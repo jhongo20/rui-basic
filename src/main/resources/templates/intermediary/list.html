@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <!-- En el head -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+
+    <title>Lista de Intermediarios</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h2 class="mt-4">Lista de Intermediarios</h2>
+                </div>
+                <div class="col-md-6 text-right">
+                    <a th:href="@{/intermediary/new}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nuevo Intermediario
+                    </a>
+                </div>
+            
+            
+            <!-- Búsqueda -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <form th:action="@{/intermediary/list}" method="get" class="d-flex gap-2">
+                        <input type="text" 
+                            name="search" 
+                            th:value="${search}" 
+                            class="form-control" 
+                            placeholder="Buscar por radicado, nombre o empresa...">
+                        <!-- Mantener los parámetros de ordenamiento en la búsqueda -->
+                        <input type="hidden" name="sort" th:value="${sort}">
+                        <input type="hidden" name="direction" th:value="${direction}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                        <!-- Botón para limpiar la búsqueda -->
+                        <a th:href="@{/intermediary/list}" class="btn btn-secondary" 
+                        th:if="${search != null and search != ''}">
+                            <i class="fas fa-times"></i> Limpiar
+                        </a>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Mensaje cuando no hay resultados -->
+            <div th:if="${noResults}" class="alert alert-info mt-3">
+                No se encontraron resultados para la búsqueda: <strong th:text="${search}"></strong>
+            </div>
+
+            <!-- Mensaje cuando hay un error -->
+            <div th:if="${error}" class="alert alert-danger mt-3" th:text="${error}"></div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="intermediariesTable" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <a th:href="@{/intermediary/list(sort='id',direction=${direction=='ASC'?'DESC':'ASC'},search=${search})}">
+                                            ID <i th:class="${sort=='id'?(direction=='ASC'?'fas fa-sort-up':'fas fa-sort-down'):'fas fa-sort'}"></i>
+                                        </a>
+                                    </th>
+                                    <th>Radicado</th>
+                                    <th>Tipo Intermediario</th>
+                                    <th>Tipo Documento</th>
+                                    <th>Número Documento</th>
+                                    <th>Nombre/Razón Social</th>
+                                    <th>Teléfono</th>
+                                    <th>Departamento</th> <!-- Nueva columna -->
+                                    <th>Funcionario</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="intermediary : ${intermediaries}">
+                                    <td th:text="${intermediary.id}"></td>
+                                    <td th:text="${intermediary.radicateNumber}"></td>
+                                    <td th:text="${intermediary.typeIntermediarieId?.value}"></td>
+                                     <!-- Nuevas celdas -->
+                                     <td>
+                                        <span th:if="${intermediary.personId != null}" 
+                                              th:text="${@intermediaryService.getDocumentTypeName(intermediary.personId.documentType)}"></span>
+                                        <span th:if="${intermediary.companyId != null}">NIT</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${intermediary.personId != null}" 
+                                            th:text="${intermediary.personId.documentNumber}"></span>
+                                        <span th:if="${intermediary.companyId != null}" 
+                                            th:text="${intermediary.companyId.nit}"></span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${intermediary.companyId != null}" 
+                                              th:text="${intermediary.companyId.name}"></span>
+                                        <span th:if="${intermediary.personId != null}" 
+                                              th:text="${intermediary.personId.firstName + ' ' + intermediary.personId.firstSurname}"></span>
+                                    </td>
+                                    <td th:text="${intermediary.companyId?.phone}"></td>
+                                    <!-- Nueva celda para el departamento -->
+                                    <td th:text="${intermediary.companyId?.departmentId?.name}"></td>
+                                    <td th:text="${@intermediaryService.getLastFunctionaryUsername(intermediary.id)}"></td>
+                                    <td>
+                                        <span th:class="${'badge ' + (intermediary.state == 'ACTIVE' ? 'bg-success' : 'bg-warning')}"
+                                              th:text="${intermediary.state.name}"></span>
+                                    </td>
+                                    <!-- Nueva celda para el state --
+                                    <td>
+                                        <span th:class="${'badge ' + (intermediary.state == 1 ? 'badge-success' : 'badge-warning')}"
+                                              th:text="${intermediary.state == 1 ? 'Activo' : 'Inactivo'}"></span>
+                                    </td>-->
+                                    <td>
+                                        <div class="btn-group">
+                                            <!-- Nuevo botón Review -->
+    <a th:href="@{/intermediary/review/{id}(id=${intermediary.id})}" 
+    class="btn btn-sm btn-primary" title="Revisar">
+     <i class="fas fa-check-circle"></i>
+ </a>
+                                            <a th:href="@{/intermediary/view/{id}(id=${intermediary.id})}" 
+                                               class="btn btn-sm btn-info" title="Ver">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/intermediary/edit/{id}(id=${intermediary.id})}" 
+                                               class="btn btn-sm btn-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-danger" title="Eliminar"
+                                                    th:onclick="'deleteIntermediary(' + ${intermediary.id} + ')'">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Paginación -->
+                        <!-- Paginación -->
+<div th:if="${totalPages > 0}" class="d-flex justify-content-between align-items-center mt-3">
+    <div class="text-muted">
+        Mostrando <span th:text="${intermediaries.size()}"></span> de 
+        <span th:text="${totalItems}"></span> registros
+    </div>
+    <nav aria-label="Navegación de páginas">
+        <ul class="pagination justify-content-end mb-0">
+            <!-- Botón Anterior -->
+            <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                <a class="page-link" 
+                   th:href="@{/intermediary/list(page=${currentPage - 1},size=10,sort=${sort},direction=${direction},search=${search})}"
+                   aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+
+            <!-- Páginas -->
+            <th:block th:with="start=${currentPage - 2 < 0 ? 0 : currentPage - 2},
+                               end=${currentPage + 2 >= totalPages ? totalPages - 1 : currentPage + 2}">
+                
+                <!-- Primera página si estamos lejos del inicio -->
+                <li class="page-item" th:if="${start > 0}" th:classappend="${currentPage == 0 ? 'active' : ''}">
+                    <a class="page-link" th:href="@{/intermediary/list(page=0,size=10,sort=${sort},direction=${direction},search=${search})}">1</a>
+                </li>
+                <li class="page-item disabled" th:if="${start > 1}">
+                    <span class="page-link">...</span>
+                </li>
+
+                <!-- Páginas centrales -->
+                <li class="page-item" th:each="pageNum : ${#numbers.sequence(start, end)}"
+                    th:classappend="${pageNum == currentPage ? 'active' : ''}">
+                    <a class="page-link" 
+                       th:href="@{/intermediary/list(page=${pageNum},size=10,sort=${sort},direction=${direction},search=${search})}"
+                       th:text="${pageNum + 1}"></a>
+                </li>
+
+                <!-- Última página si estamos lejos del final -->
+                <li class="page-item disabled" th:if="${end < totalPages - 2}">
+                    <span class="page-link">...</span>
+                </li>
+                <li class="page-item" th:if="${end < totalPages - 1}" 
+                    th:classappend="${currentPage == totalPages - 1 ? 'active' : ''}">
+                    <a class="page-link" 
+                       th:href="@{/intermediary/list(page=${totalPages - 1},size=10,sort=${sort},direction=${direction},search=${search})}"
+                       th:text="${totalPages}"></a>
+                </li>
+            </th:block>
+
+            <!-- Botón Siguiente -->
+            <li class="page-item" th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}">
+                <a class="page-link" 
+                   th:href="@{/intermediary/list(page=${currentPage + 1},size=10,sort=${sort},direction=${direction},search=${search})}"
+                   aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar este intermediario?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmDelete">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function deleteIntermediary(id) {
+            $('#deleteModal').modal('show');
+            $('#btnConfirmDelete').click(function() {
+                window.location.href = '/intermediary/delete/' + id;
+            });
+        }
+    </script>
+    <!-- Al final del body -->
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    
+</body>
+</html>

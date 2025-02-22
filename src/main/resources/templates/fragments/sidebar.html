@@ -1,0 +1,17 @@
+<nav th:fragment="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+    <div class="sidebar-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/dashboard}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/intermediary/list}">
+                    <i class="fas fa-users"></i> Intermediarios
+                </a>
+            </li>
+            <!-- Agrega más items del menú según necesites -->
+        </ul>
+    </div>
+</nav>

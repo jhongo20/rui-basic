@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Error</title>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div class="container">
+        <h1>Error</h1>
+        <p>Lo sentimos, ha ocurrido un error.</p>
+        <p th:text="${error}">Error message</p>
+        <p th:text="${status}">Status code</p>
+        <a href="/auth/login">Volver al inicio de sesión</a>
+    </div>
+</body>
+</html>
