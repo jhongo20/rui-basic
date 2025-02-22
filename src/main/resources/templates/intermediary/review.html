@@ -803,14 +803,17 @@
         </script>
         <script>
             // Funciones para manejo de documentos en Infraestructura Operativa
+            // Función para descargar documentos
             function downloadOperativaDocument(tipo, id) {
-                // Prevenir la recarga completa de la página
-                // Prevenir el comportamiento predeterminado
+                // Prevenir el comportamiento predeterminado si hay un evento
                 if (event) {
                     event.preventDefault();
                 }
                 
-                // Usar XMLHttpRequest para realizar la descarga sin cambiar de página
+                // Guardar el tab actual
+                localStorage.setItem('activeTab', '#operativa');
+                
+                // Usar XMLHttpRequest para realizar la descarga
                 const xhr = new XMLHttpRequest();
                 xhr.open('GET', `/intermediary/infraoperativa/soporte/${tipo}/${id}`, true);
                 xhr.responseType = 'blob';
@@ -832,8 +835,10 @@
                         a.click();
                         
                         // Limpiar
-                        window.URL.revokeObjectURL(url);
-                        document.body.removeChild(a);
+                        setTimeout(() => {
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                        }, 100);
                     }
                 };
                 
@@ -843,10 +848,47 @@
                 return false;
             }
 
+            // Ejecutar cuando el documento esté listo
+            document.addEventListener('DOMContentLoaded', function() {
+                mantenerTabActivo();
+                
+                // Agregar listeners para los cambios de tab
+                document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+                    tab.addEventListener('shown.bs.tab', function(e) {
+                        localStorage.setItem('activeTab', '#' + e.target.getAttribute('href').substring(1));
+                    });
+                });
+            });
+
+            // Función para mantener el tab activo
+            function mantenerTabActivo() {
+                const activeTab = localStorage.getItem('activeTab');
+                if (activeTab) {
+                    const tabElement = document.querySelector(`[href="${activeTab}"]`);
+                    if (tabElement) {
+                        new bootstrap.Tab(tabElement).show();
+                    }
+                }
+            }
+
+            // Función para ver documentos
             function viewOperativaDocument(tipo, id) {
-                console.log(`Visualizando documento ${tipo} con ID ${id}`);
-                const timestamp = new Date().getTime(); // Prevenir caché
+                // Prevenir el comportamiento predeterminado si hay un evento
+                if (event) {
+                    event.preventDefault();
+                }
+                
+                // Guardar el tab actual
+                localStorage.setItem('activeTab', '#operativa');
+                
+                // Agregar timestamp para prevenir caché
+                const timestamp = new Date().getTime();
+                
+                // Abrir en nueva pestaña
                 window.open(`/intermediary/infraoperativa/soporte/${tipo}/${id}/view?t=${timestamp}`, '_blank');
+                
+                // Importante: evitar que el evento siga propagándose
+                return false;
             }
         </script>
 </body>

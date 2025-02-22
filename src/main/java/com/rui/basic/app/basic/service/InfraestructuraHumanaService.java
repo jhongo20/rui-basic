@@ -10,7 +10,6 @@ import com.rui.basic.app.basic.repository.RuiWorkExperienceRepository;
 import com.rui.basic.app.basic.web.dto.ExperienciaLaboralDTO;
 import com.rui.basic.app.basic.web.dto.InfrastructuraHumanaDTO;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,10 +26,9 @@ public class InfraestructuraHumanaService {
     private static final Logger log = LoggerFactory.getLogger(InfraestructuraHumanaService.class);
     private final RuiInfraHumanRepository infraHumanRepository;
     private final RuiWorkExperienceRepository workExperienceRepository;
-    private final IntermediaryService intermediaryService; // Para usar getDocumentTypeName
     private final RuiSupportRepository ruiSupportRepository; 
 
-    @Autowired
+   
     public InfraestructuraHumanaService(
             RuiInfraHumanRepository infraHumanRepository,
             RuiWorkExperienceRepository workExperienceRepository,
@@ -38,7 +36,6 @@ public class InfraestructuraHumanaService {
             RuiSupportRepository ruiSupportRepository) {
         this.infraHumanRepository = infraHumanRepository;
         this.workExperienceRepository = workExperienceRepository;
-        this.intermediaryService = intermediaryService;
         this.ruiSupportRepository = ruiSupportRepository;
     }
 

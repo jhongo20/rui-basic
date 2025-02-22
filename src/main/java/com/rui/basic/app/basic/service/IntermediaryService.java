@@ -1,10 +1,8 @@
 package com.rui.basic.app.basic.service;
 
 import java.text.SimpleDateFormat;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +30,6 @@ import com.rui.basic.app.basic.repository.RuiIntermediaryRepository;
 import com.rui.basic.app.basic.repository.RuiSupportRepository;
 import com.rui.basic.app.basic.service.email.EmailService;
 import com.rui.basic.app.basic.web.dto.EmailTemplateDTO;
-import com.rui.basic.app.basic.web.dto.IntermediaryHistoryDTO;
 
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
@@ -48,7 +45,6 @@ public class IntermediaryService {
     private final RuiHistoryDetailsRepository historyDetailsRepository;
     private final RuiIntermediaryHistoryRepository intermediaryHistoryRepository;
     private final EmailService emailService;
-    private final FileStorageService fileStorageService;
     private final AuditService auditService;
     private final RuiGenericsRepository genericsRepository;
 
@@ -69,7 +65,6 @@ private RuiSupportRepository supportRepository;
         this.historyDetailsRepository = historyDetailsRepository;
         this.intermediaryHistoryRepository = intermediaryHistoryRepository;
         this.emailService = emailService;
-        this.fileStorageService = fileStorageService;
         this.auditService = auditService;
         this.genericsRepository = genericsRepository;
     }
