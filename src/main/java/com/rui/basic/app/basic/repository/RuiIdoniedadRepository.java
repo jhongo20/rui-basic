@@ -10,16 +10,18 @@ import java.util.List;
 
 @Repository
 public interface RuiIdoniedadRepository extends JpaRepository<RuiIdoniedad, Long> {
-    List<RuiIdoniedad> findByIntermediaryId_Id(Long intermediaryId);
+    @Query("SELECT i FROM RuiIdoniedad i " +
+       "JOIN i.personId p " +
+       "WHERE i.intermediaryId.id = :intermediaryId " +
+       "AND i.status = 1 " +
+       "AND p.status = 1")
+List<RuiIdoniedad> findByIntermediaryId_Id(@Param("intermediaryId") Long intermediaryId);
     
-    @Query(value = 
-        "SELECT * FROM (" +
-        "   SELECT i.*, " +
-        "   ROW_NUMBER() OVER (PARTITION BY i.PERSON_ID ORDER BY i.DATE_COURSE DESC) as rn " +
-        "   FROM RUI_IDONIEDAD i " +
-        "   WHERE i.INTERMEDIARY_ID = :intermediaryId" +
-        ") WHERE rn = 1 " +
-        "ORDER BY DATE_COURSE DESC", 
-        nativeQuery = true)
-    List<RuiIdoniedad> findMostRecentByIntermediaryId(@Param("intermediaryId") Long intermediaryId);
+    @Query("SELECT i FROM RuiIdoniedad i " +
+       "JOIN i.personId p " +
+       "WHERE i.intermediaryId.id = :intermediaryId " +
+       "AND i.status = 1 " +  // Solo idoneidades activas
+       "AND p.status = 1 " +  // Solo personas activas
+       "ORDER BY i.dateCourse DESC")
+List<RuiIdoniedad> findMostRecentByIntermediaryId(@Param("intermediaryId") Long intermediaryId);
 }

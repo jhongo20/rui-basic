@@ -18,7 +18,24 @@ import com.rui.basic.app.basic.domain.entities.RuiWorkExperience;
 public interface RuiSupportRepository extends JpaRepository<RuiSupport, Long> {
     
     // Nuevo método para buscar por idoneidad ID
-    Optional<RuiSupport> findByIdoniedadId(RuiIdoniedad idoniedadId);
+    // Modificar la consulta para verificar el status de la persona
+    // Para DocumentService (con estado de persona)
+    @Query("SELECT s FROM RuiSupport s " +
+           "JOIN s.idoniedadId i " +
+           "JOIN i.personId p " +
+           "WHERE s.idoniedadId = :idoniedad " +
+           "AND s.status = 1 " +
+           "AND p.status = :activeStatus")
+    Optional<RuiSupport> findByIdoniedadIdAndPersonStatus(
+        @Param("idoniedad") RuiIdoniedad idoniedad,
+        @Param("activeStatus") Integer activeStatus
+    );
+
+    // Para IdoneidadProfesionalService (solo por ID)
+    @Query("SELECT s FROM RuiSupport s " +
+           "WHERE s.idoniedadId.id = :idoniedadId " +
+           "AND s.status = 1")
+    Optional<RuiSupport> findByIdoniedadId(@Param("idoniedadId") Long idoniedadId);
 
     // Método para infraestructura humana
     Optional<RuiSupport> findByInfraHumnaId(RuiInfraHuman infraHumanaId);
@@ -33,9 +50,13 @@ public interface RuiSupportRepository extends JpaRepository<RuiSupport, Long> {
 
     
     // Método para buscar por experiencia laboral ID
-    Optional<RuiSupport> findByWorkExperienceId(RuiWorkExperience workExperienceId);
+    //Optional<RuiSupport> findByWorkExperienceId(RuiWorkExperience workExperienceId);
     //List<RuiSupport> findByWorkExperienceId(RuiWorkExperience workExperience);
     // Agregar una consulta personalizada para obtener el soporte más reciente
+    @Query("SELECT s FROM RuiSupport s " +
+           "WHERE s.workExperienceId = :workExperience " +
+           "AND s.status = 1")
+    List<RuiSupport> findByWorkExperienceId(@Param("workExperience") RuiWorkExperience workExperience);
     
 
     // Métodos para infraestructura operativa que retornan listas

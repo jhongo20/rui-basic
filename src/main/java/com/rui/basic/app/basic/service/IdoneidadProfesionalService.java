@@ -2,6 +2,7 @@ package com.rui.basic.app.basic.service;
 
 import com.rui.basic.app.basic.domain.entities.RuiIdoniedad;
 import com.rui.basic.app.basic.repository.RuiIdoniedadRepository;
+import com.rui.basic.app.basic.repository.RuiSupportRepository;
 import com.rui.basic.app.basic.web.dto.IdoneidadProfesionalDTO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +22,13 @@ import java.util.stream.Collectors;
 public class IdoneidadProfesionalService {
 
     private final RuiIdoniedadRepository idoniedadRepository;
+    private final RuiSupportRepository supportRepository;  // Agregar esto
 
-    
-    public IdoneidadProfesionalService(RuiIdoniedadRepository idoniedadRepository) {
+    public IdoneidadProfesionalService(
+            RuiIdoniedadRepository idoniedadRepository,
+            RuiSupportRepository supportRepository) {  // Agregar esto
         this.idoniedadRepository = idoniedadRepository;
+        this.supportRepository = supportRepository;   // Agregar esto
     }
 
     public List<IdoneidadProfesionalDTO> findByIntermediary(Long intermediaryId) {
@@ -72,22 +76,28 @@ public class IdoneidadProfesionalService {
         
         log.info("Encontrados {} registros de idoneidad", masRecientes.size());
         masRecientes.forEach(i -> {
-            log.debug("Idoneidad ID: {}, Persona ID: {}, Fecha: {}", 
+            log.debug("Idoneidad ID: {}, Persona ID: {}, Fecha: {}, Estado Idoneidad: {}, Estado Persona: {}", 
                 i.getId(), 
                 i.getPersonId() != null ? i.getPersonId().getId() : null,
-                i.getDateCourse());
+                i.getDateCourse(),
+                i.getStatus(),
+                i.getPersonId() != null ? i.getPersonId().getStatus() : null);
         });
         
-        // Obtener solo el registro con la fecha más reciente
+        // Filtrar solo registros activos y ordenar por fecha más reciente
         Optional<RuiIdoniedad> registroMasReciente = masRecientes.stream()
-            .filter(i -> i != null && i.getDateCourse() != null)
+            .filter(i -> i != null && 
+                    i.getDateCourse() != null && 
+                    i.getStatus() == 1 && 
+                    i.getPersonId() != null && 
+                    i.getPersonId().isActive())
             .max(Comparator.comparing(RuiIdoniedad::getDateCourse));
         
         List<IdoneidadProfesionalDTO> resultado = new ArrayList<>();
         registroMasReciente.ifPresent(idoniedad -> resultado.add(convertToDTO(idoniedad)));
         
         log.info("Se seleccionó el registro con fecha más reciente: {}", 
-            registroMasReciente.map(i -> i.getDateCourse().toString()).orElse("Ninguno"));
+            registroMasReciente.map(i -> "ID: " + i.getId() + ", Fecha: " + i.getDateCourse()).orElse("Ninguno"));
         
         return resultado;
     }
@@ -113,7 +123,12 @@ public class IdoneidadProfesionalService {
         dto.setDateCourse(idoniedad.getDateCourse());
         
         // Asumiendo que si el status es 1, el soporte está cargado
-        dto.setSupportUpload(idoniedad.getStatus() != null && idoniedad.getStatus() == 1);
+        //dto.setSupportUpload(idoniedad.getStatus() != null && idoniedad.getStatus() == 1);
+        boolean hasSupport = supportRepository.findByIdoniedadId(idoniedad.getId()).isPresent();
+        dto.setSupportUpload(hasSupport);
+
+        // Agregar log para depuración
+        log.debug("Idoneidad ID: {}, tiene soporte: {}", idoniedad.getId(), hasSupport);
         
         // Inicialmente todos están marcados como revisados
         dto.setChecked(true);

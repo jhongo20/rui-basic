@@ -27,7 +27,6 @@ public class IdoneidadDocumentoController {
     @GetMapping("/{id}/download")
     public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) {
         try {
-            log.info("Solicitando descarga de documento de idoneidad ID: {}", id);
             Resource file = documentoService.loadIdoneidadDocument(id);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
@@ -38,14 +37,23 @@ public class IdoneidadDocumentoController {
         }
     }
 
+
     @GetMapping("/{id}/view")
     public ResponseEntity<Resource> viewDocument(@PathVariable Long id) {
         try {
             log.info("Solicitando visualización de documento de idoneidad ID: {}", id);
             Resource file = documentoService.loadIdoneidadDocument(id);
             
-            // Determinar el tipo de contenido basado en la extensión del archivo
-            String contentType = determineContentType(file.getFilename());
+            // Determinar el tipo de contenido
+            String contentType = "application/pdf";
+            String filename = file.getFilename();
+            if (filename != null) {
+                if (filename.toLowerCase().endsWith(".jpg") || filename.toLowerCase().endsWith(".jpeg")) {
+                    contentType = "image/jpeg";
+                } else if (filename.toLowerCase().endsWith(".png")) {
+                    contentType = "image/png";
+                }
+            }
             
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))

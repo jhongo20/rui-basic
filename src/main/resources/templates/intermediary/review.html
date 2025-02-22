@@ -309,6 +309,8 @@
                                 </button>
                             </td-->
                             <td class="text-center">
+                                <!-- Debug info - remover después -->
+                            <small class="text-muted" th:text="${'Support: ' + idoniedad.supportUpload}"></small>
                                 <!-- Botón de descarga -->
                                 <button class="btn btn-link text-primary" 
                                         th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
@@ -778,7 +780,7 @@
             // Funciones para manejo de documentos en idoneidad profesional
             
             function downloadDocument(id) {
-                window.location.href = `/api/idoniedad/${id}/download`;
+                window.location.href = '/api/idoniedad/' + id + '/download';
             }
 
             // Función para abrir el documento en una nueva pestaña

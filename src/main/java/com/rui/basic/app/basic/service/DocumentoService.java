@@ -21,6 +21,7 @@ import com.rui.basic.app.basic.domain.entities.RuiIdoniedad;
 import com.rui.basic.app.basic.domain.entities.RuiInfraHuman;
 import com.rui.basic.app.basic.domain.entities.RuiInfraOperational;
 import com.rui.basic.app.basic.domain.entities.RuiIntermediary;
+import com.rui.basic.app.basic.domain.entities.RuiPerson;
 import com.rui.basic.app.basic.domain.entities.RuiSupport;
 import com.rui.basic.app.basic.domain.entities.RuiWorkExperience;
 import com.rui.basic.app.basic.repository.RuiIdoniedadRepository;
@@ -74,73 +75,58 @@ public class DocumentoService {
     }
 
     public Resource loadIdoneidadDocument(Long id) {
-        try {
-            log.info("Buscando documento de idoneidad con ID: {}", id);
-            
-            // 1. Buscar la idoneidad
-            RuiIdoniedad idoniedad = idoniedadRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Idoneidad no encontrada para ID: " + id));
-            
-            // 2. Buscar el soporte en la base de datos
-            Optional<RuiSupport> supportOpt = ruiSupportRepository.findByIdoniedadId(idoniedad);
-            
-            if (supportOpt.isEmpty()) {
-                log.error("Soporte no encontrado para la idoneidad con ID: {}", id);
-                throw new RuntimeException("Soporte no encontrado para la idoneidad con ID: " + id);
-            }
-            
-            RuiSupport support = supportOpt.get();
-            log.info("Soporte encontrado: ID: {}, Filename: {}, Route: {}", 
-                    support.getId(), support.getFilename(), support.getRoute());
-            
-            // 3. Construir la ruta completa al archivo usando la ruta almacenada en el soporte
-            String filePath = support.getRoute() + "/" + support.getFilename();
-            log.info("Intentando acceder al archivo en: {}", filePath);
-            
-            // 4. Verificar si el archivo existe
-            File file = new File(filePath);
-            if (!file.exists()) {
-                log.warn("El archivo no existe en la ruta original: {}", filePath);
-                
-                // Intentar con rutas alternativas
-                List<String> alternativePaths = generateAlternativePaths(support, idoniedad);
-                
-                boolean found = false;
-                for (String altPath : alternativePaths) {
-                    file = new File(altPath);
-                    if (file.exists()) {
-                        log.info("Archivo encontrado en ruta alternativa: {}", altPath);
-                        filePath = altPath;
-                        found = true;
-                        break;
-                    }
-                }
-                
-                if (!found) {
-                    log.error("No se pudo encontrar el archivo en ninguna ruta alternativa");
-                    throw new RuntimeException("El archivo no existe en ninguna ruta conocida");
-                }
-            }
-            
-            // 5. Cargar el recurso
-            Path path = Paths.get(filePath);
-            Resource resource = new UrlResource(path.toUri());
-            
-            if (resource.exists() && resource.isReadable()) {
-                log.info("Recurso cargado correctamente desde: {}", filePath);
-                return resource;
-            } else {
-                log.error("No se pudo leer el archivo aunque existe en el sistema de archivos: {}", filePath);
-                throw new RuntimeException("No se pudo leer el archivo");
-            }
-        } catch (MalformedURLException e) {
-            log.error("Error URL malformada: {}", e.getMessage(), e);
-            throw new RuntimeException("Error: " + e.getMessage(), e);
-        } catch (Exception e) {
-            log.error("Error al cargar documento de idoneidad: {}", e.getMessage(), e);
-            throw new RuntimeException("Error al cargar documento de idoneidad", e);
+    try {
+        log.info("Buscando documento de idoneidad con ID: {}", id);
+        
+        // 1. Buscar la idoneidad
+        RuiIdoniedad idoniedad = idoniedadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Idoneidad no encontrada para ID: " + id));
+
+        // 2. Verificar que la persona esté activa
+        if (idoniedad.getPersonId() == null) {
+            throw new RuntimeException("No hay persona asociada a esta idoneidad");
         }
+
+        if (!idoniedad.getPersonId().isActive()) {
+            throw new RuntimeException("La persona asociada a esta idoneidad no está activa");
+        }
+        
+        // 3. Buscar el soporte (pasando el estado activo)
+        RuiSupport support = ruiSupportRepository
+            .findByIdoniedadIdAndPersonStatus(idoniedad, RuiPerson.Status.ACTIVE.getValue())
+            .orElseThrow(() -> new RuntimeException("Soporte no encontrado para la idoneidad con ID: " + id));
+        
+        log.info("Soporte encontrado: ID: {}, Filename: {}, Route: {}", 
+                support.getId(), support.getFilename(), support.getRoute());
+        
+        // 4. Construir la ruta del archivo
+        String filePath = support.getRoute() + "/" + support.getFilename();
+        log.info("Intentando acceder al archivo en: {}", filePath);
+        
+        // 5. Verificar si el archivo existe
+        File file = new File(filePath);
+        if (!file.exists()) {
+            log.error("El archivo no existe en la ruta: {}", filePath);
+            throw new RuntimeException("El archivo no existe en la ruta especificada");
+        }
+        
+        // 6. Cargar el recurso
+        Path path = Paths.get(filePath);
+        Resource resource = new UrlResource(path.toUri());
+        
+        if (resource.exists() && resource.isReadable()) {
+            log.info("Recurso cargado correctamente desde: {}", filePath);
+            return resource;
+        } else {
+            log.error("No se pudo leer el archivo aunque existe en el sistema de archivos: {}", filePath);
+            throw new RuntimeException("No se pudo leer el archivo");
+        }
+        
+    } catch (Exception e) {
+        log.error("Error al cargar documento de idoneidad: {}", e.getMessage(), e);
+        throw new RuntimeException("Error al cargar documento de idoneidad: " + e.getMessage());
     }
+}
     
     /**
      * Genera diferentes variaciones de rutas posibles para encontrar el archivo
@@ -236,13 +222,20 @@ public Resource loadWorkExperienceDocument(Long id) {
         
         log.info("Cargando documento para experiencia laboral ID: {}", id);
         
-        RuiSupport support = ruiSupportRepository.findByWorkExperienceId(workExperience)
-                .orElseThrow(() -> new RuntimeException("No se encontró documento para la experiencia laboral"));
+        // Obtenemos la lista de soportes
+        List<RuiSupport> supports = ruiSupportRepository.findByWorkExperienceId(workExperience);
+        
+        if (supports.isEmpty()) {
+            throw new RuntimeException("No se encontró documento para la experiencia laboral");
+        }
+        
+        // Tomamos el primer soporte o el más reciente según tu lógica de negocio
+        RuiSupport support = supports.get(0);  // Puedes ordenar la lista si necesitas el más reciente
         
         String filePath = support.getRoute() + "/" + support.getFilename();
         log.info("Intentando acceder al archivo en: {}", filePath);
         
-        // Verificar si el archivo existe
+        // El resto del código permanece igual...
         File file = new File(filePath);
         if (!file.exists()) {
             log.error("El archivo no existe en la ruta: {}", filePath);
