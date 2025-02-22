@@ -48,6 +48,21 @@ public interface RuiSupportRepository extends JpaRepository<RuiSupport, Long> {
     Optional<RuiSupport> findByInfraOperationalSignAndStatus(RuiInfraOperational infraOperationalSign, Short status);
     Optional<RuiSupport> findByInfraOperationalSign(RuiInfraOperational infraOperational);
 
+    // Método para obtener un único soporte activo
+    @Query("SELECT s FROM RuiSupport s " +
+           "WHERE s.workExperienceId = :workExperience " +
+           "AND s.status = 1 " +
+           "ORDER BY s.id DESC")
+    Optional<RuiSupport> findFirstByWorkExperienceId(@Param("workExperience") RuiWorkExperience workExperience);
+
+    // O si prefieres usar una consulta nativa
+    @Query(value = "SELECT * FROM rui_support " +
+           "WHERE work_experience_id = :workExperienceId " +
+           "AND status = 1 " +
+           "ORDER BY id DESC " +
+           "FETCH FIRST 1 ROW ONLY", 
+           nativeQuery = true)
+    Optional<RuiSupport> findLatestByWorkExperienceId(@Param("workExperienceId") Long workExperienceId);
     
     // Método para buscar por experiencia laboral ID
     //Optional<RuiSupport> findByWorkExperienceId(RuiWorkExperience workExperienceId);

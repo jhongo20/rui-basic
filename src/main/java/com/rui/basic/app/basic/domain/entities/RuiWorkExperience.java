@@ -41,6 +41,13 @@ public class RuiWorkExperience implements Serializable {
     @Column(name = "END_DATE")
     @Temporal(TemporalType.DATE)
     private Date endDate;
+
+    @Column(name = "STATUS")
+    private Short status;
+    
+    public boolean isActive() {
+        return status != null && status == 1;
+    }
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "INFRA_HUMAN_ID")

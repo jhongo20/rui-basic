@@ -12,6 +12,7 @@ public class ExperienciaLaboralDTO {
     private String phoneBoss;
     private Date startDate;
     private Date endDate;
+    private Short status;
     private Boolean supportUpload;
     private Boolean checked; // Para el estado del checkbox
 }

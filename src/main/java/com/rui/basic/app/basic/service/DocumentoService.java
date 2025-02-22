@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +30,7 @@ import com.rui.basic.app.basic.repository.RuiIntermediaryRepository;
 import com.rui.basic.app.basic.repository.RuiSupportRepository;
 import com.rui.basic.app.basic.repository.RuiWorkExperienceRepository;
 
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 public class DocumentoService {
     
@@ -180,83 +177,116 @@ public class DocumentoService {
     }
     
     public Resource loadInfraHumanaDocument(Long id) {
-    try {
-        log.info("Cargando documento de infraestructura humana con ID: {}", id);
+        log.info("Iniciando carga de documento de infraestructura humana con ID: {}", id);
         
-        RuiInfraHuman infraHumana = infraHumanaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Infraestructura humana no encontrada para ID: " + id));
-        
-        RuiSupport support = ruiSupportRepository.findByInfraHumnaId(infraHumana)
-                .orElseThrow(() -> new RuntimeException("No se encontró documento para la infraestructura humana"));
-        
-        String filePath = support.getRoute() + "/" + support.getFilename();
-        log.info("Intentando acceder al archivo en: {}", filePath);
-        
-        // Verificar si el archivo existe
-        File file = new File(filePath);
-        if (!file.exists()) {
-            log.error("El archivo no existe en la ruta: {}", filePath);
-            throw new RuntimeException("El archivo no existe en la ruta especificada");
+        try {
+            // 1. Buscar la infraestructura humana
+            log.debug("Buscando infraestructura humana en base de datos - ID: {}", id);
+            RuiInfraHuman infraHumana = infraHumanaRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Infraestructura humana no encontrada para ID: " + id));
+            log.debug("Infraestructura humana encontrada - ID: {}, Professional ID: {}", 
+                infraHumana.getId(), 
+                infraHumana.getProfessionalId() != null ? infraHumana.getProfessionalId().getId() : "null");
+            
+            // 2. Buscar el soporte
+            log.debug("Buscando soporte para infraestructura humana ID: {}", id);
+            RuiSupport support = ruiSupportRepository.findByInfraHumnaId(infraHumana)
+                    .orElseThrow(() -> new RuntimeException("No se encontró documento para la infraestructura humana"));
+            log.debug("Soporte encontrado - ID: {}, Filename: {}, Route: {}, Extension: {}", 
+                support.getId(), 
+                support.getFilename(), 
+                support.getRoute(),
+                support.getExtencion());
+            
+            // 3. Construir la ruta del archivo
+            String filePath = support.getRoute() + "/" + support.getFilename();
+            log.info("Ruta completa del archivo: {}", filePath);
+            
+            // 4. Verificar si el archivo existe
+            File file = new File(filePath);
+            if (!file.exists()) {
+                log.error("El archivo no existe en la ruta especificada: {}", filePath);
+                log.debug("Verificando permisos del directorio: {}", support.getRoute());
+                log.debug("Directorio existe: {}, Es directorio: {}, Puede leer: {}", 
+                    new File(support.getRoute()).exists(),
+                    new File(support.getRoute()).isDirectory(),
+                    new File(support.getRoute()).canRead());
+                throw new RuntimeException("El archivo no existe en la ruta especificada");
+            }
+            log.debug("Archivo encontrado en el sistema de archivos - Tamaño: {} bytes", file.length());
+            
+            // 5. Cargar el recurso
+            Path path = Paths.get(filePath);
+            log.debug("Creando recurso URL para la ruta: {}", path.toUri());
+            Resource resource = new UrlResource(path.toUri());
+            
+            // 6. Verificar el recurso
+            if (resource.exists()) {
+                log.debug("Recurso existe y es legible - Tamaño: {} bytes", resource.contentLength());
+                if (resource.isReadable()) {
+                    log.info("Recurso cargado exitosamente - URI: {}", resource.getURI());
+                    return resource;
+                } else {
+                    log.error("El recurso existe pero no es legible: {}", filePath);
+                    throw new RuntimeException("El archivo existe pero no es legible");
+                }
+            } else {
+                log.error("No se pudo crear el recurso para el archivo: {}", filePath);
+                throw new RuntimeException("No se pudo crear el recurso para el archivo");
+            }
+            
+        } catch (Exception e) {
+            log.error("Error al cargar documento de infraestructura humana - ID: {} - Error: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Error al cargar documento de infraestructura humana: " + e.getMessage(), e);
         }
-        
-        Path path = Paths.get(filePath);
-        Resource resource = new UrlResource(path.toUri());
-        
-        if (resource.exists() && resource.isReadable()) {
-            log.info("Recurso cargado correctamente desde: {}", filePath);
-            return resource;
-        } else {
-            log.error("No se pudo leer el archivo aunque existe en el sistema de archivos: {}", filePath);
-            throw new RuntimeException("No se pudo leer el archivo");
-        }
-    } catch (Exception e) {
-        log.error("Error al cargar documento de infraestructura humana: {}", e.getMessage(), e);
-        throw new RuntimeException("Error al cargar documento de infraestructura humana", e);
     }
-}
-
-public Resource loadWorkExperienceDocument(Long id) {
-    try {
-        RuiWorkExperience workExperience = workExperienceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Experiencia laboral no encontrada para ID: " + id));
+    
+    public Resource loadWorkExperienceDocument(Long id) {
+        log.info("Iniciando carga de documento de experiencia laboral con ID: {}", id);
         
-        log.info("Cargando documento para experiencia laboral ID: {}", id);
-        
-        // Obtenemos la lista de soportes
-        List<RuiSupport> supports = ruiSupportRepository.findByWorkExperienceId(workExperience);
-        
-        if (supports.isEmpty()) {
-            throw new RuntimeException("No se encontró documento para la experiencia laboral");
+        try {
+            // 1. Buscar la experiencia laboral
+            RuiWorkExperience workExperience = workExperienceRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Experiencia laboral no encontrada para ID: " + id));
+            
+            // 2. Buscar el soporte (único)
+            RuiSupport support = ruiSupportRepository.findFirstByWorkExperienceId(workExperience)
+                    .orElseThrow(() -> new RuntimeException("No se encontró documento para la experiencia laboral"));
+            
+            log.debug("Soporte encontrado - ID: {}, Filename: {}, Route: {}", 
+                support.getId(), 
+                support.getFilename(), 
+                support.getRoute());
+            
+            // 3. Construir la ruta del archivo
+            String filePath = support.getRoute() + "/" + support.getFilename();
+            log.info("Ruta completa del archivo: {}", filePath);
+            
+            // 4. Verificar si el archivo existe
+            File file = new File(filePath);
+            if (!file.exists()) {
+                log.error("El archivo no existe en la ruta especificada: {}", filePath);
+                throw new RuntimeException("El archivo no existe en la ruta especificada");
+            }
+            
+            // 5. Cargar el recurso
+            Path path = Paths.get(filePath);
+            Resource resource = new UrlResource(path.toUri());
+            
+            if (resource.exists() && resource.isReadable()) {
+                log.info("Recurso cargado exitosamente - URI: {}", resource.getURI());
+                return resource;
+            } else {
+                log.error("No se pudo leer el archivo aunque existe en el sistema de archivos: {}", filePath);
+                throw new RuntimeException("No se pudo leer el archivo");
+            }
+            
+        } catch (Exception e) {
+            log.error("Error al cargar documento de experiencia laboral - ID: {} - Error: {}", 
+                id, e.getMessage(), e);
+            throw new RuntimeException("Error al cargar documento de experiencia laboral: " + e.getMessage());
         }
-        
-        // Tomamos el primer soporte o el más reciente según tu lógica de negocio
-        RuiSupport support = supports.get(0);  // Puedes ordenar la lista si necesitas el más reciente
-        
-        String filePath = support.getRoute() + "/" + support.getFilename();
-        log.info("Intentando acceder al archivo en: {}", filePath);
-        
-        // El resto del código permanece igual...
-        File file = new File(filePath);
-        if (!file.exists()) {
-            log.error("El archivo no existe en la ruta: {}", filePath);
-            throw new RuntimeException("El archivo no existe en la ruta especificada");
-        }
-        
-        Path path = Paths.get(filePath);
-        Resource resource = new UrlResource(path.toUri());
-        
-        if (resource.exists() && resource.isReadable()) {
-            log.info("Recurso cargado correctamente desde: {}", filePath);
-            return resource;
-        } else {
-            log.error("No se pudo leer el archivo aunque existe en el sistema de archivos: {}", filePath);
-            throw new RuntimeException("No se pudo leer el archivo");
-        }
-    } catch (Exception e) {
-        log.error("Error al cargar documento de experiencia laboral: {}", e.getMessage(), e);
-        throw new RuntimeException("Error al cargar documento de experiencia laboral", e);
     }
-}
 
 public Resource loadInfraOperativaDocument(Long id, String tipo) {
     try {
