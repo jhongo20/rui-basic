@@ -80,4 +80,7 @@ public interface RuiIntermediaryRepository extends JpaRepository<RuiIntermediary
        "LEFT JOIN FETCH i.ruiIntermediaryHistoryList h " +  // Historial
        "LEFT JOIN FETCH h.functionaryId f ")  // Funcionario del historial
        Page<RuiIntermediary> findAllWithRelations(Pageable pageable);
+
+       @Query(value = "SELECT id, state FROM RUI_INTERMEDIARIES", nativeQuery = true)
+       List<Object[]> findAllStatesDirectly();
 }

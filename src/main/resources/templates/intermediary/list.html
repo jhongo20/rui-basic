@@ -107,8 +107,12 @@
                                     <td th:text="${intermediary.companyId?.departmentId?.name}"></td>
                                     <td th:text="${@intermediaryService.getLastFunctionaryUsername(intermediary.id)}"></td>
                                     <td>
-                                        <span th:class="${'badge ' + (intermediary.state == 'ACTIVE' ? 'bg-success' : 'bg-warning')}"
-                                              th:text="${intermediary.state.name}"></span>
+                                        <span th:class="${'badge ' + @intermediaryService.getStateColorClass(intermediary.state)}"
+                                              th:text="${intermediary.state != null ? intermediary.state.name : ''}">
+                                        </span>
+                                        <small class="text-muted ms-2" th:if="${intermediary.state != null}"
+                                               th:text="'(ID: ' + ${intermediary.state.state} + ')'">
+                                        </small>
                                     </td>
                                     <!-- Nueva celda para el state --
                                     <td>

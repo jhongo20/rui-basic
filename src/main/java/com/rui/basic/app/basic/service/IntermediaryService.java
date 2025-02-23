@@ -3,6 +3,7 @@ package com.rui.basic.app.basic.service;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -349,7 +350,29 @@ private RuiSupportRepository supportRepository;
     public Page<RuiIntermediary> findAll(int page, int size, String sortField, String sortDirection) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
         Pageable pageable = PageRequest.of(page, size, sort);
-        return intermediaryRepository.findAll(pageable);
+        
+        // Agregar log de la consulta SQL directa
+        log.debug("Ejecutando consulta directa a RUI_INTERMEDIARIES");
+        List<Object[]> rawStates = intermediaryRepository.findAllStatesDirectly();
+        for (Object[] row : rawStates) {
+            log.debug("ID: {}, Estado directo de BD: {}", row[0], row[1]);
+        }
+        
+        Page<RuiIntermediary> results = intermediaryRepository.findAll(pageable);
+        
+        results.getContent().forEach(intermediary -> {
+            log.debug("Intermediary from JPA - ID: {}, Raw State Value: {}, Mapped State: {}, State Name: {}", 
+                intermediary.getId(),
+                // Valor raw del estado
+                intermediary.getState() != null ? intermediary.getState().getState() : "null",
+                // Estado mapeado
+                intermediary.getState(),
+                // Nombre del estado
+                intermediary.getState() != null ? intermediary.getState().getName() : "null"
+            );
+        });
+        
+        return results;
     }
     
     public Page<RuiIntermediary> search(String term, int page, int size, String sort, String direction) {
@@ -405,5 +428,23 @@ private RuiSupportRepository supportRepository;
             return "";
         }
     }
+
+    public String getStateColorClass(IntermediaryState state) {
+        if (state == null) return "bg-secondary";
+        
+        return switch (state) {
+            case OPENING -> "bg-primary";
+            case DILIGENTED -> "bg-info";
+            case TO_COMPLEMENT -> "bg-warning";
+            case COMPLEMENTED -> "bg-info";
+            case APPROVED -> "bg-success";
+            case REVIEWED -> "bg-primary";
+            case UPDATED -> "bg-info";
+            case RETIRED, DESISTED, PENALIZED -> "bg-danger";
+            case RENEWAL -> "bg-info";
+            default -> "bg-secondary";
+        };
+    }
+
     
 }

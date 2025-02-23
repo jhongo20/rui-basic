@@ -1,15 +1,16 @@
 package com.rui.basic.app.basic.domain.entities;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.rui.basic.app.basic.domain.converters.IntermediaryStateConverter;
 import com.rui.basic.app.basic.domain.enums.IntermediaryState;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -53,7 +54,7 @@ public class RuiIntermediary implements Serializable {
     private Long resolution;
     
     @Column(name = "STATE")
-    @Enumerated(EnumType.ORDINAL)  // Usa ORDINAL porque el estado se guarda como número en la BD
+    @Convert(converter = IntermediaryStateConverter.class)  // Usa ORDINAL porque el estado se guarda como número en la BD
     private IntermediaryState state;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -113,7 +114,7 @@ public class RuiIntermediary implements Serializable {
 
     //---
     @OneToMany(mappedBy = "intermediaryId", fetch = FetchType.LAZY)
-private List<RuiIdoniedad> idoneidadList;
+    private List<RuiIdoniedad> idoneidadList;
 
 
 }
