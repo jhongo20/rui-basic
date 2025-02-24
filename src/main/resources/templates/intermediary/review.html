@@ -141,571 +141,786 @@
                 <div class="tab-content">
                     <!-- Información General Tab -->
                     <!-- Tab Información General -->
-                    <!-- Información General Tab -->
-<div class="tab-pane fade show active" id="general" role="tabpanel">
-    <div class="progress mb-4">
-        <div class="progress-bar" role="progressbar" style="width: 20%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Información General</h5>
-            <form class="form-horizontal">
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" checked>
-                    </div>
-                    <div class="col-sm-3">
-                        <label class="col-form-label">NIT: *</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" th:value="${intermediary.companyId?.nit}" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" checked>
-                    </div>
-                    <div class="col-sm-3">
-                        <label class="col-form-label">Razón Social: *</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" th:value="${intermediary.companyId?.name}" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" checked>
-                    </div>
-                    <div class="col-sm-3">
-                        <label class="col-form-label">Departamento: *</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <select class="form-select" disabled>
-                            <option th:if="${departamento != null}" 
-                                    th:selected="true" 
-                                    th:text="${departamento.name}">DEPARTAMENTO</option>
-                            <option th:if="${departamento == null}">No especificado</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" checked>
-                    </div>
-                    <div class="col-sm-3">
-                        <label class="col-form-label">Ciudad: *</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <select class="form-select" disabled>
-                            <option th:if="${ciudad != null}" 
-                                    th:selected="true" 
-                                    th:text="${ciudad.name}">CIUDAD</option>
-                            <option th:if="${ciudad == null}">No especificada</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" checked>
-                    </div>
-                    <div class="col-sm-3">
-                        <label class="col-form-label">Dirección: *</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" th:value="${intermediary.companyId?.address}" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" checked>
-                    </div>
-                    <div class="col-sm-3">
-                        <label class="col-form-label">Correo electrónico: *</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <input type="email" class="form-control" th:value="${intermediary.companyId?.email}" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" checked>
-                    </div>
-                    <div class="col-sm-3">
-                        <label class="col-form-label">Teléfono Fijo: *</label>
-                    </div>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" th:value="${intermediary.companyId?.phone}" readonly>
-                    </div>
-                </div>
-            </form>
-
-            <div class="d-flex justify-content-end mt-4">
-                <button class="btn btn-primary" onclick="cambiarTab('idoneidad')">
-                    Siguiente
-                    <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-                    <!-- Idoneidad Profesional Tab -->
-                    <!-- Idoneidad Profesional Tab -->
-<div class="tab-pane fade" id="idoneidad">
-    <div class="progress mb-4">
-        <div class="progress-bar" role="progressbar" style="width: 40%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body">
-            <h5 class="mb-4">Datos de las personas que ejercen la labor de intermediación concurso de conocimientos específicos sobre el SGRL.</h5>
-            
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Acciones</th>
-                            <th>Tipo Identificación</th>
-                            <th>No. Identificación</th>
-                            <th>Primer Nombre</th>
-                            <th>Segundo Nombre</th>
-                            <th>Primer Apellido</th>
-                            <th>Segundo Apellido</th>
-                            <th>Entidad curso</th>
-                            <th>Fecha curso</th>
-                            <th>Soporte</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="idoniedad : ${idoneidadList}" th:if="${idoniedad != null}">
-                            <td class="text-center">
-                                <input type="checkbox" class="form-check-input" th:checked="${idoniedad != null ? idoniedad.checked : false}">
-                            </td>
-                            <td th:text="${idoniedad.documentType != null ? @intermediaryService.getDocumentTypeName(idoniedad.documentType) : ''}">-</td>
-                            <td th:text="${idoniedad.documentNumber != null ? idoniedad.documentNumber : ''}">-</td>
-                            <td th:text="${idoniedad.firstName != null ? idoniedad.firstName : ''}">-</td>
-                            <td th:text="${idoniedad.secondName != null ? idoniedad.secondName : ''}">-</td>
-                            <td th:text="${idoniedad.firstSurname != null ? idoniedad.firstSurname : ''}">-</td>
-                            <td th:text="${idoniedad.secondSurname != null ? idoniedad.secondSurname : ''}">-</td>
-                            <td th:text="${idoniedad.courseEntity != null ? idoniedad.courseEntity : ''}">-</td>
-                            <td th:text="${idoniedad.dateCourse != null ? #dates.format(idoniedad.dateCourse, 'dd/MM/yyyy') : ''}">-</td>
-                            <!--td class="text-center">
-                                <button class="btn btn-link text-primary" 
-                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
-                                        th:onclick="'downloadDocument(' + ${idoniedad.id} + ')'">
-                                    <i class="fas fa-file-download"></i>
-                                </button>
-                                <button class="btn btn-link text-primary" 
-                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
-                                        th:onclick="'viewDocument(' + ${idoniedad.id} + ')'">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </td-->
-                            <td class="text-center">
-                                <!-- Debug info - remover después -->
-                            <small class="text-muted" th:text="${'Support: ' + idoniedad.supportUpload}"></small>
-                                <!-- Botón de descarga -->
-                                <button class="btn btn-link text-primary" 
-                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
-                                        th:onclick="'downloadDocument(' + ${idoniedad.id} + ')'">
-                                    <i class="fas fa-file-download"></i>
-                                </button>
-                                
-                                <!-- Botón para ver en nueva pestaña -->
-                                <button class="btn btn-link text-primary" 
-                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
-                                        th:onclick="'openDocument(' + ${idoniedad.id} + ')'">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="d-flex justify-content-between mt-4">
-                <button class="btn btn-secondary" onclick="cambiarTab('general')">
-                    <i class="fas fa-arrow-left me-2"></i>
-                    Atrás
-                </button>
-                <button class="btn btn-primary" onclick="cambiarTab('infraestructura')">
-                    Siguiente
-                    <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-                    <!-- Infraestructura Humana Tab -->
-                     <!-- Infraestructura Humana Tab -->
-<div class="tab-pane fade" id="infraestructura">
-    <div class="progress mb-4">
-        <div class="progress-bar" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Información del profesional</h5>
-            <div th:if="${infraestructuraHumana != null}">
-                <form class="form-horizontal">
-                    <!-- Datos del profesional -->
-                    <div class="row mb-3">
-                        <div class="col-auto">
-                            <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
-                        </div>
-                        <label class="col-sm-3 col-form-label">Tipo de Documento: *</label>
-                        <div class="col-sm-8">
-                            <input type="text" class="form-control" th:value="${infraestructuraHumana.documentType != null ? @intermediaryService.getDocumentTypeName(infraestructuraHumana.documentType) : ''}" readonly>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-auto">
-                            <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
-                        </div>
-                        <label class="col-sm-3 col-form-label">Número de Documento: *</label>
-                        <div class="col-sm-8">
-                            <input type="text" class="form-control" th:value="${infraestructuraHumana.documentNumber}" readonly>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-auto">
-                            <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
-                        </div>
-                        <label class="col-sm-3 col-form-label">Primer Nombre: *</label>
-                        <div class="col-sm-8">
-                            <input type="text" class="form-control" th:value="${infraestructuraHumana.firstName}" readonly>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-auto">
-                            <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
-                        </div>
-                        <label class="col-sm-3 col-form-label">Segundo Nombre:</label>
-                        <div class="col-sm-8">
-                            <input type="text" class="form-control" th:value="${infraestructuraHumana.secondName}" readonly>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-auto">
-                            <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
-                        </div>
-                        <label class="col-sm-3 col-form-label">Primer Apellido: *</label>
-                        <div class="col-sm-8">
-                            <input type="text" class="form-control" th:value="${infraestructuraHumana.firstSurname}" readonly>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-auto">
-                            <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
-                        </div>
-                        <label class="col-sm-3 col-form-label">Segundo Apellido:</label>
-                        <div class="col-sm-8">
-                            <input type="text" class="form-control" th:value="${infraestructuraHumana.secondSurname}" readonly>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div th:unless="${infraestructuraHumana != null}" class="alert alert-info">
-                No hay información del profesional disponible.
-            </div>
-
-            <div class="table-responsive mt-4">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Acciones</th>
-                            <th>Empresa</th>
-                            <th>Cargo</th>
-                            <th>Nombre del jefe inmediato</th>
-                            <th>Teléfono del jefe inmediato</th>
-                            <th>Fecha de inicio (dd/mm/yyyy)</th>
-                            <th>Fecha de fin (dd/mm/yyyy)</th>
-                            <th>Soporte</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:if="${experienciasLaborales.empty}">
-                            <td colspan="8" class="text-center">No hay datos de experiencia laboral disponibles</td>
-                        </tr>
-                        <tr th:each="experiencia : ${experienciasLaborales}" th:if="${experiencia != null}">
-                            <td>
-                                <input type="checkbox" disabled>
-                            </td>
-                            <td th:text="${experiencia.company}"></td>
-                            <td th:text="${experiencia.charge}"></td>
-                            <td th:text="${experiencia.nameBoss}"></td>
-                            <td th:text="${experiencia.phoneBoss}"></td>
-                            <td th:text="${experiencia.startDate != null ? #dates.format(experiencia.startDate, 'dd/MM/yyyy') : ''}"></td>
-                            <td th:text="${experiencia.endDate != null ? #dates.format(experiencia.endDate, 'dd/MM/yyyy') : ''}"></td>
-                            <td>
-                                <button class="btn btn-link" th:if="${experiencia.supportUpload != null && experiencia.supportUpload}" 
-                                        th:onclick="'downloadWorkExperienceDocument(' + ${experiencia.id} + ')'">
-                                    <i class="fas fa-file-download"></i>
-                                </button>
-                                <button class="btn btn-link" th:if="${experiencia.supportUpload != null && experiencia.supportUpload}" 
-                                        th:onclick="'viewWorkExperienceDocument(' + ${experiencia.id} + ')'">
-                                    <i class="fas fa-eye ms-2"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="d-flex justify-content-between mt-4">
-                <button class="btn btn-secondary" onclick="cambiarTab('idoneidad')">
-                    <i class="fas fa-arrow-left me-2"></i>
-                    Atrás
-                </button>
-                <button class="btn btn-primary" onclick="cambiarTab('operativa')">
-                    Siguiente
-                    <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-                     <!-- Infraestructura Operativa Tab -->
-<!-- Infraestructura Operativa Tab -->
-<div class="tab-pane fade" id="operativa">
-    <div class="progress mb-4">
-        <div class="progress-bar" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body">
-            <form class="form-horizontal">
-                <!-- Soportes con checkboxes y botones de documento -->
-                <div class="row mb-4 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
-                    </div>
-                    <div class="col">
-                        <label class="form-label">* Soporte matrícula de cámara de comercio</label>
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-link" 
-                                th:if="${infraestructuraOperativa != null && infraestructuraOperativa.camaraComercioUploaded}"
-                                th:onclick="'return downloadOperativaDocument(\'camara\', ' + ${infraestructuraOperativa.id} + ', event)'">
-                            <i class="fas fa-file-download"></i>
-                        </button>
-                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.camaraComercioUploaded}"
-                                th:onclick="'viewOperativaDocument(\'camara\', ' + ${infraestructuraOperativa.id} + ')'">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="row mb-4 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
-                    </div>
-                    <div class="col">
-                        <label class="form-label">* Soporte de certificación de Software o Base de Datos</label>
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.softwareCertificationUploaded}"
-                                th:onclick="'downloadOperativaDocument(\'software\', ' + ${infraestructuraOperativa.id} + ')'">
-                            <i class="fas fa-file-download"></i>
-                        </button>
-                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.softwareCertificationUploaded}"
-                                th:onclick="'viewOperativaDocument(\'software\', ' + ${infraestructuraOperativa.id} + ')'">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="row mb-4 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
-                    </div>
-                    <div class="col">
-                        <label class="form-label">* Soporte de certificación de equipos tecnológicos</label>
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.equiposTecnologicosUploaded}"
-                                th:onclick="'downloadOperativaDocument(\'equipos\', ' + ${infraestructuraOperativa.id} + ')'">
-                            <i class="fas fa-file-download"></i>
-                        </button>
-                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.equiposTecnologicosUploaded}"
-                                th:onclick="'viewOperativaDocument(\'equipos\', ' + ${infraestructuraOperativa.id} + ')'">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Campos de información de contacto con checkboxes -->
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
-                    </div>
-                    <div class="col-sm-4">
-                        <label class="col-form-label">Línea telefónica 1: *</label>
-                    </div>
-                    <div class="col">
-                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone1 : ''}" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
-                    </div>
-                    <div class="col-sm-4">
-                        <label class="col-form-label">Línea telefónica 2:</label>
-                    </div>
-                    <div class="col">
-                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone2 : ''}" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
-                    </div>
-                    <div class="col-sm-4">
-                        <label class="col-form-label">Línea telefónica 3:</label>
-                    </div>
-                    <div class="col">
-                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone3 : ''}" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
-                    </div>
-                    <div class="col-sm-4">
-                        <label class="col-form-label">Número del Fax:</label>
-                    </div>
-                    <div class="col">
-                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phoneFax : ''}" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
-                    </div>
-                    <div class="col-sm-4">
-                        <label class="col-form-label">Correo Electrónico: *</label>
-                    </div>
-                    <div class="col">
-                        <input type="email" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.email : ''}" readonly>
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
-                    </div>
-                    <div class="col-sm-4">
-                        <label class="col-form-label">Dirección de oficina de atención al ciudadano: *</label>
-                    </div>
-                    <div class="col">
-                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.addressServiceOffice : ''}" readonly>
-                    </div>
-                </div>
-            </form>
-
-            <div class="d-flex justify-content-between mt-4">
-                <button class="btn btn-secondary" onclick="cambiarTab('infraestructura')">
-                    <i class="fas fa-arrow-left me-2"></i>
-                    Atrás
-                </button>
-                <button class="btn btn-primary" onclick="cambiarTab('firma')">
-                    Siguiente
-                    <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Firma Digitalizada Tab -->
-<div class="tab-pane fade" id="firma">
-    <div class="progress mb-4">
-        <div class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body">
-            <div class="row mb-4 align-items-center">
-                <div class="col-auto">
-                    <input type="checkbox" class="form-check-input" th:checked="${firmaDigitalizada != null ? true : false}">
-                </div>
-                <div class="col">
-                    <h5 class="card-title mb-0">Firma Digitalizada</h5>
-                </div>
-            </div>
-
-            <!-- Mostrar alerta de éxito o error si existen -->
-            <div class="alert alert-success" th:if="${mensaje != null}" th:text="${mensaje}"></div>
-            <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
-
-            
-            <!-- Contenedor de la firma -->
-            <div class="text-center mb-4">
-                <img  th:if="${firmaDigitalizada != null}"
-                th:src="${firmaDigitalizada.imagenUrl}"
-                     alt="Firma Digitalizada" 
-                     class="img-fluid" 
-                     style="max-width: 500px;">
-
-                     <!-- Mensaje si no hay firma -->
-                <p th:if="${firmaDigitalizada == null}" class="text-muted">No hay firma digitalizada disponible</p>
-            </div>
-
-            <!-- Botones de acción -->
-            <div class="d-flex justify-content-between mt-4">
-                <div>
-                    <!-- Mostrar botones según el estado -->
-                    <form th:if="${intermediary.state != null && intermediary.state.state == 6}" method="post" th:action="@{'/intermediary/status/aprobar/' + ${intermediary.id}}" style="display:inline;">
-                        <button type="submit" class="btn btn-success me-2">
-                            Aprobar registro
-                        </button>
-                    </form>
-                    
-                    <form th:if="${intermediary.state != null && intermediary.state.state == 6}" method="post" th:action="@{'/intermediary/status/regresar-funcionario/' + ${intermediary.id}}" style="display:inline;">
-                        <button type="submit" class="btn btn-secondary">
-                            Regresar a funcionario
-                        </button>
-                    </form>
-                    
-                    <!-- Botones para cuando no está revisado -->
-                    <form th:if="${intermediary.state != null && intermediary.state.state != 6}" method="post" th:action="@{'/intermediary/status/enviar-complementar/' + ${intermediary.id}}" style="display:inline;">
-                        <button type="submit" class="btn btn-secondary me-2">
-                            Enviar a Complementar
-                        </button>
-                    </form>
-                    
-                    <form th:if="${intermediary.state != null && intermediary.state.state != 6}" method="post" th:action="@{'/intermediary/status/marcar-revisado/' + ${intermediary.id}}" style="display:inline;">
-                        <button type="submit" class="btn btn-primary">
-                            Marcar como Revisado
-                        </button>
-                    </form>
-                </div>
+                   
                 
-                <button class="btn btn-secondary" onclick="cambiarTab('operativa')">
-                    <i class="fas fa-arrow-left me-2"></i>
-                    Atrás
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+                <div class="tab-pane fade show active" id="general" role="tabpanel">
                     
+                        <div class="progress mb-4">
+                            <div class="progress-bar" role="progressbar" style="width: 20%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Información General</h5>
+                                <div th:if="${isAgente == null or !isAgente}">
+                                <form class="form-horizontal">
+                                    <div class="row mb-3 align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input" checked>
+                                        </div>
+                                        
+                                        <div class="col-sm-3">
+                                            <label class="col-form-label">NIT: *</label>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <input type="text" class="form-control" th:value="${intermediary.companyId?.nit}" readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3 align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input" checked>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <label class="col-form-label">Razón Social: *</label>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <input type="text" class="form-control" th:value="${intermediary.companyId?.name}" readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3 align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input" checked>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <label class="col-form-label">Departamento: *</label>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <select class="form-select" disabled>
+                                                <option th:if="${departamento != null}" 
+                                                        th:selected="true" 
+                                                        th:text="${departamento.name}">DEPARTAMENTO</option>
+                                                <option th:if="${departamento == null}">No especificado</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3 align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input" checked>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <label class="col-form-label">Ciudad: *</label>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <select class="form-select" disabled>
+                                                <option th:if="${ciudad != null}" 
+                                                        th:selected="true" 
+                                                        th:text="${ciudad.name}">CIUDAD</option>
+                                                <option th:if="${ciudad == null}">No especificada</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3 align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input" checked>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <label class="col-form-label">Dirección: *</label>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <input type="text" class="form-control" th:value="${intermediary.companyId?.address}" readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3 align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input" checked>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <label class="col-form-label">Correo electrónico: *</label>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <input type="email" class="form-control" th:value="${intermediary.companyId?.email}" readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3 align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input" checked>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <label class="col-form-label">Teléfono Fijo: *</label>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <input type="text" class="form-control" th:value="${intermediary.companyId?.phone}" readonly>
+                                        </div>
+                                    </div>
+                                    <!-- Modal para observaciones -->
+                                <div class="modal fade" id="observationModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Observaciones</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="form-group">
+                                                    <label id="observationLabel" class="form-label"></label>
+                                                    <textarea class="form-control" id="observationText" rows="3"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                <button type="button" class="btn btn-primary" onclick="saveObservation()">Guardar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </form>
+
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button class="btn btn-primary" onclick="cambiarTab('idoneidad')">
+                                        Siguiente
+                                        <i class="fas fa-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${isAgente != null and isAgente}">
+                        <!-- Contenido para agente -->
+                         <!-- Campos de persona -->
+                        <form class="form-horizontal">
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Tipo de Documento: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <select class="form-select" disabled>
+                                        <option th:if="${intermediary.personId?.documentType != null}" 
+                                                th:selected="true" 
+                                                th:text="${@intermediaryService.getDocumentTypeName(intermediary.personId.documentType)}"</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Número de documento -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Número de Documento: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.documentNumber : ''}" readonly>
+                                </div>
+                            </div>
+                            <!-- Primer nombre -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Primer Nombre: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.firstName : ''}" readonly>
+                                </div>
+                            </div>
+    
+                            <!-- Segundo nombre -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Segundo Nombre:</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.secondName : ''}" readonly>
+                                </div>
+                            </div>
+    
+                            <!-- Primer apellido -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Primer Apellido: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.firstSurname : ''}" readonly>
+                                </div>
+                            </div>
+    
+                            <!-- Segundo apellido -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Segundo Apellido:</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.secondSurname : ''}" readonly>
+                                </div>
+                            </div>
+                            <!-- Departamento -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Departamento: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <select class="form-select" disabled>
+                                        <option th:if="${departamento != null}" 
+                                                th:selected="true" 
+                                                th:text="${departamento.name}">DEPARTAMENTO</option>
+                                        <option th:if="${departamento == null}">No especificado</option>
+                                    </select>
+                                </div>
+                            </div>
+    
+                            <!-- Ciudad -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Ciudad: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <select class="form-select" disabled>
+                                        <option th:if="${ciudad != null}" 
+                                                th:selected="true" 
+                                                th:text="${ciudad.name}">CIUDAD</option>
+                                        <option th:if="${ciudad == null}">No especificada</option>
+                                    </select>
+                                </div>
+                            </div>
+    
+                            <!-- Dirección -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Dirección: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.address : ''}" readonly>
+                                </div>
+                            </div>
+    
+                            <!-- Correo electrónico -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Correo electrónico: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="email" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.email : ''}" readonly>
+                                </div>
+                            </div>
+    
+                            <!-- Teléfono fijo -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Teléfono Fijo: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.phone : ''}" readonly>
+                                </div>
+                            </div>
+    
+                            <!-- Teléfono móvil -->
+                            <div class="row mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" checked>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="col-form-label">Teléfono Móvil: *</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.cellphone : ''}" readonly>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="d-flex justify-content-end mt-4">
+                            <button class="btn btn-primary" onclick="cambiarTab('idoneidad')">
+                                Siguiente
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                 <!-- Información General Tab -->
+
+                    
+                <!-- Idoneidad Profesional Tab -->    
+                <div class="tab-pane fade" id="idoneidad">
+                    <div class="progress mb-4">
+                        <div class="progress-bar" role="progressbar" style="width: 40%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="mb-4">Datos de las personas que ejercen la labor de intermediación concurso de conocimientos específicos sobre el SGRL.</h5>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Acciones</th>
+                                            <th>Tipo Identificación</th>
+                                            <th>No. Identificación</th>
+                                            <th>Primer Nombre</th>
+                                            <th>Segundo Nombre</th>
+                                            <th>Primer Apellido</th>
+                                            <th>Segundo Apellido</th>
+                                            <th>Entidad curso</th>
+                                            <th>Fecha curso</th>
+                                            <th>Soporte</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="idoniedad : ${idoneidadList}" th:if="${idoniedad != null}">
+                                            <td class="text-center">
+                                                <input type="checkbox" class="form-check-input" th:checked="${idoniedad != null ? idoniedad.checked : false}">
+                                            </td>
+                                            <td th:text="${idoniedad.documentType != null ? @intermediaryService.getDocumentTypeName(idoniedad.documentType) : ''}">-</td>
+                                            <td th:text="${idoniedad.documentNumber != null ? idoniedad.documentNumber : ''}">-</td>
+                                            <td th:text="${idoniedad.firstName != null ? idoniedad.firstName : ''}">-</td>
+                                            <td th:text="${idoniedad.secondName != null ? idoniedad.secondName : ''}">-</td>
+                                            <td th:text="${idoniedad.firstSurname != null ? idoniedad.firstSurname : ''}">-</td>
+                                            <td th:text="${idoniedad.secondSurname != null ? idoniedad.secondSurname : ''}">-</td>
+                                            <td th:text="${idoniedad.courseEntity != null ? idoniedad.courseEntity : ''}">-</td>
+                                            <td th:text="${idoniedad.dateCourse != null ? #dates.format(idoniedad.dateCourse, 'dd/MM/yyyy') : ''}">-</td>
+                                            <!--td class="text-center">
+                                                <button class="btn btn-link text-primary" 
+                                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
+                                                        th:onclick="'downloadDocument(' + ${idoniedad.id} + ')'">
+                                                    <i class="fas fa-file-download"></i>
+                                                </button>
+                                                <button class="btn btn-link text-primary" 
+                                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
+                                                        th:onclick="'viewDocument(' + ${idoniedad.id} + ')'">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td-->
+                                            <td class="text-center">
+                                                <!-- Debug info - remover después -->
+                                            <small class="text-muted" th:text="${'Support: ' + idoniedad.supportUpload}"></small>
+                                                <!-- Botón de descarga -->
+                                                <button class="btn btn-link text-primary" 
+                                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
+                                                        th:onclick="'downloadDocument(' + ${idoniedad.id} + ')'">
+                                                    <i class="fas fa-file-download"></i>
+                                                </button>
+                                                
+                                                <!-- Botón para ver en nueva pestaña -->
+                                                <button class="btn btn-link text-primary" 
+                                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
+                                                        th:onclick="'openDocument(' + ${idoniedad.id} + ')'">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button class="btn btn-secondary" onclick="cambiarTab('general')">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Atrás
+                                </button>
+                                <button class="btn btn-primary" onclick="cambiarTab('infraestructura')">
+                                    Siguiente
+                                    <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Idoneidad Profesional Tab -->
+                    
+                <!-- Infraestructura Humana Tab -->     
+                <div class="tab-pane fade" id="infraestructura">
+                    <div class="progress mb-4">
+                        <div class="progress-bar" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Infraestructura Humana</h5>
+                            
+                            <div th:if="${isAgente == null or !isAgente}">
+                                <div th:if="${infraestructuraHumana != null}">
+                                    <form class="form-horizontal">
+                                        <!-- Datos del profesional -->
+                                        <div class="row mb-3">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
+                                            </div>
+                                            <label class="col-sm-3 col-form-label">Tipo de Documento: *</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.documentType != null ? @intermediaryService.getDocumentTypeName(infraestructuraHumana.documentType) : ''}" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
+                                            </div>
+                                            <label class="col-sm-3 col-form-label">Número de Documento: *</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.documentNumber}" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
+                                            </div>
+                                            <label class="col-sm-3 col-form-label">Primer Nombre: *</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.firstName}" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
+                                            </div>
+                                            <label class="col-sm-3 col-form-label">Segundo Nombre:</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.secondName}" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
+                                            </div>
+                                            <label class="col-sm-3 col-form-label">Primer Apellido: *</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.firstSurname}" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input" th:checked="${infraestructuraHumana.checked != null ? infraestructuraHumana.checked : false}">
+                                            </div>
+                                            <label class="col-sm-3 col-form-label">Segundo Apellido:</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.secondSurname}" readonly>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Para intermediarios tipo Agente (no mostrar información de abogado) -->
+                            <div th:unless="${infraestructuraHumana != null}" class="alert alert-info">
+                                No hay información del profesional disponible.
+                            </div>
+
+                            <div class="table-responsive mt-4">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Acciones</th>
+                                            <th>Empresa</th>
+                                            <th>Cargo</th>
+                                            <th>Nombre del jefe inmediato</th>
+                                            <th>Teléfono del jefe inmediato</th>
+                                            <th>Fecha de inicio (dd/mm/yyyy)</th>
+                                            <th>Fecha de fin (dd/mm/yyyy)</th>
+                                            <th>Soporte</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${experienciasLaborales.empty}">
+                                            <td colspan="8" class="text-center">No hay datos de experiencia laboral disponibles</td>
+                                        </tr>
+                                        <tr th:each="experiencia : ${experienciasLaborales}" th:if="${experiencia != null}">
+                                            <td>
+                                                <input type="checkbox" disabled>
+                                            </td>
+                                            <td th:text="${experiencia.company}"></td>
+                                            <td th:text="${experiencia.charge}"></td>
+                                            <td th:text="${experiencia.nameBoss}"></td>
+                                            <td th:text="${experiencia.phoneBoss}"></td>
+                                            <td th:text="${experiencia.startDate != null ? #dates.format(experiencia.startDate, 'dd/MM/yyyy') : ''}"></td>
+                                            <td th:text="${experiencia.endDate != null ? #dates.format(experiencia.endDate, 'dd/MM/yyyy') : ''}"></td>
+                                            <td>
+                                                <!-- Importante: asegurémonos de que los botones siempre se muestren, independientemente del tipo de intermediario -->
+                                                <button class="btn btn-link" 
+                                                        th:if="${experiencia.supportUpload != null && experiencia.supportUpload}" 
+                                                        th:onclick="'downloadWorkExperienceDocument(' + ${experiencia.id} + ')'">
+                                                    <i class="fas fa-file-download"></i>
+                                                </button>
+                                                <button class="btn btn-link" 
+                                                        th:if="${experiencia.supportUpload != null && experiencia.supportUpload}" 
+                                                        th:onclick="'viewWorkExperienceDocument(' + ${experiencia.id} + ')'">
+                                                    <i class="fas fa-eye ms-2"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button class="btn btn-secondary" onclick="cambiarTab('idoneidad')">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Atrás
+                                </button>
+                                <button class="btn btn-primary" onclick="cambiarTab('operativa')">
+                                    Siguiente
+                                    <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Infraestructura Humana Tab -->
+                     
+                <!-- Infraestructura Operativa Tab -->
+                <div class="tab-pane fade" id="operativa">
+                    <div class="progress mb-4">
+                        <div class="progress-bar" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Infraestructura Operativa</h5>
+                            <form class="form-horizontal">
+                                <!-- Soportes con checkboxes y botones de documento -->
+                                <div class="row mb-4 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                    </div>
+                                    <div class="col">
+                                        <label class="form-label">* Soporte matrícula de cámara de comercio</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-link" 
+                                                th:if="${infraestructuraOperativa != null && infraestructuraOperativa.camaraComercioUploaded}"
+                                                th:onclick="'return downloadOperativaDocument(\'camara\', ' + ${infraestructuraOperativa.id} + ', event)'">
+                                            <i class="fas fa-file-download"></i>
+                                        </button>
+                                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.camaraComercioUploaded}"
+                                                th:onclick="'viewOperativaDocument(\'camara\', ' + ${infraestructuraOperativa.id} + ')'">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                    </div>
+                                    <div class="col">
+                                        <label class="form-label">* Soporte de certificación de Software o Base de Datos</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.softwareCertificationUploaded}"
+                                                th:onclick="'downloadOperativaDocument(\'software\', ' + ${infraestructuraOperativa.id} + ')'">
+                                            <i class="fas fa-file-download"></i>
+                                        </button>
+                                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.softwareCertificationUploaded}"
+                                                th:onclick="'viewOperativaDocument(\'software\', ' + ${infraestructuraOperativa.id} + ')'">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                    </div>
+                                    <div class="col">
+                                        <label class="form-label">* Soporte de certificación de equipos tecnológicos</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.equiposTecnologicosUploaded}"
+                                                th:onclick="'downloadOperativaDocument(\'equipos\', ' + ${infraestructuraOperativa.id} + ')'">
+                                            <i class="fas fa-file-download"></i>
+                                        </button>
+                                        <button class="btn btn-link" th:if="${infraestructuraOperativa != null && infraestructuraOperativa.equiposTecnologicosUploaded}"
+                                                th:onclick="'viewOperativaDocument(\'equipos\', ' + ${infraestructuraOperativa.id} + ')'">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Campos de información de contacto con checkboxes -->
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="col-form-label">Línea telefónica 1: *</label>
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone1 : ''}" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="col-form-label">Línea telefónica 2:</label>
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone2 : ''}" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="col-form-label">Línea telefónica 3:</label>
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone3 : ''}" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="col-form-label">Número del Fax:</label>
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phoneFax : ''}" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="col-form-label">Correo Electrónico: *</label>
+                                    </div>
+                                    <div class="col">
+                                        <input type="email" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.email : ''}" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="col-form-label">Dirección de oficina de atención al ciudadano: *</label>
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.addressServiceOffice : ''}" readonly>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button class="btn btn-secondary" onclick="cambiarTab('infraestructura')">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Atrás
+                                </button>
+                                <button class="btn btn-primary" onclick="cambiarTab('firma')">
+                                    Siguiente
+                                    <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Infraestructura Operativa Tab -->
+                <!-- Firma Digitalizada Tab -->
+                <div class="tab-pane fade" id="firma">
+                    <div class="progress mb-4">
+                        <div class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row mb-4 align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input" th:checked="${firmaDigitalizada != null ? true : false}">
+                                </div>
+                                <div class="col">
+                                    <h5 class="card-title mb-0">Firma Digitalizada</h5>
+                                </div>
+                            </div>
+
+                            <!-- Mostrar alerta de éxito o error si existen -->
+                            <div class="alert alert-success" th:if="${mensaje != null}" th:text="${mensaje}"></div>
+                            <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
+
+                            
+                            <!-- Contenedor de la firma -->
+                            <div class="text-center mb-4">
+                                <img  th:if="${firmaDigitalizada != null}"
+                                th:src="${firmaDigitalizada.imagenUrl}"
+                                    alt="Firma Digitalizada" 
+                                    class="img-fluid" 
+                                    style="max-width: 500px;">
+
+                                    <!-- Mensaje si no hay firma -->
+                                <p th:if="${firmaDigitalizada == null}" class="text-muted">No hay firma digitalizada disponible</p>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="d-flex justify-content-between mt-4">
+                                <div>
+                                    <!-- Mostrar botones según el estado -->
+                                    <form th:if="${intermediary.state != null && intermediary.state.state == 6}" method="post" th:action="@{'/intermediary/status/aprobar/' + ${intermediary.id}}" style="display:inline;">
+                                        <button type="submit" class="btn btn-success me-2">
+                                            Aprobar registro
+                                        </button>
+                                    </form>
+                                    
+                                    <form th:if="${intermediary.state != null && intermediary.state.state == 6}" method="post" th:action="@{'/intermediary/status/regresar-funcionario/' + ${intermediary.id}}" style="display:inline;">
+                                        <button type="submit" class="btn btn-secondary">
+                                            Regresar a funcionario
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Botones para cuando no está revisado -->
+                                    <form th:if="${intermediary.state != null && intermediary.state.state != 6}" method="post" th:action="@{'/intermediary/status/enviar-complementar/' + ${intermediary.id}}" style="display:inline;">
+                                        <button type="submit" class="btn btn-secondary me-2">
+                                            Enviar a Complementar
+                                        </button>
+                                    </form>
+                                    
+                                    <form th:if="${intermediary.state != null && intermediary.state.state != 6}" method="post" th:action="@{'/intermediary/status/marcar-revisado/' + ${intermediary.id}}" style="display:inline;">
+                                        <button type="submit" class="btn btn-primary">
+                                            Marcar como Revisado
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <button class="btn btn-secondary" onclick="cambiarTab('operativa')">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Atrás
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Firma Digitalizada Tab -->
 
                     <!-- Continuar con los demás tabs... -->
                 </div>
@@ -890,6 +1105,76 @@
                 // Importante: evitar que el evento siga propagándose
                 return false;
             }
+        </script>
+        <script>
+            //funciones para de agregar/eliminar/editar observaciones
+            let currentField = '';
+
+function createObservation(field) {
+    fetch(`/api/observations/create/${field}`, {
+        method: 'POST'
+    }).then(response => {
+        if (response.ok) {
+            // Actualizar UI
+            updateFieldStatus(field, true);
+        }
+    });
+}
+
+function removeObservation(field) {
+    fetch(`/api/observations/remove/${field}`, {
+        method: 'POST'
+    }).then(response => {
+        if (response.ok) {
+            // Actualizar UI
+            updateFieldStatus(field, false);
+        }
+    });
+}
+
+function showObservationDialog(field) {
+    currentField = field;
+    const modal = new bootstrap.Modal(document.getElementById('observationModal'));
+    // Cargar observación existente si hay
+    fetch(`/api/observations/${field}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('observationText').value = data.observation || '';
+            document.getElementById('observationLabel').textContent = 
+                `Observación sobre ${getFieldLabel(field)}`;
+            modal.show();
+        });
+}
+
+function saveObservation() {
+    const observation = document.getElementById('observationText').value;
+    fetch(`/api/observations/save`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            field: currentField,
+            observation: observation
+        })
+    }).then(response => {
+        if (response.ok) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('observationModal'));
+            modal.hide();
+            // Actualizar UI según sea necesario
+        }
+    });
+}
+
+function getFieldLabel(field) {
+    const labels = {
+        'nit': 'NIT',
+        'business_name': 'Razón Social',
+        'department_id': 'Departamento',
+        // ... más campos
+    };
+    return labels[field] || field;
+}
         </script>
 </body>
 </html>

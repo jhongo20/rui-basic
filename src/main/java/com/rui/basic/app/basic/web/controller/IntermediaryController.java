@@ -17,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -37,6 +38,11 @@ import com.rui.basic.app.basic.web.dto.FirmaDigitalizadaDTO;
 import com.rui.basic.app.basic.web.dto.IdoneidadProfesionalDTO;
 import com.rui.basic.app.basic.web.dto.InfraestructuraOperativaDTO;
 import com.rui.basic.app.basic.web.dto.InfrastructuraHumanaDTO;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import com.rui.basic.app.basic.domain.entities.RuiCity;
+import com.rui.basic.app.basic.domain.entities.RuiDepartment;
 import com.rui.basic.app.basic.domain.entities.RuiIntermediary;
 import com.rui.basic.app.basic.domain.enums.IntermediaryState;
 
@@ -134,103 +140,115 @@ public class IntermediaryController {
     @GetMapping("/review/{id}")
     public String showReview(@PathVariable Long id, Model model) {
         try {
-            // Obtener el intermediario
             RuiIntermediary intermediary = intermediaryService.findById(id);
             
-            if (intermediary == null) {
-                return "redirect:/error";
-            }
-            
-            // Obtener la idoneidad profesional más reciente
-            List<IdoneidadProfesionalDTO> idoneidadList = idoneidadService.findMostRecentByIntermediary(id);
-            
-            // Modelo por defecto
+            // Cargar datos principales
             model.addAttribute("intermediary", intermediary);
-            model.addAttribute("idoneidadList", idoneidadList);
 
-            // Obtener datos de departamento y ciudad si es una empresa
-        if (intermediary.getCompanyId() != null) {
-            Long departmentId = intermediary.getCompanyId().getDepartmentId() != null ? 
-                                intermediary.getCompanyId().getDepartmentId().getId() : null;
-            Long cityId = intermediary.getCompanyId().getCityId() != null ? 
-                          intermediary.getCompanyId().getCityId().getId() : null;
-            
-            if (departmentId != null) {
-                ubicacionService.getDepartmentById(departmentId).ifPresent(dept -> 
-                    model.addAttribute("departamento", dept));
-            }
-            
-            if (cityId != null) {
-                ubicacionService.getCityById(cityId).ifPresent(city -> 
-                    model.addAttribute("ciudad", city));
-            }
-        } else if (intermediary.getPersonId() != null) {
-            // Para personas
-            Long departmentId = intermediary.getPersonId().getDepartmentId() != null ? 
-                                intermediary.getPersonId().getDepartmentId().getId() : null;
-            Long cityId = intermediary.getPersonId().getCityId() != null ? 
-                          intermediary.getPersonId().getCityId().getId() : null;
-            
-            if (departmentId != null) {
-                ubicacionService.getDepartmentById(departmentId).ifPresent(dept -> 
-                    model.addAttribute("departamento", dept));
-            }
-            
-            if (cityId != null) {
-                ubicacionService.getCityById(cityId).ifPresent(city -> 
-                    model.addAttribute("ciudad", city));
-            }
-        }
-            
-            try {
-                // Intentar obtener información de infraestructura humana
-                InfrastructuraHumanaDTO infraestructuraHumana = infraestructuraHumanaService.findByIntermediary(id);
-                model.addAttribute("infraestructuraHumana", infraestructuraHumana);
-                
-                if (infraestructuraHumana != null && infraestructuraHumana.getId() != null) {
-                    try {
-                        // Intentar obtener experiencias laborales
-                        List<ExperienciaLaboralDTO> experienciasLaborales = 
-                            infraestructuraHumanaService.findWorkExperienceByInfraHuman(infraestructuraHumana.getId());
-                        model.addAttribute("experienciasLaborales", experienciasLaborales);
-                    } catch (Exception e) {
-                        log.warn("Error al cargar experiencias laborales: {}", e.getMessage());
-                        model.addAttribute("experienciasLaborales", new ArrayList<>());
-                    }
-                } else {
-                    model.addAttribute("experienciasLaborales", new ArrayList<>());
-                }
-            } catch (Exception e) {
-                log.warn("Error al cargar infraestructura humana: {}", e.getMessage());
-                model.addAttribute("infraestructuraHumana", null);
-                model.addAttribute("experienciasLaborales", new ArrayList<>());
-            }
-            
-            try {
-                // Intentar obtener información de infraestructura operativa
-                InfraestructuraOperativaDTO infraestructuraOperativa = infraestructuraOperativaService.findByIntermediary(id);
-                model.addAttribute("infraestructuraOperativa", infraestructuraOperativa);
-            } catch (Exception e) {
-                log.warn("Error al cargar infraestructura operativa: {}", e.getMessage());
-                model.addAttribute("infraestructuraOperativa", null);
-            }
+            // Determinar tipo de intermediario
+        boolean isAgente = intermediary.getTypeIntermediarieId() != null && 
+        intermediary.getTypeIntermediarieId().getId() == 4L;
+        model.addAttribute("isAgente", isAgente);
 
-            try {
-                // Intentar obtener información de firma digitalizada
-                FirmaDigitalizadaDTO firmaDigitalizada = firmaDigitalizadaService.findByIntermediary(id);
-                model.addAttribute("firmaDigitalizada", firmaDigitalizada);
-            } catch (Exception e) {
-                log.warn("Error al cargar firma digitalizada: {}", e.getMessage());
-                model.addAttribute("firmaDigitalizada", null);
-            }
+            model.addAttribute("idoneidadList", idoneidadService.findMostRecentByIntermediary(id));
             
-            // Añadir estado actual para mostrar botones apropiados
-            model.addAttribute("estadoRevisado", intermediary.getState() == IntermediaryState.REVIEWED);
+            // Cargar ubicación
+            loadLocationData(intermediary, model);
+            
+            // Cargar infraestructuras y firma
+            loadInfrastructuraHumana(id, model);
+            loadInfrastructuraOperativa(id, model);
+            loadFirmaDigitalizada(id, model);
+            
+            // Estado de revisión
+            model.addAttribute("estadoRevisado", 
+                intermediary.getState() == IntermediaryState.REVIEWED);
             
             return "intermediary/review";
+            
+        } catch (EntityNotFoundException e) {
+            log.error("Intermediario no encontrado: {}", id);
+            return "redirect:/error";
         } catch (Exception e) {
             log.error("Error al cargar la revisión del intermediario: {}", e.getMessage(), e);
             return "redirect:/error";
+        }
+    }
+
+    private void loadLocationData(RuiIntermediary intermediary, Model model) {
+        Long departmentId = null;
+        Long cityId = null;
+
+        if (intermediary.getCompanyId() != null) {
+            departmentId = Optional.ofNullable(intermediary.getCompanyId().getDepartmentId())
+                                 .map(RuiDepartment::getId)
+                                 .orElse(null);
+            cityId = Optional.ofNullable(intermediary.getCompanyId().getCityId())
+                           .map(RuiCity::getId)
+                           .orElse(null);
+        } else if (intermediary.getPersonId() != null) {
+            departmentId = Optional.ofNullable(intermediary.getPersonId().getDepartmentId())
+                                 .map(RuiDepartment::getId)
+                                 .orElse(null);
+            cityId = Optional.ofNullable(intermediary.getPersonId().getCityId())
+                           .map(RuiCity::getId)
+                           .orElse(null);
+        }
+
+        if (departmentId != null) {
+            ubicacionService.getDepartmentById(departmentId)
+                .ifPresent(dept -> model.addAttribute("departamento", dept));
+        }
+        
+        if (cityId != null) {
+            ubicacionService.getCityById(cityId)
+                .ifPresent(city -> model.addAttribute("ciudad", city));
+        }
+    }
+
+    private void loadInfrastructuraHumana(Long id, Model model) {
+        try {
+            InfrastructuraHumanaDTO infraestructuraHumana = 
+                infraestructuraHumanaService.findByIntermediary(id);
+            model.addAttribute("infraestructuraHumana", infraestructuraHumana);
+
+            /*
+              List<ExperienciaLaboralDTO> experiencias = 
+                infraestructuraHumanaService.findWorkExperienceByIntermediary(id);
+            model.addAttribute("experienciasLaborales", experiencias);
+             */
+            if (infraestructuraHumana != null && infraestructuraHumana.getId() != null) {
+                List<ExperienciaLaboralDTO> experiencias = 
+                    infraestructuraHumanaService.findWorkExperienceByInfraHuman(
+                        infraestructuraHumana.getId());
+                model.addAttribute("experienciasLaborales", experiencias);
+            } else {
+                model.addAttribute("experienciasLaborales", new ArrayList<>());
+            }
+        } catch (Exception e) {
+            log.warn("Error al cargar infraestructura humana: {}", e.getMessage());
+            model.addAttribute("infraestructuraHumana", null);
+            model.addAttribute("experienciasLaborales", new ArrayList<>());
+        }
+    }
+
+    private void loadInfrastructuraOperativa(Long id, Model model) {
+        try {
+            model.addAttribute("infraestructuraOperativa", 
+                infraestructuraOperativaService.findByIntermediary(id));
+        } catch (Exception e) {
+            log.warn("Error al cargar infraestructura operativa: {}", e.getMessage());
+            model.addAttribute("infraestructuraOperativa", null);
+        }
+    }
+
+    private void loadFirmaDigitalizada(Long id, Model model) {
+        try {
+            model.addAttribute("firmaDigitalizada", 
+                firmaDigitalizadaService.findByIntermediary(id));
+        } catch (Exception e) {
+            log.warn("Error al cargar firma digitalizada: {}", e.getMessage());
+            model.addAttribute("firmaDigitalizada", null);
         }
     }
 

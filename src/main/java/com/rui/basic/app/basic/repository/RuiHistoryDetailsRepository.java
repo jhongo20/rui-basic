@@ -29,4 +29,13 @@ public interface RuiHistoryDetailsRepository extends JpaRepository<RuiHistoryDet
        "WHERE h.intermediaryId.id = :intermediaryId " +
        "ORDER BY h.datetime DESC")
     List<IntermediaryHistoryDTO> findLastHistoryByIntermediaryId(@Param("intermediaryId") Long intermediaryId);
+    //---
+    @Query(value = """
+        SELECT hd.* 
+        FROM RUI_HISTORY_DETAILS hd
+        INNER JOIN RUI_INTERMEDIARY_HISTORY h ON hd.INTERMEDIARY_HISTORY_ID = h.ID
+        WHERE h.INTERMEDIARY_ID = :intermediaryId
+    """, nativeQuery = true)
+    List<RuiHistoryDetails> findByIntermediaryId(@Param("intermediaryId") Long intermediaryId);
+
 }

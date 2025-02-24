@@ -121,39 +121,65 @@ public class InfraestructuraHumanaService {
     }
     
     private ExperienciaLaboralDTO convertToWorkExperienceDTO(RuiWorkExperience workExperience) {
-    if (workExperience == null) {
-        return null;
+        if (workExperience == null) {
+            return null;
+        }
+        
+        log.debug("Convirtiendo experiencia laboral a DTO - ID: {}", workExperience.getId());
+        
+        ExperienciaLaboralDTO dto = new ExperienciaLaboralDTO();
+        dto.setId(workExperience.getId());
+        dto.setCompany(workExperience.getCompany());
+        dto.setCharge(workExperience.getCharge());
+        dto.setNameBoss(workExperience.getNameBoss());
+        dto.setPhoneBoss(workExperience.getPhoneBoss());
+        dto.setStartDate(workExperience.getStartDate());
+        dto.setEndDate(workExperience.getEndDate());
+        dto.setStatus(workExperience.getStatus());
+        
+        // Verificar soporte (único)
+        Optional<RuiSupport> supportOpt = ruiSupportRepository.findFirstByWorkExperienceId(workExperience);
+        
+        dto.setSupportUpload(supportOpt.isPresent());
+        
+        if (supportOpt.isPresent()) {
+            RuiSupport support = supportOpt.get();
+            log.debug("Soporte encontrado - ID: {}, Filename: {}", 
+                support.getId(), 
+                support.getFilename());
+        } else {
+            log.debug("No se encontró soporte para la experiencia laboral ID: {}", 
+                workExperience.getId());
+        }
+        
+        dto.setChecked(true);
+        return dto;
     }
-    
-    log.debug("Convirtiendo experiencia laboral a DTO - ID: {}", workExperience.getId());
-    
-    ExperienciaLaboralDTO dto = new ExperienciaLaboralDTO();
-    dto.setId(workExperience.getId());
-    dto.setCompany(workExperience.getCompany());
-    dto.setCharge(workExperience.getCharge());
-    dto.setNameBoss(workExperience.getNameBoss());
-    dto.setPhoneBoss(workExperience.getPhoneBoss());
-    dto.setStartDate(workExperience.getStartDate());
-    dto.setEndDate(workExperience.getEndDate());
-    dto.setStatus(workExperience.getStatus());
-    
-    // Verificar soporte (único)
-    Optional<RuiSupport> supportOpt = ruiSupportRepository.findFirstByWorkExperienceId(workExperience);
-    
-    dto.setSupportUpload(supportOpt.isPresent());
-    
-    if (supportOpt.isPresent()) {
-        RuiSupport support = supportOpt.get();
-        log.debug("Soporte encontrado - ID: {}, Filename: {}", 
-            support.getId(), 
-            support.getFilename());
-    } else {
-        log.debug("No se encontró soporte para la experiencia laboral ID: {}", 
-            workExperience.getId());
+
+    public List<ExperienciaLaboralDTO> findWorkExperienceByIntermediary(Long intermediaryId) {
+        log.info("Buscando experiencias laborales para intermediario ID: {}", intermediaryId);
+        
+        try {
+            // Usar el método del repositorio que modificamos para usar 'intermediary' en lugar de 'intermediaryId'
+            List<RuiWorkExperience> experiences = workExperienceRepository
+                .findByInfraHumanId_Intermediary_Id(intermediaryId);
+            
+            if (experiences.isEmpty()) {
+                log.info("No se encontraron experiencias laborales para el intermediario ID: {}", intermediaryId);
+                return new ArrayList<>();
+            }
+            
+            return experiences.stream()
+                    .map(this::convertToWorkExperienceDTO)
+                    .collect(Collectors.toList());
+            
+        } catch (Exception e) {
+            log.error("Error al buscar experiencias laborales para intermediario ID: {} - Error: {}", 
+                intermediaryId, e.getMessage(), e);
+            return new ArrayList<>();
+        }
     }
-    
-    dto.setChecked(true);
-    return dto;
-}
+
+
     
 }

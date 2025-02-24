@@ -22,4 +22,10 @@ public interface RuiWorkExperienceRepository extends JpaRepository<RuiWorkExperi
     List<RuiWorkExperience> findByInfraHumanIdAndStatus(
         @Param("infraHumanId") Long infraHumanId, 
         @Param("status") Short status);
+
+        @Query("SELECT w FROM RuiWorkExperience w " +
+        "WHERE w.infraHumanId.intermediary.id = :intermediaryId " +
+        "AND w.status = 1")
+    List<RuiWorkExperience> findByInfraHumanId_Intermediary_Id(@Param("intermediaryId") Long intermediaryId);
+       
 }
