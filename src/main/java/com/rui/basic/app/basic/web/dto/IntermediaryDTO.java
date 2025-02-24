@@ -32,6 +32,7 @@ public class IntermediaryDTO implements Serializable {
     private List<AssignmentDTO> assignments;
     private List<HistoryDTO> history;
     private String departmentName;
+    
 
     // Constructor que coincide con la consulta JPQL
     public IntermediaryDTO(Long id, String radicateNumber, IntermediaryState state, 

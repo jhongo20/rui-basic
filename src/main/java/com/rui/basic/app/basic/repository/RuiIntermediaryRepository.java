@@ -71,16 +71,42 @@ public interface RuiIntermediaryRepository extends JpaRepository<RuiIntermediary
     "OR LOWER(COALESCE(t.value, '')) LIKE LOWER(CONCAT('%', :search, '%'))")
        Page<RuiIntermediary> findBySearchTerm(@Param("search") String search, Pageable pageable);
     
-       @Query("SELECT i FROM RuiIntermediary i " +
-       "LEFT JOIN FETCH i.companyId c " +
-       "LEFT JOIN FETCH c.departmentId d " +
-       "LEFT JOIN FETCH i.personId p " +
-       "LEFT JOIN FETCH i.typeIntermediarieId " +
-       "LEFT JOIN FETCH p.documentType dt " +
-       "LEFT JOIN FETCH i.ruiIntermediaryHistoryList h " +  // Historial
-       "LEFT JOIN FETCH h.functionaryId f ")  // Funcionario del historial
-       Page<RuiIntermediary> findAllWithRelations(Pageable pageable);
+       // En RuiIntermediaryRepository
+       // En RuiIntermediaryRepository
+@Query(value = """
+       WITH latest_assignments AS (
+           SELECT 
+               a.INTERMEDIARY_ID,
+               MAX(a.ID) as max_id,
+               MAX(h.DATETIME) as last_update
+           FROM RUI_ASSIGNMENTS a
+           INNER JOIN RUI_INTERMEDIARY_HISTORY h 
+               ON a.INTERMEDIARY_ID = h.INTERMEDIARY_ID
+           GROUP BY a.INTERMEDIARY_ID
+       )
+       SELECT i.*
+       FROM RUI_INTERMEDIARIES i
+       LEFT JOIN latest_assignments la ON i.ID = la.INTERMEDIARY_ID
+       LEFT JOIN RUI_USERS u ON u.ID = (
+           SELECT USER_ID 
+           FROM RUI_ASSIGNMENTS 
+           WHERE ID = la.max_id
+       )
+       WHERE i.STATE IN (2, 3, 4, 7)
+       AND i.RADICATE_NUMBER IS NOT NULL
+       ORDER BY 
+           la.last_update DESC NULLS LAST,
+           i.RADICATE_NUMBER DESC,
+           i.ID DESC
+   """, countQuery = """
+       SELECT COUNT(i.ID)
+       FROM RUI_INTERMEDIARIES i
+       WHERE i.STATE IN (2, 3, 4, 7)
+       AND i.RADICATE_NUMBER IS NOT NULL
+   """, nativeQuery = true)
+   Page<RuiIntermediary> findAllWithDetails(Pageable pageable);
 
        @Query(value = "SELECT id, state FROM RUI_INTERMEDIARIES", nativeQuery = true)
        List<Object[]> findAllStatesDirectly();
+       
 }

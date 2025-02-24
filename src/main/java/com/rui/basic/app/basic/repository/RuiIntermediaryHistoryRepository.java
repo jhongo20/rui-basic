@@ -14,12 +14,17 @@ public interface RuiIntermediaryHistoryRepository extends JpaRepository<RuiInter
     RuiIntermediaryHistory findByIntermediaryId(RuiIntermediary intermediary);
     
     //List<RuiIntermediaryHistory> findByIntermediaryIdOrderByDatetimeDesc(RuiIntermediary intermediary);
-    @Query(value = "SELECT U.USERNAME " +
-       "FROM RUI_USERS U " +
-       "JOIN RUI_INTERMEDIARY_HISTORY H ON U.ID = H.FUNCTIONARY_ID " +
-       "JOIN RUI_INTERMEDIARIES I ON H.INTERMEDIARY_ID = I.ID " +
-       "WHERE I.ID = :intermediaryId",
-       nativeQuery = true)
+    @Query(value = """
+    SELECT u.USERNAME
+    FROM RUI_USERS u
+    INNER JOIN RUI_ASSIGNMENTS a ON u.ID = a.USER_ID
+    WHERE a.ID = (
+        SELECT MAX(a2.ID)
+        FROM RUI_ASSIGNMENTS a2
+        WHERE a2.INTERMEDIARY_ID = :intermediaryId
+    )
+    AND u.STATUS = 1
+    """, nativeQuery = true)
 String findFunctionaryUsername(@Param("intermediaryId") Long intermediaryId);
 
 }

@@ -105,7 +105,15 @@
                                     <td th:text="${intermediary.companyId?.phone}"></td>
                                     <!-- Nueva celda para el departamento -->
                                     <td th:text="${intermediary.companyId?.departmentId?.name}"></td>
-                                    <td th:text="${@intermediaryService.getLastFunctionaryUsername(intermediary.id)}"></td>
+                                    <td>
+                                        <!-- Cache el resultado para evitar múltiples llamadas al servicio -->
+                                        <th:block th:with="funcionario=${@intermediaryService.getLastFunctionaryUsername(intermediary.id)}">
+                                            <span th:text="${funcionario}"
+                                                  th:class="${funcionario == 'No asignado' ? 'text-muted' : ''}"
+                                                  th:title="${funcionario == 'No asignado' ? 'Sin funcionario asignado' : 'Funcionario asignado'}">
+                                            </span>
+                                        </th:block>
+                                    </td>
                                     <td>
                                         <span th:class="${'badge ' + @intermediaryService.getStateColorClass(intermediary.state)}"
                                               th:text="${intermediary.state != null ? intermediary.state.name : ''}">

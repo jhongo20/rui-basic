@@ -3,7 +3,6 @@ package com.rui.basic.app.basic.service;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -346,8 +345,7 @@ private RuiSupportRepository supportRepository;
     /**
      * Encuentra todos los intermediarios
      * @return Lista de intermediarios
-     */
-    public Page<RuiIntermediary> findAll(int page, int size, String sortField, String sortDirection) {
+     * public Page<RuiIntermediary> findAll(int page, int size, String sortField, String sortDirection) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
         Pageable pageable = PageRequest.of(page, size, sort);
         
@@ -374,11 +372,39 @@ private RuiSupportRepository supportRepository;
         
         return results;
     }
+     */
+    public Page<RuiIntermediary> findAll(int page, int size, String sortField, String sortDirection) {
+        try {
+            Sort sort;
+            if (sortField != null && !sortField.isEmpty()) {
+                // Si se proporciona un campo de ordenamiento, lo usamos
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+            } else {
+                // Ordenamiento por defecto: último registro primero
+                sort = Sort.by(
+                    Sort.Order.desc("lastUpdate"),  // Primero por fecha de actualización
+                    Sort.Order.desc("radicateNumber") // Luego por número de radicado
+                );
+            }
+            
+            Pageable pageable = PageRequest.of(page, size, sort);
+            return intermediaryRepository.findAllWithDetails(pageable);
+            
+        } catch (Exception e) {
+            log.error("Error obteniendo lista de intermediarios: {}", e.getMessage());
+            throw new BusinessException("Error obteniendo lista de intermediarios", e);
+        }
+    }
     
+    // Método de búsqueda mejorado
     public Page<RuiIntermediary> search(String term, int page, int size, String sort, String direction) {
         try {
             Sort.Direction sortDirection = Sort.Direction.fromString(direction);
             Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+            
+            if (term == null || term.trim().isEmpty()) {
+                return findAll(page, size, sort, direction);
+            }
             
             return intermediaryRepository.findBySearchTerm(term.trim(), pageable);
         } catch (Exception e) {
@@ -423,9 +449,16 @@ private RuiSupportRepository supportRepository;
     // En IntermediaryService
     public String getLastFunctionaryUsername(Long intermediaryId) {
         try {
-            return intermediaryHistoryRepository.findFunctionaryUsername(intermediaryId);
+            if (intermediaryId == null) {
+                return "No asignado";
+            }
+            
+            String username = intermediaryHistoryRepository.findFunctionaryUsername(intermediaryId);
+            return username != null ? username : "No asignado";
+            
         } catch (Exception e) {
-            return "";
+            log.error("Error obteniendo username del funcionario para intermediario {}: {}", intermediaryId, e.getMessage());
+            return "No asignado";
         }
     }
 
