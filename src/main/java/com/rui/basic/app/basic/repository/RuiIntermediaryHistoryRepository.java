@@ -1,6 +1,8 @@
 package com.rui.basic.app.basic.repository;
 
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,6 +27,9 @@ public interface RuiIntermediaryHistoryRepository extends JpaRepository<RuiInter
     )
     AND u.STATUS = 1
     """, nativeQuery = true)
-String findFunctionaryUsername(@Param("intermediaryId") Long intermediaryId);
+    String findFunctionaryUsername(@Param("intermediaryId") Long intermediaryId);
+
+    @Query("SELECT h FROM RuiIntermediaryHistory h WHERE h.intermediaryId.id = :intermediaryId AND h.status = 1")
+    Optional<RuiIntermediaryHistory> findActiveByIntermediaryId(@Param("intermediaryId") Long intermediaryId);
 
 }

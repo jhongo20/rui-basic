@@ -3,7 +3,9 @@ package com.rui.basic.app.basic.service;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.rui.basic.app.basic.domain.entities.RuiGenerics;
+import com.rui.basic.app.basic.domain.entities.RuiHistoryDetails;
 import com.rui.basic.app.basic.domain.entities.RuiIdoniedad;
 import com.rui.basic.app.basic.domain.entities.RuiInfraHuman;
 import com.rui.basic.app.basic.domain.entities.RuiInfraOperational;
@@ -30,6 +33,7 @@ import com.rui.basic.app.basic.repository.RuiIntermediaryRepository;
 import com.rui.basic.app.basic.repository.RuiSupportRepository;
 import com.rui.basic.app.basic.service.email.EmailService;
 import com.rui.basic.app.basic.web.dto.EmailTemplateDTO;
+import com.rui.basic.app.basic.web.dto.FormFieldStateDTO;
 
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
@@ -479,5 +483,176 @@ private RuiSupportRepository supportRepository;
         };
     }
 
+    //Metodos para las observaciones
+    public FormFieldStateDTO getFieldState(Long intermediaryId, String field) {
+        List<RuiHistoryDetails> details = historyDetailsRepository
+            .findByIntermediaryId(intermediaryId);
+        
+        FormFieldStateDTO state = new FormFieldStateDTO();
+        
+        Optional<RuiHistoryDetails> detail = details.stream()
+            .filter(d -> d.getFieldName().equals(field))
+            .findFirst();
+        
+        if (detail.isPresent()) {
+            state.setIconClose(true);
+            state.setCommentDisabled(false);
+            state.setObservation(detail.get().getObservation());
+        } else {
+            state.setIconClose(false);
+            state.setCommentDisabled(true);
+            state.setObservation("");
+        }
+        
+        return state;
+    }
+
+    public void createObservation(Long intermediaryId, String field) {
+        // Lógica para crear una observación
+        RuiIntermediary intermediary = findById(intermediaryId);
+        
+        // Buscar historial activo o crear uno nuevo
+        RuiIntermediaryHistory history = findOrCreateActiveHistory(intermediary);
+        
+        // Determinar tableName y tableId
+        String tableName = determineTableName(field);
+        Long tableId = determineTableId(intermediary, field);
+        
+        // Crear detalle de historial
+        RuiHistoryDetails detail = new RuiHistoryDetails();
+        detail.setIntermediaryHistoryId(history);
+        detail.setFieldName(field);
+        detail.setObservation("");  // Inicialmente vacío
+        detail.setTableName(tableName);
+        detail.setTableId(tableId);
+        
+        historyDetailsRepository.save(detail);
+    }
+
+    // Método auxiliar para determinar el nombre de la tabla
+    private String determineTableName(String field) {
+        // Mapeo de campos a tablas
+        Map<String, String> tableMap = new HashMap<>();
+        tableMap.put("nit", "RUI_COMPANY");
+        tableMap.put("business_name", "RUI_COMPANY");
+        tableMap.put("department_id", "RUI_COMPANY");
+        tableMap.put("city_id", "RUI_COMPANY");
+        tableMap.put("address", "RUI_COMPANY");
+        tableMap.put("email", "RUI_COMPANY");
+        tableMap.put("phone", "RUI_COMPANY");
+        
+        // Campos de persona
+        tableMap.put("document_type", "RUI_PERSON");
+        tableMap.put("document_number", "RUI_PERSON");
+        tableMap.put("first_name", "RUI_PERSON");
+        tableMap.put("second_name", "RUI_PERSON");
+        tableMap.put("first_surname", "RUI_PERSON");
+        tableMap.put("second_surname", "RUI_PERSON");
+        tableMap.put("cellphone", "RUI_PERSON");
+        
+        return tableMap.getOrDefault(field, "UNKNOWN");
+    }
+
+    // Método auxiliar para determinar el ID de la tabla
+    private Long determineTableId(RuiIntermediary intermediary, String field) {
+        if (intermediary.getCompanyId() != null) {
+            // Campos de compañía
+            if ("nit".equals(field) || "business_name".equals(field) || 
+                "department_id".equals(field) || "city_id".equals(field) || 
+                "address".equals(field) || "email".equals(field) || 
+                "phone".equals(field)) {
+                return intermediary.getCompanyId().getId();
+            }
+        }
+        if (intermediary.getPersonId() != null) {
+            // Campos de persona
+            if ("document_type".equals(field) || "document_number".equals(field) || 
+                "first_name".equals(field) || "second_name".equals(field) || 
+                "first_surname".equals(field) || "second_surname".equals(field) || 
+                "cellphone".equals(field)) {
+                return intermediary.getPersonId().getId();
+            }
+            // Campos compartidos (pueden venir de persona o compañía, usamos persona si existe)
+            if ("department_id".equals(field) || "city_id".equals(field) || 
+                "address".equals(field) || "email".equals(field) || 
+                "phone".equals(field)) {
+                return intermediary.getPersonId().getId();
+            }
+        }
+        return null;
+    }
+
+    public void removeObservation(Long intermediaryId, String field) {
+        // Lógica para eliminar una observación
+        List<RuiHistoryDetails> details = historyDetailsRepository
+            .findByIntermediaryId(intermediaryId);
+        
+        details.stream()
+            .filter(d -> d.getFieldName().equals(field))
+            .findFirst()
+            .ifPresent(detail -> historyDetailsRepository.delete(detail));
+    }
+
+    public void updateObservation(Long intermediaryId, String field, String observation) {
+        // Lógica para actualizar una observación
+        List<RuiHistoryDetails> details = historyDetailsRepository
+            .findByIntermediaryId(intermediaryId);
+        
+        details.stream()
+            .filter(d -> d.getFieldName().equals(field))
+            .findFirst()
+            .ifPresent(detail -> {
+                detail.setObservation(observation);
+                historyDetailsRepository.save(detail);
+            });
+    }
+
+    private RuiIntermediaryHistory findOrCreateActiveHistory(RuiIntermediary intermediary) {
+        // Buscar historial activo
+        Optional<RuiIntermediaryHistory> activeHistory = intermediaryHistoryRepository
+            .findActiveByIntermediaryId(intermediary.getId());
+        
+        if (activeHistory.isPresent()) {
+            return activeHistory.get();
+        } else {
+            // Crear nuevo historial
+            RuiIntermediaryHistory history = new RuiIntermediaryHistory();
+            history.setIntermediaryId(intermediary);
+            history.setDatetime(new Date()); // Usar datetime en lugar de creationDate
+            history.setStatus((short) 1); // Activo
+            
+            return intermediaryHistoryRepository.save(history);
+        }
+    }
+
+    public Map<String, FormFieldStateDTO> getFieldStates(Long intermediaryId) { 
+        Map<String, FormFieldStateDTO> states = new HashMap<>(); 
+        List<RuiHistoryDetails> details = historyDetailsRepository.findByIntermediaryId(intermediaryId);
+        
+        // Campos de empresa y persona
+        String[] fields = { 
+            "nit", "business_name", "department_id", "city_id", "address", "email", "phone",
+            "document_type", "document_number", "first_name", "second_name", "first_surname", 
+            "second_surname", "cellphone"
+        }; 
+        
+        for (String field : fields) { 
+            FormFieldStateDTO state = new FormFieldStateDTO(); 
+            Optional<RuiHistoryDetails> detail = details.stream()
+                .filter(d -> d.getFieldName().equals(field))
+                .findFirst(); 
+            if (detail.isPresent()) { 
+                state.setIconClose(true); 
+                state.setCommentDisabled(false); 
+                state.setObservation(detail.get().getObservation()); 
+            } else { 
+                state.setIconClose(false); 
+                state.setCommentDisabled(true); 
+                state.setObservation(""); 
+            } 
+            states.put(field, state); 
+        } 
+        return states; 
+    }
     
 }

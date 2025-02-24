@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,7 @@ import com.rui.basic.app.basic.service.email.EmailService;
 import com.rui.basic.app.basic.web.dto.EmailTemplateDTO;
 import com.rui.basic.app.basic.web.dto.ExperienciaLaboralDTO;
 import com.rui.basic.app.basic.web.dto.FirmaDigitalizadaDTO;
+import com.rui.basic.app.basic.web.dto.FormFieldStateDTO;
 import com.rui.basic.app.basic.web.dto.IdoneidadProfesionalDTO;
 import com.rui.basic.app.basic.web.dto.InfraestructuraOperativaDTO;
 import com.rui.basic.app.basic.web.dto.InfrastructuraHumanaDTO;
@@ -141,6 +143,10 @@ public class IntermediaryController {
     public String showReview(@PathVariable Long id, Model model) {
         try {
             RuiIntermediary intermediary = intermediaryService.findById(id);
+
+            // Asegúrate de que esto se está ejecutando:
+        Map<String, FormFieldStateDTO> fieldStates = intermediaryService.getFieldStates(id);
+        model.addAttribute("fieldStates", fieldStates);
             
             // Cargar datos principales
             model.addAttribute("intermediary", intermediary);

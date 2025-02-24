@@ -6,5 +6,5 @@ import lombok.Data;
 public class FormFieldStateDTO {
     private boolean iconClose;
     private boolean commentDisabled;
-    private String observation;
+    private String observation= "";;
 }
