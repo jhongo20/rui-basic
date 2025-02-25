@@ -1,20 +1,33 @@
 package com.rui.basic.app.basic.service;
 
+import com.rui.basic.app.basic.domain.entities.RuiHistoryDetails;
 import com.rui.basic.app.basic.domain.entities.RuiInfraHuman;
+import com.rui.basic.app.basic.domain.entities.RuiIntermediary;
+import com.rui.basic.app.basic.domain.entities.RuiIntermediaryHistory;
 import com.rui.basic.app.basic.domain.entities.RuiPerson;
 import com.rui.basic.app.basic.domain.entities.RuiSupport;
 import com.rui.basic.app.basic.domain.entities.RuiWorkExperience;
+import com.rui.basic.app.basic.repository.RuiHistoryDetailsRepository;
 import com.rui.basic.app.basic.repository.RuiInfraHumanRepository;
+import com.rui.basic.app.basic.repository.RuiIntermediaryHistoryRepository;
+import com.rui.basic.app.basic.repository.RuiIntermediaryRepository;
 import com.rui.basic.app.basic.repository.RuiSupportRepository;
 import com.rui.basic.app.basic.repository.RuiWorkExperienceRepository;
 import com.rui.basic.app.basic.web.dto.ExperienciaLaboralDTO;
+import com.rui.basic.app.basic.web.dto.FormFieldStateDTO;
 import com.rui.basic.app.basic.web.dto.InfrastructuraHumanaDTO;
+
+import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -27,16 +40,25 @@ public class InfraestructuraHumanaService {
     private final RuiInfraHumanRepository infraHumanRepository;
     private final RuiWorkExperienceRepository workExperienceRepository;
     private final RuiSupportRepository ruiSupportRepository; 
+    private final RuiHistoryDetailsRepository historyDetailsRepository;
+    private final RuiIntermediaryHistoryRepository intermediaryHistoryRepository;
+    private final RuiIntermediaryRepository intermediaryRepository;
 
    
     public InfraestructuraHumanaService(
             RuiInfraHumanRepository infraHumanRepository,
             RuiWorkExperienceRepository workExperienceRepository,
             IntermediaryService intermediaryService, 
-            RuiSupportRepository ruiSupportRepository) {
+            RuiSupportRepository ruiSupportRepository,
+            RuiHistoryDetailsRepository historyDetailsRepository,
+            RuiIntermediaryHistoryRepository intermediaryHistoryRepository,
+            RuiIntermediaryRepository intermediaryRepository) {
         this.infraHumanRepository = infraHumanRepository;
         this.workExperienceRepository = workExperienceRepository;
         this.ruiSupportRepository = ruiSupportRepository;
+        this.historyDetailsRepository = historyDetailsRepository;
+        this.intermediaryHistoryRepository = intermediaryHistoryRepository;
+        this.intermediaryRepository = intermediaryRepository;
     }
 
     public InfrastructuraHumanaDTO findByIntermediary(Long intermediaryId) {
@@ -180,6 +202,234 @@ public class InfraestructuraHumanaService {
         }
     }
 
+    //endpoints para las observaciones de la infraestructura humana
+   /**
+     * Obtiene el estado de la observación para una experiencia laboral
+     */
+    public FormFieldStateDTO getWorkExpObservation(Long workExpId) {
+        log.debug("Buscando observación para experiencia laboral ID: {}", workExpId);
+        
+        Optional<RuiWorkExperience> workExpOptional = workExperienceRepository.findById(workExpId);
+        if (workExpOptional.isEmpty()) {
+            throw new EntityNotFoundException("Experiencia laboral no encontrada con ID: " + workExpId);
+        }
+        
+        RuiWorkExperience workExp = workExpOptional.get();
+        if (!workExp.isActive()) {
+            log.warn("Experiencia laboral inactiva con ID: {}", workExpId);
+            FormFieldStateDTO state = new FormFieldStateDTO();
+            state.setIconClose(false);
+            state.setCommentDisabled(true);
+            state.setObservation("Esta experiencia laboral está inactiva");
+            return state;
+        }
+        
+        // Buscar observación en RuiHistoryDetails
+        List<RuiHistoryDetails> details = historyDetailsRepository.findByTableIdAndTableName(workExpId, "RUI_WORK_EXPERIENCE");
+        Optional<RuiHistoryDetails> detail = details.stream()
+                .filter(d -> "general".equals(d.getFieldName()))
+                .findFirst();
+        
+        FormFieldStateDTO state = new FormFieldStateDTO();
+        if (detail.isPresent()) {
+            state.setIconClose(true);
+            state.setCommentDisabled(false);
+            state.setObservation(detail.get().getObservation());
+        } else {
+            state.setIconClose(false);
+            state.setCommentDisabled(true);
+            state.setObservation("");
+        }
+        
+        return state;
+    }
 
+    /**
+     * Crea una observación general para una experiencia laboral.
+     */
+    public FormFieldStateDTO createWorkExpObservation(Long workExpId) {
+        log.debug("Creando observación para experiencia laboral ID: {}", workExpId);
+        
+        Optional<RuiWorkExperience> workExpOptional = workExperienceRepository.findById(workExpId);
+        if (workExpOptional.isEmpty()) {
+            throw new EntityNotFoundException("Experiencia laboral no encontrada con ID: " + workExpId);
+        }
+        
+        RuiWorkExperience workExp = workExpOptional.get();
+        if (!workExp.isActive()) {
+            log.warn("Experiencia laboral inactiva con ID: {}", workExpId);
+            FormFieldStateDTO state = new FormFieldStateDTO();
+            state.setIconClose(false);
+            state.setCommentDisabled(true);
+            state.setObservation("Esta experiencia laboral está inactiva");
+            return state;
+        }
+        
+        // Obtener el intermediario asociado
+        RuiInfraHuman infraHuman = workExp.getInfraHumanId();
+        if (infraHuman == null) {
+            throw new EntityNotFoundException("Infraestructura humana no encontrada para experiencia laboral ID: " + workExpId);
+        }
+        
+        Optional<RuiIntermediary> intermediaryOpt = intermediaryRepository.findByInfrastructureHumanId(infraHuman.getId());
+        if (intermediaryOpt.isEmpty()) {
+            throw new EntityNotFoundException("Intermediario no encontrado para infraestructura humana ID: " + infraHuman.getId());
+        }
+        
+        RuiIntermediary intermediary = intermediaryOpt.get();
+        
+        // Buscar o crear el historial activo
+        RuiIntermediaryHistory history = findOrCreateActiveHistory(intermediary);
+        
+        // Verificar si ya existe una observación
+        List<RuiHistoryDetails> details = historyDetailsRepository.findByTableIdAndTableName(workExpId, "RUI_WORK_EXPERIENCE");
+        Optional<RuiHistoryDetails> existingDetail = details.stream()
+                .filter(d -> "general".equals(d.getFieldName()))
+                .findFirst();
+        
+        if (existingDetail.isPresent()) {
+            log.info("Ya existe una observación para la experiencia laboral ID: {}", workExpId);
+            return getWorkExpObservation(workExpId);
+        }
+        
+        // Crear nueva observación
+        RuiHistoryDetails newDetail = new RuiHistoryDetails();
+        newDetail.setIntermediaryHistoryId(history);
+        newDetail.setTableName("RUI_WORK_EXPERIENCE");
+        newDetail.setTableId(workExpId);
+        newDetail.setFieldName("general");
+        newDetail.setObservation("");
+        
+        historyDetailsRepository.save(newDetail);
+        log.info("Creada nueva observación para experiencia laboral ID: {}", workExpId);
+        
+        return getWorkExpObservation(workExpId);
+    }
+
+    /**
+     * Elimina la observación general para una experiencia laboral.
+     */
+    public FormFieldStateDTO removeWorkExpObservation(Long workExpId) {
+        log.debug("Eliminando observación para experiencia laboral ID: {}", workExpId);
+        
+        Optional<RuiWorkExperience> workExpOptional = workExperienceRepository.findById(workExpId);
+        if (workExpOptional.isEmpty()) {
+            throw new EntityNotFoundException("Experiencia laboral no encontrada con ID: " + workExpId);
+        }
+        
+        // Buscar y eliminar la observación
+        List<RuiHistoryDetails> details = historyDetailsRepository.findByTableIdAndTableName(workExpId, "RUI_WORK_EXPERIENCE");
+        details.stream()
+                .filter(d -> "general".equals(d.getFieldName()))
+                .findFirst()
+                .ifPresent(historyDetailsRepository::delete);
+        
+        log.info("Eliminada observación para experiencia laboral ID: {}", workExpId);
+        
+        FormFieldStateDTO state = new FormFieldStateDTO();
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("");
+        
+        return state;
+    }
+
+    /**
+     * Actualiza la observación general para una experiencia laboral.
+     */
+    public FormFieldStateDTO updateWorkExpObservation(Long workExpId, String observation) {
+        log.debug("Actualizando observación para experiencia laboral ID: {}", workExpId);
+        
+        Optional<RuiWorkExperience> workExpOptional = workExperienceRepository.findById(workExpId);
+        if (workExpOptional.isEmpty()) {
+            throw new EntityNotFoundException("Experiencia laboral no encontrada con ID: " + workExpId);
+        }
+        
+        // Buscar y actualizar la observación
+        List<RuiHistoryDetails> details = historyDetailsRepository.findByTableIdAndTableName(workExpId, "RUI_WORK_EXPERIENCE");
+        Optional<RuiHistoryDetails> detailOpt = details.stream()
+                .filter(d -> "general".equals(d.getFieldName()))
+                .findFirst();
+        
+        if (detailOpt.isPresent()) {
+            RuiHistoryDetails detail = detailOpt.get();
+            detail.setObservation(observation);
+            historyDetailsRepository.save(detail);
+            log.info("Actualizada observación para experiencia laboral ID: {}", workExpId);
+        } else {
+            log.warn("No se encontró observación para actualizar en experiencia laboral ID: {}", workExpId);
+        }
+        
+        return getWorkExpObservation(workExpId);
+    }
+
+    /**
+     * Encuentra o crea un historial activo para un intermediario
+     */
+    private RuiIntermediaryHistory findOrCreateActiveHistory(RuiIntermediary intermediary) {
+        Optional<RuiIntermediaryHistory> activeHistory = intermediaryHistoryRepository
+                .findActiveByIntermediaryId(intermediary.getId());
+        
+        if (activeHistory.isPresent()) {
+            return activeHistory.get();
+        } else {
+            RuiIntermediaryHistory history = new RuiIntermediaryHistory();
+            history.setIntermediaryId(intermediary);
+            history.setDatetime(new Date());
+            history.setStatus((short) 1); // Activo
+            
+            return intermediaryHistoryRepository.save(history);
+        }
+    }
+
+    /**
+     * Método auxiliar para encontrar el intermediario asociado a una experiencia laboral
+     */
+    private Optional<RuiIntermediary> findIntermediaryByWorkExpId(Long workExpId) {
+        Optional<RuiWorkExperience> workExpOptional = workExperienceRepository.findById(workExpId);
+        if (workExpOptional.isEmpty()) {
+            return Optional.empty();
+        }
+        
+        RuiWorkExperience workExp = workExpOptional.get();
+        if (workExp.getInfraHumanId() == null) {
+            return Optional.empty();
+        }
+        
+        Long infraHumanId = workExp.getInfraHumanId().getId();
+        
+        return intermediaryRepository.findByInfrastructureHumanId(infraHumanId);
+    }
+
+    private static final Set<String> GENERAL_FIELDS = Set.of(
+        "nit", "business_name", "department_id", "city_id", "address", "email", "phone",
+        "document_type", "document_number", "first_name", "second_name", "first_surname", "second_surname", "cellphone",
+        "infra_document_type", "infra_document_number", "infra_first_name", "infra_second_name", 
+        "infra_first_surname", "infra_second_surname"
+    );
+
+    public Map<String, FormFieldStateDTO> getFieldStates(Long id) {
+        Map<String, FormFieldStateDTO> fieldStates = new HashMap<>();
+        
+        // Buscar todas las observaciones asociadas a este intermediario
+        List<RuiHistoryDetails> observations = historyDetailsRepository.findByIntermediaryId(id);
+        
+        // Procesar observaciones
+        for (RuiHistoryDetails observation : observations) {
+            String fieldName = observation.getFieldName();
+            
+            // Solo procesar campos de Información General y ahora también de Infraestructura Humana
+            if (GENERAL_FIELDS.contains(fieldName) || fieldName.startsWith("infra_")) {
+                FormFieldStateDTO state = new FormFieldStateDTO();
+                state.setIconClose(true);
+                state.setCommentDisabled(false);
+                state.setObservation(observation.getObservation());
+                
+                fieldStates.put(fieldName, state);
+            }
+        }
+        
+        return fieldStates;
+    }
     
 }

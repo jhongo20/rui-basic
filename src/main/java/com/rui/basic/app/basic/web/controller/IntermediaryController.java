@@ -4,16 +4,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.data.domain.Page;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import java.util.ArrayList;
@@ -478,6 +483,98 @@ public class IntermediaryController {
         } catch (Exception e) {
             log.error("Error al visualizar documento de infraestructura operativa: {}", e.getMessage(), e);
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    //endpoint para observaciones de tab infraestructura operativa
+    @GetMapping("/workexp/{id}/observation")
+    @ResponseBody
+    public ResponseEntity<FormFieldStateDTO> getWorkExpObservation(@PathVariable Long id) {
+        try {
+            log.debug("Recibiendo solicitud GET para observación de experiencia laboral ID: {}", id);
+            FormFieldStateDTO state = infraestructuraHumanaService.getWorkExpObservation(id);
+            return ResponseEntity.ok(state);
+        } catch (EntityNotFoundException e) {
+            log.error("Experiencia laboral no encontrada: {}", id);
+            FormFieldStateDTO state = new FormFieldStateDTO();
+            state.setIconClose(false);
+            state.setCommentDisabled(true);
+            state.setObservation("Experiencia laboral no encontrada");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(state);
+        } catch (Exception e) {
+            log.error("Error al obtener observación de experiencia laboral: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(new FormFieldStateDTO());
+        }
+    }
+
+
+    @PostMapping("/workexp/{id}/observation")
+    @ResponseBody
+    public ResponseEntity<FormFieldStateDTO> createWorkExpObservation(@PathVariable Long id) {
+        try {
+            log.debug("Recibiendo solicitud POST para crear observación en experiencia laboral ID: {}", id);
+            FormFieldStateDTO state = infraestructuraHumanaService.createWorkExpObservation(id);
+            return ResponseEntity.ok(state);
+        } catch (EntityNotFoundException e) {
+            log.error("Experiencia laboral no encontrada: {}", id);
+            FormFieldStateDTO state = new FormFieldStateDTO();
+            state.setIconClose(false);
+            state.setCommentDisabled(true);
+            state.setObservation("Experiencia laboral no encontrada");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(state);
+        } catch (Exception e) {
+            log.error("Error al crear observación en experiencia laboral: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(new FormFieldStateDTO());
+        }
+    }
+
+    @DeleteMapping("/workexp/{id}/observation")
+    @ResponseBody
+    public ResponseEntity<FormFieldStateDTO> removeWorkExpObservation(@PathVariable Long id) {
+        try {
+            log.debug("Recibiendo solicitud DELETE para eliminar observación en experiencia laboral ID: {}", id);
+            FormFieldStateDTO state = infraestructuraHumanaService.removeWorkExpObservation(id);
+            return ResponseEntity.ok(state);
+        } catch (EntityNotFoundException e) {
+            log.error("Experiencia laboral no encontrada: {}", id);
+            FormFieldStateDTO state = new FormFieldStateDTO();
+            state.setIconClose(false);
+            state.setCommentDisabled(true);
+            state.setObservation("Experiencia laboral no encontrada");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(state);
+        } catch (Exception e) {
+            log.error("Error al eliminar observación en experiencia laboral: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(new FormFieldStateDTO());
+        }
+    }
+
+    @PutMapping("/workexp/{id}/observation")
+    @ResponseBody
+    public ResponseEntity<FormFieldStateDTO> updateWorkExpObservation(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> payload) {
+        try {
+            String observation = payload != null ? payload.get("observation") : null;
+            if (observation == null) {
+                throw new IllegalArgumentException("La observación no puede ser nula");
+            }
+            
+            log.debug("Recibiendo solicitud PUT para actualizar observación en experiencia laboral ID: {}", id);
+            FormFieldStateDTO state = infraestructuraHumanaService.updateWorkExpObservation(id, observation);
+            return ResponseEntity.ok(state);
+        } catch (IllegalArgumentException e) {
+            log.error("Parámetros inválidos: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new FormFieldStateDTO());
+        } catch (EntityNotFoundException e) {
+            log.error("Experiencia laboral no encontrada: {}", id);
+            FormFieldStateDTO state = new FormFieldStateDTO();
+            state.setIconClose(false);
+            state.setCommentDisabled(true);
+            state.setObservation("Experiencia laboral no encontrada");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(state);
+        } catch (Exception e) {
+            log.error("Error al actualizar observación en experiencia laboral: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(new FormFieldStateDTO());
         }
     }
 

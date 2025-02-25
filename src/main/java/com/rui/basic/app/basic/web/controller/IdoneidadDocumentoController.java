@@ -24,7 +24,6 @@ import com.rui.basic.app.basic.service.IdoneidadProfesionalService;
 import com.rui.basic.app.basic.web.dto.FormFieldStateDTO;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("/api/idoniedad")

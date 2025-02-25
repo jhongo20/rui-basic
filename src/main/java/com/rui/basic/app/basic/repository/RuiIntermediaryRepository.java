@@ -108,5 +108,8 @@ public interface RuiIntermediaryRepository extends JpaRepository<RuiIntermediary
 
        @Query(value = "SELECT id, state FROM RUI_INTERMEDIARIES", nativeQuery = true)
        List<Object[]> findAllStatesDirectly();
+
+       @Query("SELECT i FROM RuiIntermediary i WHERE i.infrastructureHumanId.id = :infraHumanId")
+        Optional<RuiIntermediary> findByInfrastructureHumanId(@Param("infraHumanId") Long infraHumanId);
        
 }

@@ -11,7 +11,6 @@ import com.rui.basic.app.basic.repository.RuiSupportRepository;
 import com.rui.basic.app.basic.web.dto.FormFieldStateDTO;
 import com.rui.basic.app.basic.web.dto.IdoneidadProfesionalDTO;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
