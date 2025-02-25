@@ -552,7 +552,10 @@ function getFieldLabel(field) {
         'operativa_phone3': 'Línea telefónica 3',
         'operativa_phone_fax': 'Número del Fax',
         'operativa_email': 'Correo Electrónico (Operativa)',
-        'operativa_address': 'Dirección de oficina de atención al ciudadano'
+        'operativa_address': 'Dirección de oficina de atención al ciudadano',
+
+        // Campo de firma digitalizada
+        'firma_digitalizada': 'Firma Digitalizada'
     };
     
     return labels[field] || field;

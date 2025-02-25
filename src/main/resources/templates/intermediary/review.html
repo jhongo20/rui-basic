@@ -1755,30 +1755,55 @@
                         <div class="card-body">
                             <div class="row mb-4 align-items-center">
                                 <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input" th:checked="${firmaDigitalizada != null ? true : false}">
+                                    <input type="checkbox" class="form-check-input field-checkbox" 
+                                           data-field="firma_digitalizada" 
+                                           onchange="handleCheckboxChange(this)">
                                 </div>
                                 <div class="col">
                                     <h5 class="card-title mb-0">Firma Digitalizada</h5>
                                 </div>
+                                <div class="col-auto observation-buttons" data-field="firma_digitalizada">
+                                    <button class="btn btn-primary btn-sm btn-add-observation" 
+                                            type="button" 
+                                            onclick="createObservation('firma_digitalizada', event)" 
+                                            style="display: none;"
+                                            title="Agregar observación">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    </button>
+                                    <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                            type="button" 
+                                            onclick="removeObservation('firma_digitalizada', event)" 
+                                            style="display: none;"
+                                            title="Eliminar observación">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-primary btn-sm btn-show-observation" 
+                                            type="button" 
+                                            onclick="showObservationDialog('firma_digitalizada', event)" 
+                                            style="display: none;"
+                                            title="Ver/Editar observación">
+                                        <i class="fas fa-comment"></i>
+                                    </button>
+                                </div>
                             </div>
-
+                
                             <!-- Mostrar alerta de éxito o error si existen -->
                             <div class="alert alert-success" th:if="${mensaje != null}" th:text="${mensaje}"></div>
                             <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
-
+                
                             
                             <!-- Contenedor de la firma -->
                             <div class="text-center mb-4">
-                                <img  th:if="${firmaDigitalizada != null}"
-                                th:src="${firmaDigitalizada.imagenUrl}"
-                                    alt="Firma Digitalizada" 
-                                    class="img-fluid" 
-                                    style="max-width: 500px;">
-
-                                    <!-- Mensaje si no hay firma -->
+                                <img th:if="${firmaDigitalizada != null}"
+                                     th:src="${firmaDigitalizada.imagenUrl}"
+                                     alt="Firma Digitalizada" 
+                                     class="img-fluid" 
+                                     style="max-width: 500px;">
+                
+                                <!-- Mensaje si no hay firma -->
                                 <p th:if="${firmaDigitalizada == null}" class="text-muted">No hay firma digitalizada disponible</p>
                             </div>
-
+                
                             <!-- Botones de acción -->
                             <div class="d-flex justify-content-between mt-4">
                                 <div>
