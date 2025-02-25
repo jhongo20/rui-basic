@@ -40,10 +40,7 @@ import com.rui.basic.app.basic.service.UbicacionService;
 import com.rui.basic.app.basic.service.email.EmailService;
 import com.rui.basic.app.basic.web.dto.EmailTemplateDTO;
 import com.rui.basic.app.basic.web.dto.ExperienciaLaboralDTO;
-import com.rui.basic.app.basic.web.dto.FirmaDigitalizadaDTO;
 import com.rui.basic.app.basic.web.dto.FormFieldStateDTO;
-import com.rui.basic.app.basic.web.dto.IdoneidadProfesionalDTO;
-import com.rui.basic.app.basic.web.dto.InfraestructuraOperativaDTO;
 import com.rui.basic.app.basic.web.dto.InfrastructuraHumanaDTO;
 
 import jakarta.persistence.EntityNotFoundException;

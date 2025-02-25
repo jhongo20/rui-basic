@@ -1028,334 +1028,333 @@
                 <!-- Idoneidad Profesional Tab -->
                     
                 <!-- Infraestructura Humana Tab -->     
-                <!-- Modificación para Infraestructura Humana Tab -->
-<div class="tab-pane fade" id="infraestructura">
-    <div class="progress mb-4">
-        <div class="progress-bar" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Infraestructura Humana</h5>
-            
-            <div th:if="${isAgente == null or !isAgente}">
-                <div th:if="${infraestructuraHumana != null}">
-                    <form class="form-horizontal">
-                        <!-- Datos del profesional -->
-                        <div class="row mb-3 align-items-center">
-                            <div class="col-auto">
-                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                       data-field="infra_document_type" 
-                                       onchange="handleCheckboxChange(this)">
-                            </div>
-                            <div class="col-sm-3">
-                                <label class="col-form-label">Tipo de Documento: *</label>
-                            </div>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" th:value="${infraestructuraHumana.documentType != null ? @intermediaryService.getDocumentTypeName(infraestructuraHumana.documentType) : ''}" readonly>
-                            </div>
-                            <div class="col-auto observation-buttons" data-field="infra_document_type">
-                                <button class="btn btn-primary btn-sm btn-add-observation" 
-                                        type="button" 
-                                        onclick="createObservation('infra_document_type', event)" 
-                                        style="display: none;"
-                                        title="Agregar observación">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-remove-observation" 
-                                        type="button" 
-                                        onclick="removeObservation('infra_document_type', event)" 
-                                        style="display: none;"
-                                        title="Eliminar observación">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-show-observation" 
-                                        type="button" 
-                                        onclick="showObservationDialog('infra_document_type', event)" 
-                                        style="display: none;"
-                                        title="Ver/Editar observación">
-                                    <i class="fas fa-comment"></i>
-                                </button>
-                            </div>
-                        </div>
+                <div class="tab-pane fade" id="infraestructura">
+                    <div class="progress mb-4">
+                        <div class="progress-bar" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Infraestructura Humana</h5>
+                            
+                            <div th:if="${isAgente == null or !isAgente}">
+                                <div th:if="${infraestructuraHumana != null}">
+                                    <form class="form-horizontal">
+                                        <!-- Datos del profesional -->
+                                        <div class="row mb-3 align-items-center">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input field-checkbox" 
+                                                    data-field="infra_document_type" 
+                                                    onchange="handleCheckboxChange(this)">
+                                            </div>
+                                            <div class="col-sm-3">
+                                                <label class="col-form-label">Tipo de Documento: *</label>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.documentType != null ? @intermediaryService.getDocumentTypeName(infraestructuraHumana.documentType) : ''}" readonly>
+                                            </div>
+                                            <div class="col-auto observation-buttons" data-field="infra_document_type">
+                                                <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                        type="button" 
+                                                        onclick="createObservation('infra_document_type', event)" 
+                                                        style="display: none;"
+                                                        title="Agregar observación">
+                                                    <i class="fas fa-exclamation-circle"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                        type="button" 
+                                                        onclick="removeObservation('infra_document_type', event)" 
+                                                        style="display: none;"
+                                                        title="Eliminar observación">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                        type="button" 
+                                                        onclick="showObservationDialog('infra_document_type', event)" 
+                                                        style="display: none;"
+                                                        title="Ver/Editar observación">
+                                                    <i class="fas fa-comment"></i>
+                                                </button>
+                                            </div>
+                                        </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <div class="col-auto">
-                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                       data-field="infra_document_number" 
-                                       onchange="handleCheckboxChange(this)">
-                            </div>
-                            <div class="col-sm-3">
-                                <label class="col-form-label">Número de Documento: *</label>
-                            </div>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" th:value="${infraestructuraHumana.documentNumber}" readonly>
-                            </div>
-                            <div class="col-auto observation-buttons" data-field="infra_document_number">
-                                <button class="btn btn-primary btn-sm btn-add-observation" 
-                                        type="button" 
-                                        onclick="createObservation('infra_document_number', event)" 
-                                        style="display: none;"
-                                        title="Agregar observación">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-remove-observation" 
-                                        type="button" 
-                                        onclick="removeObservation('infra_document_number', event)" 
-                                        style="display: none;"
-                                        title="Eliminar observación">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-show-observation" 
-                                        type="button" 
-                                        onclick="showObservationDialog('infra_document_number', event)" 
-                                        style="display: none;"
-                                        title="Ver/Editar observación">
-                                    <i class="fas fa-comment"></i>
-                                </button>
-                            </div>
-                        </div>
+                                        <div class="row mb-3 align-items-center">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input field-checkbox" 
+                                                    data-field="infra_document_number" 
+                                                    onchange="handleCheckboxChange(this)">
+                                            </div>
+                                            <div class="col-sm-3">
+                                                <label class="col-form-label">Número de Documento: *</label>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.documentNumber}" readonly>
+                                            </div>
+                                            <div class="col-auto observation-buttons" data-field="infra_document_number">
+                                                <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                        type="button" 
+                                                        onclick="createObservation('infra_document_number', event)" 
+                                                        style="display: none;"
+                                                        title="Agregar observación">
+                                                    <i class="fas fa-exclamation-circle"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                        type="button" 
+                                                        onclick="removeObservation('infra_document_number', event)" 
+                                                        style="display: none;"
+                                                        title="Eliminar observación">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                        type="button" 
+                                                        onclick="showObservationDialog('infra_document_number', event)" 
+                                                        style="display: none;"
+                                                        title="Ver/Editar observación">
+                                                    <i class="fas fa-comment"></i>
+                                                </button>
+                                            </div>
+                                        </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <div class="col-auto">
-                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                       data-field="infra_first_name" 
-                                       onchange="handleCheckboxChange(this)">
-                            </div>
-                            <div class="col-sm-3">
-                                <label class="col-form-label">Primer Nombre: *</label>
-                            </div>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" th:value="${infraestructuraHumana.firstName}" readonly>
-                            </div>
-                            <div class="col-auto observation-buttons" data-field="infra_first_name">
-                                <button class="btn btn-primary btn-sm btn-add-observation" 
-                                        type="button" 
-                                        onclick="createObservation('infra_first_name', event)" 
-                                        style="display: none;"
-                                        title="Agregar observación">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-remove-observation" 
-                                        type="button" 
-                                        onclick="removeObservation('infra_first_name', event)" 
-                                        style="display: none;"
-                                        title="Eliminar observación">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-show-observation" 
-                                        type="button" 
-                                        onclick="showObservationDialog('infra_first_name', event)" 
-                                        style="display: none;"
-                                        title="Ver/Editar observación">
-                                    <i class="fas fa-comment"></i>
-                                </button>
-                            </div>
-                        </div>
+                                        <div class="row mb-3 align-items-center">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input field-checkbox" 
+                                                    data-field="infra_first_name" 
+                                                    onchange="handleCheckboxChange(this)">
+                                            </div>
+                                            <div class="col-sm-3">
+                                                <label class="col-form-label">Primer Nombre: *</label>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.firstName}" readonly>
+                                            </div>
+                                            <div class="col-auto observation-buttons" data-field="infra_first_name">
+                                                <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                        type="button" 
+                                                        onclick="createObservation('infra_first_name', event)" 
+                                                        style="display: none;"
+                                                        title="Agregar observación">
+                                                    <i class="fas fa-exclamation-circle"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                        type="button" 
+                                                        onclick="removeObservation('infra_first_name', event)" 
+                                                        style="display: none;"
+                                                        title="Eliminar observación">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                        type="button" 
+                                                        onclick="showObservationDialog('infra_first_name', event)" 
+                                                        style="display: none;"
+                                                        title="Ver/Editar observación">
+                                                    <i class="fas fa-comment"></i>
+                                                </button>
+                                            </div>
+                                        </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <div class="col-auto">
-                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                       data-field="infra_second_name" 
-                                       onchange="handleCheckboxChange(this)">
-                            </div>
-                            <div class="col-sm-3">
-                                <label class="col-form-label">Segundo Nombre:</label>
-                            </div>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" th:value="${infraestructuraHumana.secondName}" readonly>
-                            </div>
-                            <div class="col-auto observation-buttons" data-field="infra_second_name">
-                                <button class="btn btn-primary btn-sm btn-add-observation" 
-                                        type="button" 
-                                        onclick="createObservation('infra_second_name', event)" 
-                                        style="display: none;"
-                                        title="Agregar observación">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-remove-observation" 
-                                        type="button" 
-                                        onclick="removeObservation('infra_second_name', event)" 
-                                        style="display: none;"
-                                        title="Eliminar observación">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-show-observation" 
-                                        type="button" 
-                                        onclick="showObservationDialog('infra_second_name', event)" 
-                                        style="display: none;"
-                                        title="Ver/Editar observación">
-                                    <i class="fas fa-comment"></i>
-                                </button>
-                            </div>
-                        </div>
+                                        <div class="row mb-3 align-items-center">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input field-checkbox" 
+                                                    data-field="infra_second_name" 
+                                                    onchange="handleCheckboxChange(this)">
+                                            </div>
+                                            <div class="col-sm-3">
+                                                <label class="col-form-label">Segundo Nombre:</label>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.secondName}" readonly>
+                                            </div>
+                                            <div class="col-auto observation-buttons" data-field="infra_second_name">
+                                                <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                        type="button" 
+                                                        onclick="createObservation('infra_second_name', event)" 
+                                                        style="display: none;"
+                                                        title="Agregar observación">
+                                                    <i class="fas fa-exclamation-circle"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                        type="button" 
+                                                        onclick="removeObservation('infra_second_name', event)" 
+                                                        style="display: none;"
+                                                        title="Eliminar observación">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                        type="button" 
+                                                        onclick="showObservationDialog('infra_second_name', event)" 
+                                                        style="display: none;"
+                                                        title="Ver/Editar observación">
+                                                    <i class="fas fa-comment"></i>
+                                                </button>
+                                            </div>
+                                        </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <div class="col-auto">
-                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                       data-field="infra_first_surname" 
-                                       onchange="handleCheckboxChange(this)">
-                            </div>
-                            <div class="col-sm-3">
-                                <label class="col-form-label">Primer Apellido: *</label>
-                            </div>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" th:value="${infraestructuraHumana.firstSurname}" readonly>
-                            </div>
-                            <div class="col-auto observation-buttons" data-field="infra_first_surname">
-                                <button class="btn btn-primary btn-sm btn-add-observation" 
-                                        type="button" 
-                                        onclick="createObservation('infra_first_surname', event)" 
-                                        style="display: none;"
-                                        title="Agregar observación">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-remove-observation" 
-                                        type="button" 
-                                        onclick="removeObservation('infra_first_surname', event)" 
-                                        style="display: none;"
-                                        title="Eliminar observación">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-show-observation" 
-                                        type="button" 
-                                        onclick="showObservationDialog('infra_first_surname', event)" 
-                                        style="display: none;"
-                                        title="Ver/Editar observación">
-                                    <i class="fas fa-comment"></i>
-                                </button>
-                            </div>
-                        </div>
+                                        <div class="row mb-3 align-items-center">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input field-checkbox" 
+                                                    data-field="infra_first_surname" 
+                                                    onchange="handleCheckboxChange(this)">
+                                            </div>
+                                            <div class="col-sm-3">
+                                                <label class="col-form-label">Primer Apellido: *</label>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.firstSurname}" readonly>
+                                            </div>
+                                            <div class="col-auto observation-buttons" data-field="infra_first_surname">
+                                                <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                        type="button" 
+                                                        onclick="createObservation('infra_first_surname', event)" 
+                                                        style="display: none;"
+                                                        title="Agregar observación">
+                                                    <i class="fas fa-exclamation-circle"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                        type="button" 
+                                                        onclick="removeObservation('infra_first_surname', event)" 
+                                                        style="display: none;"
+                                                        title="Eliminar observación">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                        type="button" 
+                                                        onclick="showObservationDialog('infra_first_surname', event)" 
+                                                        style="display: none;"
+                                                        title="Ver/Editar observación">
+                                                    <i class="fas fa-comment"></i>
+                                                </button>
+                                            </div>
+                                        </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <div class="col-auto">
-                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                       data-field="infra_second_surname" 
-                                       onchange="handleCheckboxChange(this)">
-                            </div>
-                            <div class="col-sm-3">
-                                <label class="col-form-label">Segundo Apellido:</label>
-                            </div>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" th:value="${infraestructuraHumana.secondSurname}" readonly>
-                            </div>
-                            <div class="col-auto observation-buttons" data-field="infra_second_surname">
-                                <button class="btn btn-primary btn-sm btn-add-observation" 
-                                        type="button" 
-                                        onclick="createObservation('infra_second_surname', event)" 
-                                        style="display: none;"
-                                        title="Agregar observación">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-remove-observation" 
-                                        type="button" 
-                                        onclick="removeObservation('infra_second_surname', event)" 
-                                        style="display: none;"
-                                        title="Eliminar observación">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-primary btn-sm btn-show-observation" 
-                                        type="button" 
-                                        onclick="showObservationDialog('infra_second_surname', event)" 
-                                        style="display: none;"
-                                        title="Ver/Editar observación">
-                                    <i class="fas fa-comment"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Para intermediarios tipo Agente (no mostrar información de abogado) -->
-            <div th:unless="${infraestructuraHumana != null}" class="alert alert-info">
-                No hay información del profesional disponible.
-            </div>
-
-            <!-- Tabla de experiencias laborales -->
-            <div class="table-responsive mt-4">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Acciones</th>
-                            <th>Empresa</th>
-                            <th>Cargo</th>
-                            <th>Nombre del jefe inmediato</th>
-                            <th>Teléfono del jefe inmediato</th>
-                            <th>Fecha de inicio (dd/mm/yyyy)</th>
-                            <th>Fecha de fin (dd/mm/yyyy)</th>
-                            <th>Soporte</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:if="${experienciasLaborales.empty}">
-                            <td colspan="8" class="text-center">No hay datos de experiencia laboral disponibles</td>
-                        </tr>
-                        <tr th:each="experiencia : ${experienciasLaborales}" th:if="${experiencia != null}">
-                            <td class="text-center">
-                                <input type="checkbox" class="form-check-input work-exp-checkbox" 
-                                       th:attr="data-work-exp-id=${experiencia.id}" 
-                                       onchange="handleCheckboxChange(this)">
-                                <div class="observation-buttons mt-2" th:attr="data-work-exp-id=${experiencia.id}">
-                                    <button class="btn btn-primary btn-sm btn-add-observation" 
-                                            type="button" 
-                                            th:onclick="|createObservation('work_exp', event, ${experiencia.id})|" 
-                                            style="display: none;"
-                                            title="Agregar observación">
-                                        <i class="fas fa-exclamation-circle"></i>
-                                    </button>
-                                    <button class="btn btn-primary btn-sm btn-remove-observation" 
-                                            type="button" 
-                                            th:onclick="|removeObservation('work_exp', event, ${experiencia.id})|" 
-                                            style="display: none;"
-                                            title="Eliminar observación">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="btn btn-primary btn-sm btn-show-observation" 
-                                            type="button" 
-                                            th:onclick="|showObservationDialog('work_exp', event, ${experiencia.id})|" 
-                                            style="display: none;"
-                                            title="Ver/Editar observación">
-                                        <i class="fas fa-comment"></i>
-                                    </button>
+                                        <div class="row mb-3 align-items-center">
+                                            <div class="col-auto">
+                                                <input type="checkbox" class="form-check-input field-checkbox" 
+                                                    data-field="infra_second_surname" 
+                                                    onchange="handleCheckboxChange(this)">
+                                            </div>
+                                            <div class="col-sm-3">
+                                                <label class="col-form-label">Segundo Apellido:</label>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" th:value="${infraestructuraHumana.secondSurname}" readonly>
+                                            </div>
+                                            <div class="col-auto observation-buttons" data-field="infra_second_surname">
+                                                <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                        type="button" 
+                                                        onclick="createObservation('infra_second_surname', event)" 
+                                                        style="display: none;"
+                                                        title="Agregar observación">
+                                                    <i class="fas fa-exclamation-circle"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                        type="button" 
+                                                        onclick="removeObservation('infra_second_surname', event)" 
+                                                        style="display: none;"
+                                                        title="Eliminar observación">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                        type="button" 
+                                                        onclick="showObservationDialog('infra_second_surname', event)" 
+                                                        style="display: none;"
+                                                        title="Ver/Editar observación">
+                                                    <i class="fas fa-comment"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
                                 </div>
-                            </td>
-                            <td th:text="${experiencia.company}"></td>
-                            <td th:text="${experiencia.charge}"></td>
-                            <td th:text="${experiencia.nameBoss}"></td>
-                            <td th:text="${experiencia.phoneBoss}"></td>
-                            <td th:text="${experiencia.startDate != null ? #dates.format(experiencia.startDate, 'dd/MM/yyyy') : ''}"></td>
-                            <td th:text="${experiencia.endDate != null ? #dates.format(experiencia.endDate, 'dd/MM/yyyy') : ''}"></td>
-                            <td>
-                                <button class="btn btn-link" 
-                                        th:if="${experiencia.supportUpload != null && experiencia.supportUpload}" 
-                                        th:onclick="'downloadWorkExperienceDocument(' + ${experiencia.id} + ')'">
-                                    <i class="fas fa-file-download"></i>
-                                </button>
-                                <button class="btn btn-link" 
-                                        th:if="${experiencia.supportUpload != null && experiencia.supportUpload}" 
-                                        th:onclick="'viewWorkExperienceDocument(' + ${experiencia.id} + ')'">
-                                    <i class="fas fa-eye ms-2"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                            </div>
 
-            <div class="d-flex justify-content-between mt-4">
-                <button class="btn btn-secondary" onclick="cambiarTab('idoneidad')">
-                    <i class="fas fa-arrow-left me-2"></i>
-                    Atrás
-                </button>
-                <button class="btn btn-primary" onclick="cambiarTab('operativa')">
-                    Siguiente
-                    <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+                            <!-- Para intermediarios tipo Agente (no mostrar información de abogado) -->
+                            <div th:unless="${infraestructuraHumana != null}" class="alert alert-info">
+                                No hay información del profesional disponible.
+                            </div>
+
+                            <!-- Tabla de experiencias laborales -->
+                            <div class="table-responsive mt-4">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Acciones</th>
+                                            <th>Empresa</th>
+                                            <th>Cargo</th>
+                                            <th>Nombre del jefe inmediato</th>
+                                            <th>Teléfono del jefe inmediato</th>
+                                            <th>Fecha de inicio (dd/mm/yyyy)</th>
+                                            <th>Fecha de fin (dd/mm/yyyy)</th>
+                                            <th>Soporte</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${experienciasLaborales.empty}">
+                                            <td colspan="8" class="text-center">No hay datos de experiencia laboral disponibles</td>
+                                        </tr>
+                                        <tr th:each="experiencia : ${experienciasLaborales}" th:if="${experiencia != null}">
+                                            <td class="text-center">
+                                                <input type="checkbox" class="form-check-input work-exp-checkbox" 
+                                                    th:attr="data-work-exp-id=${experiencia.id}" 
+                                                    onchange="handleCheckboxChange(this)">
+                                                <div class="observation-buttons mt-2" th:attr="data-work-exp-id=${experiencia.id}">
+                                                    <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                            type="button" 
+                                                            th:onclick="|createObservation('work_exp', event, ${experiencia.id})|" 
+                                                            style="display: none;"
+                                                            title="Agregar observación">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                    </button>
+                                                    <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                            type="button" 
+                                                            th:onclick="|removeObservation('work_exp', event, ${experiencia.id})|" 
+                                                            style="display: none;"
+                                                            title="Eliminar observación">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                            type="button" 
+                                                            th:onclick="|showObservationDialog('work_exp', event, ${experiencia.id})|" 
+                                                            style="display: none;"
+                                                            title="Ver/Editar observación">
+                                                        <i class="fas fa-comment"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td th:text="${experiencia.company}"></td>
+                                            <td th:text="${experiencia.charge}"></td>
+                                            <td th:text="${experiencia.nameBoss}"></td>
+                                            <td th:text="${experiencia.phoneBoss}"></td>
+                                            <td th:text="${experiencia.startDate != null ? #dates.format(experiencia.startDate, 'dd/MM/yyyy') : ''}"></td>
+                                            <td th:text="${experiencia.endDate != null ? #dates.format(experiencia.endDate, 'dd/MM/yyyy') : ''}"></td>
+                                            <td>
+                                                <button class="btn btn-link" 
+                                                        th:if="${experiencia.supportUpload != null && experiencia.supportUpload}" 
+                                                        th:onclick="'downloadWorkExperienceDocument(' + ${experiencia.id} + ')'">
+                                                    <i class="fas fa-file-download"></i>
+                                                </button>
+                                                <button class="btn btn-link" 
+                                                        th:if="${experiencia.supportUpload != null && experiencia.supportUpload}" 
+                                                        th:onclick="'viewWorkExperienceDocument(' + ${experiencia.id} + ')'">
+                                                    <i class="fas fa-eye ms-2"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button class="btn btn-secondary" onclick="cambiarTab('idoneidad')">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Atrás
+                                </button>
+                                <button class="btn btn-primary" onclick="cambiarTab('operativa')">
+                                    Siguiente
+                                    <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Infraestructura Humana Tab -->
                      
                 <!-- Infraestructura Operativa Tab -->
@@ -1371,7 +1370,9 @@
                                 <!-- Soportes con checkboxes y botones de documento -->
                                 <div class="row mb-4 align-items-center">
                                     <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                        <input type="checkbox" class="form-check-input field-checkbox" 
+                                               data-field="operativa_camara" 
+                                               onchange="handleCheckboxChange(this)">
                                     </div>
                                     <div class="col">
                                         <label class="form-label">* Soporte matrícula de cámara de comercio</label>
@@ -1387,11 +1388,36 @@
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
+                                    <div class="col-auto observation-buttons" data-field="operativa_camara">
+                                        <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                type="button" 
+                                                onclick="createObservation('operativa_camara', event)" 
+                                                style="display: none;"
+                                                title="Agregar observación">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                type="button" 
+                                                onclick="removeObservation('operativa_camara', event)" 
+                                                style="display: none;"
+                                                title="Eliminar observación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                type="button" 
+                                                onclick="showObservationDialog('operativa_camara', event)" 
+                                                style="display: none;"
+                                                title="Ver/Editar observación">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    </div>
                                 </div>
-
+                
                                 <div class="row mb-4 align-items-center">
                                     <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                        <input type="checkbox" class="form-check-input field-checkbox" 
+                                               data-field="operativa_software" 
+                                               onchange="handleCheckboxChange(this)">
                                     </div>
                                     <div class="col">
                                         <label class="form-label">* Soporte de certificación de Software o Base de Datos</label>
@@ -1406,11 +1432,36 @@
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
+                                    <div class="col-auto observation-buttons" data-field="operativa_software">
+                                        <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                type="button" 
+                                                onclick="createObservation('operativa_software', event)" 
+                                                style="display: none;"
+                                                title="Agregar observación">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                type="button" 
+                                                onclick="removeObservation('operativa_software', event)" 
+                                                style="display: none;"
+                                                title="Eliminar observación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                type="button" 
+                                                onclick="showObservationDialog('operativa_software', event)" 
+                                                style="display: none;"
+                                                title="Ver/Editar observación">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    </div>
                                 </div>
-
+                
                                 <div class="row mb-4 align-items-center">
                                     <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                        <input type="checkbox" class="form-check-input field-checkbox" 
+                                               data-field="operativa_equipos" 
+                                               onchange="handleCheckboxChange(this)">
                                     </div>
                                     <div class="col">
                                         <label class="form-label">* Soporte de certificación de equipos tecnológicos</label>
@@ -1425,12 +1476,37 @@
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
+                                    <div class="col-auto observation-buttons" data-field="operativa_equipos">
+                                        <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                type="button" 
+                                                onclick="createObservation('operativa_equipos', event)" 
+                                                style="display: none;"
+                                                title="Agregar observación">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                type="button" 
+                                                onclick="removeObservation('operativa_equipos', event)" 
+                                                style="display: none;"
+                                                title="Eliminar observación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                type="button" 
+                                                onclick="showObservationDialog('operativa_equipos', event)" 
+                                                style="display: none;"
+                                                title="Ver/Editar observación">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    </div>
                                 </div>
-
+                
                                 <!-- Campos de información de contacto con checkboxes -->
                                 <div class="row mb-3 align-items-center">
                                     <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                        <input type="checkbox" class="form-check-input field-checkbox" 
+                                               data-field="operativa_phone1" 
+                                               onchange="handleCheckboxChange(this)">
                                     </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Línea telefónica 1: *</label>
@@ -1438,11 +1514,37 @@
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone1 : ''}" readonly>
                                     </div>
+                                    <div class="col-auto observation-buttons" data-field="operativa_phone1">
+                                        <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                type="button" 
+                                                onclick="createObservation('operativa_phone1', event)" 
+                                                style="display: none;"
+                                                title="Agregar observación">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                type="button" 
+                                                onclick="removeObservation('operativa_phone1', event)" 
+                                                style="display: none;"
+                                                title="Eliminar observación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                type="button" 
+                                                onclick="showObservationDialog('operativa_phone1', event)" 
+                                                style="display: none;"
+                                                title="Ver/Editar observación">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    </div>
                                 </div>
-
+                
+                                <!-- Continuar con el mismo patrón para los demás campos -->
                                 <div class="row mb-3 align-items-center">
                                     <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                        <input type="checkbox" class="form-check-input field-checkbox" 
+                                               data-field="operativa_phone2" 
+                                               onchange="handleCheckboxChange(this)">
                                     </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Línea telefónica 2:</label>
@@ -1450,11 +1552,37 @@
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone2 : ''}" readonly>
                                     </div>
+                                    <div class="col-auto observation-buttons" data-field="operativa_phone2">
+                                        <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                type="button" 
+                                                onclick="createObservation('operativa_phone2', event)" 
+                                                style="display: none;"
+                                                title="Agregar observación">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                type="button" 
+                                                onclick="removeObservation('operativa_phone2', event)" 
+                                                style="display: none;"
+                                                title="Eliminar observación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                type="button" 
+                                                onclick="showObservationDialog('operativa_phone2', event)" 
+                                                style="display: none;"
+                                                title="Ver/Editar observación">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    </div>
                                 </div>
-
+                
+                                <!-- Continúa agregando el mismo patrón para el resto de los campos -->
                                 <div class="row mb-3 align-items-center">
                                     <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                        <input type="checkbox" class="form-check-input field-checkbox" 
+                                               data-field="operativa_phone3" 
+                                               onchange="handleCheckboxChange(this)">
                                     </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Línea telefónica 3:</label>
@@ -1462,11 +1590,37 @@
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone3 : ''}" readonly>
                                     </div>
+                                    <div class="col-auto observation-buttons" data-field="operativa_phone3">
+                                        <!-- Botones de observación... -->
+                                        <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                type="button" 
+                                                onclick="createObservation('operativa_phone3', event)" 
+                                                style="display: none;"
+                                                title="Agregar observación">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                type="button" 
+                                                onclick="removeObservation('operativa_phone3', event)" 
+                                                style="display: none;"
+                                                title="Eliminar observación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                type="button" 
+                                                onclick="showObservationDialog('operativa_phone3', event)" 
+                                                style="display: none;"
+                                                title="Ver/Editar observación">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    </div>
                                 </div>
-
+                
                                 <div class="row mb-3 align-items-center">
                                     <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                        <input type="checkbox" class="form-check-input field-checkbox" 
+                                               data-field="operativa_phone_fax" 
+                                               onchange="handleCheckboxChange(this)">
                                     </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Número del Fax:</label>
@@ -1474,11 +1628,37 @@
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phoneFax : ''}" readonly>
                                     </div>
+                                    <div class="col-auto observation-buttons" data-field="operativa_phone_fax">
+                                        <!-- Botones de observación... -->
+                                        <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                type="button" 
+                                                onclick="createObservation('operativa_phone_fax', event)" 
+                                                style="display: none;"
+                                                title="Agregar observación">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                type="button" 
+                                                onclick="removeObservation('operativa_phone_fax', event)" 
+                                                style="display: none;"
+                                                title="Eliminar observación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                type="button" 
+                                                onclick="showObservationDialog('operativa_phone_fax', event)" 
+                                                style="display: none;"
+                                                title="Ver/Editar observación">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    </div>
                                 </div>
-
+                
                                 <div class="row mb-3 align-items-center">
                                     <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                        <input type="checkbox" class="form-check-input field-checkbox" 
+                                               data-field="operativa_email" 
+                                               onchange="handleCheckboxChange(this)">
                                     </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Correo Electrónico: *</label>
@@ -1486,11 +1666,37 @@
                                     <div class="col">
                                         <input type="email" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.email : ''}" readonly>
                                     </div>
+                                    <div class="col-auto observation-buttons" data-field="operativa_email">
+                                        <!-- Botones de observación... -->
+                                        <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                type="button" 
+                                                onclick="createObservation('operativa_email', event)" 
+                                                style="display: none;"
+                                                title="Agregar observación">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                type="button" 
+                                                onclick="removeObservation('operativa_email', event)" 
+                                                style="display: none;"
+                                                title="Eliminar observación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                type="button" 
+                                                onclick="showObservationDialog('operativa_email', event)" 
+                                                style="display: none;"
+                                                title="Ver/Editar observación">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    </div>
                                 </div>
-
+                
                                 <div class="row mb-3 align-items-center">
                                     <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input" th:checked="${infraestructuraOperativa != null ? true : false}">
+                                        <input type="checkbox" class="form-check-input field-checkbox" 
+                                               data-field="operativa_address" 
+                                               onchange="handleCheckboxChange(this)">
                                     </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Dirección de oficina de atención al ciudadano: *</label>
@@ -1498,9 +1704,33 @@
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.addressServiceOffice : ''}" readonly>
                                     </div>
+                                    <div class="col-auto observation-buttons" data-field="operativa_address">
+                                        <!-- Botones de observación... -->
+                                        <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                type="button" 
+                                                onclick="createObservation('operativa_address', event)" 
+                                                style="display: none;"
+                                                title="Agregar observación">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                type="button" 
+                                                onclick="removeObservation('operativa_address', event)" 
+                                                style="display: none;"
+                                                title="Eliminar observación">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                type="button" 
+                                                onclick="showObservationDialog('operativa_address', event)" 
+                                                style="display: none;"
+                                                title="Ver/Editar observación">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
-
+                
                             <div class="d-flex justify-content-between mt-4">
                                 <button class="btn btn-secondary" onclick="cambiarTab('infraestructura')">
                                     <i class="fas fa-arrow-left me-2"></i>

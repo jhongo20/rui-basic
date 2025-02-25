@@ -541,7 +541,18 @@ function getFieldLabel(field) {
         'infra_first_name': 'Primer Nombre (Infraestructura)',
         'infra_second_name': 'Segundo Nombre (Infraestructura)',
         'infra_first_surname': 'Primer Apellido (Infraestructura)',
-        'infra_second_surname': 'Segundo Apellido (Infraestructura)'
+        'infra_second_surname': 'Segundo Apellido (Infraestructura)',
+
+        // Campos de infraestructura operativa
+        'operativa_camara': 'Soporte matrícula de cámara de comercio',
+        'operativa_software': 'Soporte de certificación de Software o Base de Datos',
+        'operativa_equipos': 'Soporte de certificación de equipos tecnológicos',
+        'operativa_phone1': 'Línea telefónica 1',
+        'operativa_phone2': 'Línea telefónica 2',
+        'operativa_phone3': 'Línea telefónica 3',
+        'operativa_phone_fax': 'Número del Fax',
+        'operativa_email': 'Correo Electrónico (Operativa)',
+        'operativa_address': 'Dirección de oficina de atención al ciudadano'
     };
     
     return labels[field] || field;
