@@ -529,29 +529,80 @@ private RuiSupportRepository supportRepository;
         historyDetailsRepository.save(detail);
     }
 
-    // Método auxiliar para determinar el nombre de la tabla
-    private String determineTableName(String field) {
-        // Mapeo de campos a tablas
-        Map<String, String> tableMap = new HashMap<>();
-        tableMap.put("nit", "RUI_COMPANY");
-        tableMap.put("business_name", "RUI_COMPANY");
-        tableMap.put("department_id", "RUI_COMPANY");
-        tableMap.put("city_id", "RUI_COMPANY");
-        tableMap.put("address", "RUI_COMPANY");
-        tableMap.put("email", "RUI_COMPANY");
-        tableMap.put("phone", "RUI_COMPANY");
-        
-        // Campos de persona
-        tableMap.put("document_type", "RUI_PERSON");
-        tableMap.put("document_number", "RUI_PERSON");
-        tableMap.put("first_name", "RUI_PERSON");
-        tableMap.put("second_name", "RUI_PERSON");
-        tableMap.put("first_surname", "RUI_PERSON");
-        tableMap.put("second_surname", "RUI_PERSON");
-        tableMap.put("cellphone", "RUI_PERSON");
-        
-        return tableMap.getOrDefault(field, "UNKNOWN");
+    /**
+ * Método auxiliar para determinar el nombre de la tabla basado en el campo
+ * @param field El nombre del campo
+ * @return El nombre de la tabla correspondiente
+ */
+private String determineTableName(String field) {
+    if (field == null) {
+        return "UNKNOWN";
     }
+    
+    // Mapeo de campos a tablas
+    Map<String, String> tableMap = new HashMap<>();
+    
+    // Campos de la compañía
+    tableMap.put("nit", "RUI_COMPANY");
+    tableMap.put("business_name", "RUI_COMPANY");
+    tableMap.put("department_id", "RUI_COMPANY");
+    tableMap.put("city_id", "RUI_COMPANY");
+    tableMap.put("address", "RUI_COMPANY");
+    tableMap.put("email", "RUI_COMPANY");
+    tableMap.put("phone", "RUI_COMPANY");
+    
+    // Campos de persona
+    tableMap.put("document_type", "RUI_PERSON");
+    tableMap.put("document_number", "RUI_PERSON");
+    tableMap.put("first_name", "RUI_PERSON");
+    tableMap.put("second_name", "RUI_PERSON");
+    tableMap.put("first_surname", "RUI_PERSON");
+    tableMap.put("second_surname", "RUI_PERSON");
+    tableMap.put("cellphone", "RUI_PERSON");
+    
+    // Campos de infraestructura humana
+    tableMap.put("infra_document_type", "RUI_PERSONS"); // Asumiendo que son los datos del profesional
+    tableMap.put("infra_document_number", "RUI_PERSONS");
+    tableMap.put("infra_first_name", "RUI_PERSONS");
+    tableMap.put("infra_second_name", "RUI_PERSONS");
+    tableMap.put("infra_first_surname", "RUI_PERSONS");
+    tableMap.put("infra_second_surname", "RUI_PERSONS");
+    
+    // Campos de experiencia laboral
+    if (field.equals("work_exp")) {
+        return "RUI_WORK_EXPERIENCE";
+    }
+    
+    // Campos de infraestructura operativa
+    tableMap.put("operativa_camara", "RUI_INFRA_OPERATIONAL");
+    tableMap.put("operativa_software", "RUI_INFRA_OPERATIONAL");
+    tableMap.put("operativa_equipos", "RUI_INFRA_OPERATIONAL");
+    tableMap.put("operativa_phone1", "RUI_INFRA_OPERATIONAL");
+    tableMap.put("operativa_phone2", "RUI_INFRA_OPERATIONAL");
+    tableMap.put("operativa_phone3", "RUI_INFRA_OPERATIONAL");
+    tableMap.put("operativa_phone_fax", "RUI_INFRA_OPERATIONAL");
+    tableMap.put("operativa_email", "RUI_INFRA_OPERATIONAL");
+    tableMap.put("operativa_address", "RUI_INFRA_OPERATIONAL");
+    
+    // Campo de firma digitalizada
+    tableMap.put("firma_digitalizada", "RUI_SUPPORT"); // Asumiendo que la firma se guarda en la tabla de soporte
+    
+    // Usar el mapeo o determinar el nombre de la tabla por prefijo
+    if (tableMap.containsKey(field)) {
+        return tableMap.get(field);
+    }
+    
+    // Si no está en el mapeo, intentar determinar por prefijo
+    if (field.startsWith("infra_")) {
+        return "RUI_INFRA_HUMAN";
+    } else if (field.startsWith("operativa_")) {
+        return "RUI_INFRA_OPERATIONAL";
+    }
+    
+    // Registrar campos desconocidos para facilitar la depuración
+    log.warn("Campo no mapeado a ninguna tabla: {}", field);
+    return "UNKNOWN";
+}
 
     // Método auxiliar para determinar el ID de la tabla
     private Long determineTableId(RuiIntermediary intermediary, String field) {
