@@ -30,6 +30,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**", "/css/**", "/js/**", "/img/**", "/error", "/api/test/**").permitAll()
+                .requestMatchers("/api/idoneidad/**").hasRole("Soporte") // Permitir acceso a /api/idoneidad/** para ROLE_Soporte
+                .requestMatchers("/api/intermediary/**").hasRole("Soporte") // Asegurar permisos para "Información General"
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

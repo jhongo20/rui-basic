@@ -1,16 +1,24 @@
 package com.rui.basic.app.basic.service;
 
+import com.rui.basic.app.basic.domain.entities.RuiHistoryDetails;
 import com.rui.basic.app.basic.domain.entities.RuiIdoniedad;
+import com.rui.basic.app.basic.domain.entities.RuiIntermediary;
+import com.rui.basic.app.basic.domain.entities.RuiIntermediaryHistory;
+import com.rui.basic.app.basic.repository.RuiHistoryDetailsRepository;
 import com.rui.basic.app.basic.repository.RuiIdoniedadRepository;
+import com.rui.basic.app.basic.repository.RuiIntermediaryHistoryRepository;
 import com.rui.basic.app.basic.repository.RuiSupportRepository;
+import com.rui.basic.app.basic.web.dto.FormFieldStateDTO;
 import com.rui.basic.app.basic.web.dto.IdoneidadProfesionalDTO;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,11 +32,18 @@ public class IdoneidadProfesionalService {
     private final RuiIdoniedadRepository idoniedadRepository;
     private final RuiSupportRepository supportRepository;  // Agregar esto
 
+    private final RuiHistoryDetailsRepository historyDetailsRepository;
+    private final RuiIntermediaryHistoryRepository intermediaryHistoryRepository;
+
     public IdoneidadProfesionalService(
             RuiIdoniedadRepository idoniedadRepository,
-            RuiSupportRepository supportRepository) {  // Agregar esto
+            RuiSupportRepository supportRepository,
+            RuiHistoryDetailsRepository historyDetailsRepository,
+            RuiIntermediaryHistoryRepository intermediaryHistoryRepository) {
         this.idoniedadRepository = idoniedadRepository;
-        this.supportRepository = supportRepository;   // Agregar esto
+        this.supportRepository = supportRepository;
+        this.historyDetailsRepository = historyDetailsRepository;
+        this.intermediaryHistoryRepository = intermediaryHistoryRepository;
     }
 
     public List<IdoneidadProfesionalDTO> findByIntermediary(Long intermediaryId) {
@@ -102,6 +117,9 @@ public class IdoneidadProfesionalService {
         return resultado;
     }
 
+    /**
+     * Convierte un RuiIdoniedad a IdoneidadProfesionalDTO.
+     */
     private IdoneidadProfesionalDTO convertToDTO(RuiIdoniedad idoniedad) {
         if (idoniedad == null) {
             return null;
@@ -134,5 +152,214 @@ public class IdoneidadProfesionalService {
         dto.setChecked(true);
         
         return dto;
+    }
+
+    /**
+ * Obtiene el estado de la observación general para un registro de idoneidad.
+ */
+public FormFieldStateDTO getObservation(Long idoniedadId) {
+    log.debug("Buscando observación para Idoneidad ID: {}", idoniedadId);
+    Optional<RuiIdoniedad> idoniedadOptional = idoniedadRepository.findById(idoniedadId);
+    
+    FormFieldStateDTO state = new FormFieldStateDTO();
+    
+    if (idoniedadOptional.isEmpty()) {
+        log.warn("Idoneidad no encontrada: {}", idoniedadId);
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("Idoneidad no encontrada");
+        return state;
+    }
+
+    RuiIdoniedad idoniedad = idoniedadOptional.get();
+    
+    // Verificar si el registro está activo (status = 1) y la persona asociada también
+    if (idoniedad.getStatus() != 1 || idoniedad.getPersonId() == null || !idoniedad.getPersonId().isActive()) {
+        log.warn("Idoneidad ID {} inactiva o persona asociada inactiva", idoniedadId);
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("Idoneidad o persona inactiva");
+        return state;
+    }
+
+    // Buscar la observación general en RuiHistoryDetails
+    Optional<RuiHistoryDetails> detail = historyDetailsRepository
+        .findByTableIdAndTableName(idoniedadId, "RUI_IDONIEDAD")
+        .stream()
+        .filter(d -> "general".equals(d.getFieldName())) // Filtrar por observación general
+        .findFirst();
+    
+    if (detail.isPresent()) {
+        state.setIconClose(true);
+        state.setCommentDisabled(false);
+        state.setObservation(detail.get().getObservation());
+    } else {
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("");
+    }
+    
+    log.debug("Estado de la observación para Idoneidad ID {}: {}", idoniedadId, state);
+    return state;
+}
+
+    /**
+ * Crea una observación general para un registro de idoneidad.
+ */
+public FormFieldStateDTO createObservation(Long idoniedadId) {
+    log.debug("Intentando crear observación para Idoneidad ID: {}", idoniedadId);
+    Optional<RuiIdoniedad> idoniedadOptional = idoniedadRepository.findById(idoniedadId);
+    
+    if (idoniedadOptional.isEmpty()) {
+        log.warn("Idoneidad no encontrada: {}", idoniedadId);
+        FormFieldStateDTO state = new FormFieldStateDTO();
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("Idoneidad no encontrada");
+        return state;
+    }
+
+    RuiIdoniedad idoniedad = idoniedadOptional.get();
+    
+    // Verificar si el registro está activo
+    if (idoniedad.getStatus() != 1 || idoniedad.getPersonId() == null || !idoniedad.getPersonId().isActive()) {
+        log.warn("Idoneidad ID {} inactiva o persona asociada inactiva", idoniedadId);
+        FormFieldStateDTO state = new FormFieldStateDTO();
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("Idoneidad o persona inactiva");
+        return state;
+    }
+
+    RuiIntermediaryHistory history = findOrCreateActiveHistory(idoniedad.getIntermediaryId());
+    
+    // Verificar si ya existe una observación general para evitar duplicados
+    Optional<RuiHistoryDetails> existingDetail = historyDetailsRepository
+        .findByTableIdAndTableName(idoniedadId, "RUI_IDONIEDAD")
+        .stream()
+        .filter(d -> "general".equals(d.getFieldName()))
+        .findFirst();
+
+    if (!existingDetail.isPresent()) {
+        RuiHistoryDetails detail = new RuiHistoryDetails();
+        detail.setIntermediaryHistoryId(history);
+        detail.setFieldName("general"); // Usamos "general" para observaciones generales del registro
+        detail.setObservation(""); // Inicialmente vacío
+        detail.setTableName("RUI_IDONIEDAD");
+        detail.setTableId(idoniedadId);
+        
+        historyDetailsRepository.save(detail);
+        log.info("Observación general creada para Idoneidad ID: {}", idoniedadId);
+    } else {
+        log.warn("Ya existe una observación general para Idoneidad ID: {}", idoniedadId);
+    }
+
+    // Devolver el estado actualizado
+    return getObservation(idoniedadId);
+}
+
+    /**
+ * Elimina la observación general para un registro de idoneidad.
+ */
+public FormFieldStateDTO removeObservation(Long idoniedadId) {
+    log.debug("Intentando eliminar observación para Idoneidad ID: {}", idoniedadId);
+    Optional<RuiIdoniedad> idoniedadOptional = idoniedadRepository.findById(idoniedadId);
+    
+    if (idoniedadOptional.isEmpty()) {
+        log.warn("Idoneidad no encontrada: {}", idoniedadId);
+        FormFieldStateDTO state = new FormFieldStateDTO();
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("Idoneidad no encontrada");
+        return state;
+    }
+
+    RuiIdoniedad idoniedad = idoniedadOptional.get();
+    
+    // Verificar si el registro está activo
+    if (idoniedad.getStatus() != 1 || idoniedad.getPersonId() == null || !idoniedad.getPersonId().isActive()) {
+        log.warn("Idoneidad ID {} inactiva o persona asociada inactiva", idoniedadId);
+        FormFieldStateDTO state = new FormFieldStateDTO();
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("Idoneidad o persona inactiva");
+        return state;
+    }
+
+    historyDetailsRepository.findByTableIdAndTableName(idoniedadId, "RUI_IDONIEDAD")
+        .stream()
+        .filter(d -> "general".equals(d.getFieldName())) // Solo eliminamos observaciones generales
+        .findFirst()
+        .ifPresent(historyDetailsRepository::delete);
+    
+    log.info("Observación general eliminada para Idoneidad ID: {}", idoniedadId);
+    
+    // Devolver el estado actualizado
+    FormFieldStateDTO state = new FormFieldStateDTO();
+    state.setIconClose(false);
+    state.setCommentDisabled(true);
+    state.setObservation("");
+    return state;
+}
+
+    /**
+ * Actualiza la observación general para un registro de idoneidad.
+ */
+public FormFieldStateDTO updateObservation(Long idoniedadId, String observation) {
+    log.debug("Intentando actualizar observación para Idoneidad ID: {}", idoniedadId);
+    Optional<RuiIdoniedad> idoniedadOptional = idoniedadRepository.findById(idoniedadId);
+    
+    if (idoniedadOptional.isEmpty()) {
+        log.warn("Idoneidad no encontrada: {}", idoniedadId);
+        FormFieldStateDTO state = new FormFieldStateDTO();
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("Idoneidad no encontrada");
+        return state;
+    }
+
+    RuiIdoniedad idoniedad = idoniedadOptional.get();
+    
+    // Verificar si el registro está activo
+    if (idoniedad.getStatus() != 1 || idoniedad.getPersonId() == null || !idoniedad.getPersonId().isActive()) {
+        log.warn("Idoneidad ID {} inactiva o persona asociada inactiva", idoniedadId);
+        FormFieldStateDTO state = new FormFieldStateDTO();
+        state.setIconClose(false);
+        state.setCommentDisabled(true);
+        state.setObservation("Idoneidad o persona inactiva");
+        return state;
+    }
+
+    historyDetailsRepository.findByTableIdAndTableName(idoniedadId, "RUI_IDONIEDAD")
+        .stream()
+        .filter(d -> "general".equals(d.getFieldName()))
+        .findFirst()
+        .ifPresent(detail -> {
+            detail.setObservation(observation);
+            historyDetailsRepository.save(detail);
+            log.info("Observación general actualizada para Idoneidad ID: {}", idoniedadId);
+        });
+    
+    // Devolver el estado actualizado
+    return getObservation(idoniedadId);
+}
+
+    /**
+     * Encuentra o crea el historial activo para un intermediario asociado a la idoneidad.
+     */
+    private RuiIntermediaryHistory findOrCreateActiveHistory(RuiIntermediary intermediary) {
+        Optional<RuiIntermediaryHistory> activeHistory = intermediaryHistoryRepository
+            .findActiveByIntermediaryId(intermediary.getId());
+        
+        if (activeHistory.isPresent()) {
+            return activeHistory.get();
+        } else {
+            RuiIntermediaryHistory history = new RuiIntermediaryHistory();
+            history.setIntermediaryId(intermediary);
+            history.setDatetime(new Date());
+            history.setStatus((short) 1); // Activo
+            
+            return intermediaryHistoryRepository.save(history);
+        }
     }
 }

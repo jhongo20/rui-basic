@@ -959,39 +959,48 @@
                                     <tbody>
                                         <tr th:each="idoniedad : ${idoneidadList}" th:if="${idoniedad != null}">
                                             <td class="text-center">
-                                                <input type="checkbox" class="form-check-input" th:checked="${idoniedad != null ? idoniedad.checked : false}">
+                                                <input type="checkbox" class="form-check-input row-checkbox" 
+                                                       th:data-idoniedad-id="${idoniedad.id}" 
+                                                       onchange="handleCheckboxChange(this)">
+                                                       <div class="observation-buttons mt-2" th:attr="data-idoniedad-id=${idoniedad.id}">
+                                                    <button class="btn btn-primary btn-sm btn-add-observation" 
+                                                            type="button" 
+                                                            th:onclick="|createObservation(null, event, ${idoniedad.id})|" 
+                                                            style="display: none;"
+                                                            title="Agregar observación">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                    </button>
+                                                    <button class="btn btn-primary btn-sm btn-remove-observation" 
+                                                            type="button" 
+                                                            th:onclick="|removeObservation(null, event, ${idoniedad.id})|" 
+                                                            style="display: none;"
+                                                            title="Eliminar observación">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button class="btn btn-primary btn-sm btn-show-observation" 
+                                                            type="button" 
+                                                            th:onclick="|showObservationDialog(null, event, ${idoniedad.id})|" 
+                                                            style="display: none;"
+                                                            title="Ver/Editar observación">
+                                                        <i class="fas fa-comment"></i>
+                                                    </button>
+                                                </div>
                                             </td>
-                                            <td th:text="${idoniedad.documentType != null ? @intermediaryService.getDocumentTypeName(idoniedad.documentType) : ''}">-</td>
-                                            <td th:text="${idoniedad.documentNumber != null ? idoniedad.documentNumber : ''}">-</td>
-                                            <td th:text="${idoniedad.firstName != null ? idoniedad.firstName : ''}">-</td>
-                                            <td th:text="${idoniedad.secondName != null ? idoniedad.secondName : ''}">-</td>
-                                            <td th:text="${idoniedad.firstSurname != null ? idoniedad.firstSurname : ''}">-</td>
-                                            <td th:text="${idoniedad.secondSurname != null ? idoniedad.secondSurname : ''}">-</td>
-                                            <td th:text="${idoniedad.courseEntity != null ? idoniedad.courseEntity : ''}">-</td>
-                                            <td th:text="${idoniedad.dateCourse != null ? #dates.format(idoniedad.dateCourse, 'dd/MM/yyyy') : ''}">-</td>
-                                            <!--td class="text-center">
-                                                <button class="btn btn-link text-primary" 
-                                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
-                                                        th:onclick="'downloadDocument(' + ${idoniedad.id} + ')'">
-                                                    <i class="fas fa-file-download"></i>
-                                                </button>
-                                                <button class="btn btn-link text-primary" 
-                                                        th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
-                                                        th:onclick="'viewDocument(' + ${idoniedad.id} + ')'">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </td-->
+                                            <td th:text="${idoniedad.documentType != null ? @intermediaryService.getDocumentTypeName(idoniedad.documentType) : '-'}"></td>
+                                            <td th:text="${idoniedad.documentNumber != null ? idoniedad.documentNumber : '-'}"></td>
+                                            <td th:text="${idoniedad.firstName != null ? idoniedad.firstName : '-'}"></td>
+                                            <td th:text="${idoniedad.secondName != null ? idoniedad.secondName : '-'}"></td>
+                                            <td th:text="${idoniedad.firstSurname != null ? idoniedad.firstSurname : '-'}"></td>
+                                            <td th:text="${idoniedad.secondSurname != null ? idoniedad.secondSurname : '-'}"></td>
+                                            <td th:text="${idoniedad.courseEntity != null ? idoniedad.courseEntity : '-'}"></td>
+                                            <td th:text="${idoniedad.dateCourse != null ? #dates.format(idoniedad.dateCourse, 'dd/MM/yyyy') : '-'}"></td>
                                             <td class="text-center">
-                                                <!-- Debug info - remover después -->
-                                            <small class="text-muted" th:text="${'Support: ' + idoniedad.supportUpload}"></small>
-                                                <!-- Botón de descarga -->
+                                                <small class="text-muted" th:text="${'Support: ' + idoniedad.supportUpload}"></small>
                                                 <button class="btn btn-link text-primary" 
                                                         th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
                                                         th:onclick="'downloadDocument(' + ${idoniedad.id} + ')'">
                                                     <i class="fas fa-file-download"></i>
                                                 </button>
-                                                
-                                                <!-- Botón para ver en nueva pestaña -->
                                                 <button class="btn btn-link text-primary" 
                                                         th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
                                                         th:onclick="'openDocument(' + ${idoniedad.id} + ')'">
@@ -1002,7 +1011,7 @@
                                     </tbody>
                                 </table>
                             </div>
-
+                
                             <div class="d-flex justify-content-between mt-4">
                                 <button class="btn btn-secondary" onclick="cambiarTab('general')">
                                     <i class="fas fa-arrow-left me-2"></i>
@@ -1400,6 +1409,9 @@
 
 <!-- Modal para observaciones -->
 <div class="modal fade" id="observationModal" tabindex="-1">
+    <!-- Agregar dentro del modal -->
+<input type="hidden" id="currentField">
+<input type="hidden" id="currentIdoniedadId">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -1478,6 +1490,8 @@
                 if (selectedTab && selectedPane) {
                     selectedTab.classList.add('active');
                     selectedPane.classList.add('show', 'active');
+                }else {
+                    console.error('Tab o pane no encontrado:', { tabId, selectedTab, selectedPane });
                 }
             }
             
@@ -1598,75 +1612,6 @@
                 return false;
             }
         </script>
-        <script>
-            //funciones para de agregar/eliminar/editar observaciones
-            let currentField = '';
-
-function createObservation(field) {
-    fetch(`/api/observations/create/${field}`, {
-        method: 'POST'
-    }).then(response => {
-        if (response.ok) {
-            // Actualizar UI
-            updateFieldStatus(field, true);
-        }
-    });
-}
-
-function removeObservation(field) {
-    fetch(`/api/observations/remove/${field}`, {
-        method: 'POST'
-    }).then(response => {
-        if (response.ok) {
-            // Actualizar UI
-            updateFieldStatus(field, false);
-        }
-    });
-}
-
-function showObservationDialog(field) {
-    currentField = field;
-    const modal = new bootstrap.Modal(document.getElementById('observationModal'));
-    // Cargar observación existente si hay
-    fetch(`/api/observations/${field}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('observationText').value = data.observation || '';
-            document.getElementById('observationLabel').textContent = 
-                `Observación sobre ${getFieldLabel(field)}`;
-            modal.show();
-        });
-}
-
-function saveObservation() {
-    const observation = document.getElementById('observationText').value;
-    fetch(`/api/observations/save`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            field: currentField,
-            observation: observation
-        })
-    }).then(response => {
-        if (response.ok) {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('observationModal'));
-            modal.hide();
-            // Actualizar UI según sea necesario
-        }
-    });
-}
-
-function getFieldLabel(field) {
-    const labels = {
-        'nit': 'NIT',
-        'business_name': 'Razón Social',
-        'department_id': 'Departamento',
-        // ... más campos
-    };
-    return labels[field] || field;
-}
-        </script>
+        
 </body>
 </html>

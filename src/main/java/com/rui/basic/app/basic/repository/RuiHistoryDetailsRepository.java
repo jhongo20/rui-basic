@@ -38,4 +38,8 @@ public interface RuiHistoryDetailsRepository extends JpaRepository<RuiHistoryDet
     """, nativeQuery = true)
     List<RuiHistoryDetails> findByIntermediaryId(@Param("intermediaryId") Long intermediaryId);
 
+    // Nuevo método para buscar por tableId y tableName
+    @Query("SELECT h FROM RuiHistoryDetails h WHERE h.tableId = :tableId AND h.tableName = :tableName")
+    List<RuiHistoryDetails> findByTableIdAndTableName(@Param("tableId") Long tableId, @Param("tableName") String tableName);
+
 }
