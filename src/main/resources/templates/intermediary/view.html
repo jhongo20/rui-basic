@@ -157,77 +157,6 @@
                         margin-left: 10px;
                     }
                 </style>
-                <style>
-                    .nav-tabs .nav-link.active {
-                        background-color: #3f51b5;
-                        color: white !important;
-                    }
-                    .nav-tabs .nav-link {
-                        color: #3f51b5;
-                    }
-                    .progress {
-                        height: 5px;
-                        margin-bottom: 20px;
-                    }
-                    .tab-content {
-                        padding: 20px;
-                    }
-                    .btn-secondary {
-                        background-color: #f8f9fa;
-                        border-color: #ddd;
-                        color: #333;
-                    }
-                    .btn-secondary:hover {
-                        background-color: #e9ecef;
-                        border-color: #ccc;
-                        color: #333;
-                    }
-                    .btn-primary {
-                        background-color: #3f51b5;
-                        border-color: #3f51b5;
-                    }
-                    .btn-primary:hover {
-                        background-color: #303f9f;
-                        border-color: #303f9f;
-                    }
-                    .table th {
-                        background-color: #f8f9fa;
-                        color: #333;
-                        font-weight: 500;
-                    }
-                    .btn-link {
-                        padding: 0.25rem 0.5rem;
-                        text-decoration: none;
-                    }
-                    .btn-link:hover {
-                        background-color: #f8f9fa;
-                        border-radius: 4px;
-                    }
-                    .table td {
-                        vertical-align: middle;
-                    }
-                    .view-only-badge {
-                        background-color: #f8f9fa;
-                        color: #3f51b5;
-                        font-size: 0.8rem;
-                        padding: 0.25rem 0.5rem;
-                        border-radius: 4px;
-                        margin-left: 10px;
-                    }
-                    .observation-badge {
-                    display: inline-block;
-                    background-color: #ffeb3b;
-                    color: #000;
-                    font-size: 0.8rem;
-                    padding: 0.25rem 0.5rem;
-                    border-radius: 4px;
-                    margin-left: 0.5rem;
-                    cursor: pointer;
-                }
-                .observation-badge:hover {
-                    background-color: #ffc107;
-                }
-                </style>
 </head>
 <body>
     <!-- Agrega esto en algún lugar de tu plantilla, puede ser oculto -->
@@ -237,9 +166,19 @@
 <div id="toast-container" class="position-fixed top-0 end-0 p-3"></div>
     <div class="container-fluid">
         <div class="card mt-4">
-            <div class="card-header">
-                <h4>FORMULARIO ÚNICO DE INTERMEDIARIOS DE SEGUROS EN EL RAMO DE RIESGOS LABORALES</h4>
-                <p>TIPO DE INTERMEDIARIO: <span th:text="${intermediary?.typeIntermediarieId?.value}"></span></p>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4>FORMULARIO ÚNICO DE INTERMEDIARIOS DE SEGUROS EN EL RAMO DE RIESGOS LABORALES</h4>
+                    <p>TIPO DE INTERMEDIARIO: <span th:text="${intermediary?.typeIntermediarieId?.value}"></span>
+                        <span class="view-only-badge">Modo Visualización</span>
+                    </p>
+                </div>
+                <div>
+                    <a href="/intermediary/list" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Volver al listado
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 <!-- Nav tabs -->
@@ -1430,33 +1369,6 @@
                 
                             <!-- Botones de acción -->
                             <div class="d-flex justify-content-between mt-4">
-                                <div>
-                                    <!-- Mostrar botones según el estado -->
-                                    <form th:if="${intermediary.state != null && intermediary.state.state == 6}" method="post" th:action="@{'/intermediary/status/aprobar/' + ${intermediary.id}}" style="display:inline;">
-                                        <button type="submit" class="btn btn-success me-2">
-                                            Aprobar registro
-                                        </button>
-                                    </form>
-                                    
-                                    <form th:if="${intermediary.state != null && intermediary.state.state == 6}" method="post" th:action="@{'/intermediary/status/regresar-funcionario/' + ${intermediary.id}}" style="display:inline;">
-                                        <button type="submit" class="btn btn-secondary">
-                                            Regresar a funcionario
-                                        </button>
-                                    </form>
-                                    
-                                    <!-- Botones para cuando no está revisado -->
-                                    <form th:if="${intermediary.state != null && intermediary.state.state != 6}" method="post" th:action="@{'/intermediary/status/enviar-complementar/' + ${intermediary.id}}" style="display:inline;">
-                                        <button type="submit" class="btn btn-secondary me-2">
-                                            Enviar a Complementar
-                                        </button>
-                                    </form>
-                                    
-                                    <form th:if="${intermediary.state != null && intermediary.state.state != 6}" method="post" th:action="@{'/intermediary/status/marcar-revisado/' + ${intermediary.id}}" style="display:inline;">
-                                        <button type="submit" class="btn btn-primary">
-                                            Marcar como Revisado
-                                        </button>
-                                    </form>
-                                </div>
                                 
                                 <button class="btn btn-secondary" onclick="cambiarTab('operativa')">
                                     <i class="fas fa-arrow-left me-2"></i>
