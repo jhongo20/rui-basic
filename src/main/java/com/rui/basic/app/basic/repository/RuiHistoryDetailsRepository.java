@@ -42,4 +42,8 @@ public interface RuiHistoryDetailsRepository extends JpaRepository<RuiHistoryDet
     @Query("SELECT h FROM RuiHistoryDetails h WHERE h.tableId = :tableId AND h.tableName = :tableName")
     List<RuiHistoryDetails> findByTableIdAndTableName(@Param("tableId") Long tableId, @Param("tableName") String tableName);
 
+    @Query("SELECT COUNT(h) FROM RuiHistoryDetails h WHERE h.intermediaryHistoryId.intermediaryId.id = :intermediaryId")
+    Long countByIntermediaryId(@Param("intermediaryId") Long intermediaryId);
+
+    
 }

@@ -3,6 +3,7 @@ package com.rui.basic.app.basic.service;
 import com.rui.basic.app.basic.domain.entities.RuiIntermediary;
 import com.rui.basic.app.basic.domain.entities.RuiSupport;
 import com.rui.basic.app.basic.domain.enums.IntermediaryState;
+import com.rui.basic.app.basic.repository.RuiHistoryDetailsRepository;
 import com.rui.basic.app.basic.repository.RuiIntermediaryRepository;
 import com.rui.basic.app.basic.repository.RuiSupportRepository;
 import com.rui.basic.app.basic.web.dto.FirmaDigitalizadaDTO;
@@ -18,6 +19,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -29,15 +32,18 @@ public class FirmaDigitalizadaService {
     private static final Logger log = LoggerFactory.getLogger(FirmaDigitalizadaService.class);
     private final RuiSupportRepository supportRepository;
     private final RuiIntermediaryRepository intermediaryRepository;
+    private final RuiHistoryDetailsRepository historyDetailsRepository;
     private final Path firmasStorageLocation;
 
    
     public FirmaDigitalizadaService(
             RuiSupportRepository supportRepository,
             RuiIntermediaryRepository intermediaryRepository,
+            RuiHistoryDetailsRepository historyDetailsRepository,
             @Value("${app.documentos.ruta:/tmp/documentos}") String documentosRuta) {
         this.supportRepository = supportRepository;
         this.intermediaryRepository = intermediaryRepository;
+        this.historyDetailsRepository = historyDetailsRepository;
         
         // Crear directorio para firmas
         this.firmasStorageLocation = Paths.get(documentosRuta, "firmas");
@@ -151,26 +157,45 @@ public class FirmaDigitalizadaService {
     }
     
     @Transactional
-    public boolean marcarComoRevisado(Long intermediaryId) {
-        try {
-            Optional<RuiIntermediary> intermediaryOpt = intermediaryRepository.findById(intermediaryId);
-            
-            if (intermediaryOpt.isEmpty()) {
-                log.error("No se encontró el intermediario: {}", intermediaryId);
-                return false;
-            }
-            
-            RuiIntermediary intermediary = intermediaryOpt.get();
-            intermediary.setState(IntermediaryState.REVIEWED);
-            intermediaryRepository.save(intermediary);
-            
-            log.info("Intermediario {} marcado como REVISADO", intermediaryId);
-            return true;
-        } catch (Exception e) {
-            log.error("Error al marcar como revisado el intermediario {}: {}", intermediaryId, e.getMessage(), e);
-            return false;
+public Map<String, Object> marcarComoRevisado(Long intermediaryId) {
+    Map<String, Object> result = new HashMap<>();
+    result.put("success", false);
+    
+    try {
+        Optional<RuiIntermediary> intermediaryOpt = intermediaryRepository.findById(intermediaryId);
+        
+        if (intermediaryOpt.isEmpty()) {
+            log.error("No se encontró el intermediario: {}", intermediaryId);
+            result.put("message", "No se encontró el intermediario");
+            return result;
         }
+        
+        RuiIntermediary intermediary = intermediaryOpt.get();
+        
+        // Verificar si hay observaciones pendientes
+        Long observacionesPendientes = historyDetailsRepository.countByIntermediaryId(intermediaryId);
+        
+        // Si hay observaciones, indicarlo en la respuesta pero no impedir la acción
+        if (observacionesPendientes > 0) {
+            result.put("observacionesPendientes", true);
+            result.put("cantidadObservaciones", observacionesPendientes);
+        }
+        
+        // Cambiar estado
+        intermediary.setState(IntermediaryState.REVIEWED);
+        intermediaryRepository.save(intermediary);
+        
+        log.info("Intermediario {} marcado como REVISADO", intermediaryId);
+        result.put("success", true);
+        result.put("message", "Registro marcado como revisado correctamente");
+        
+        return result;
+    } catch (Exception e) {
+        log.error("Error al marcar como revisado el intermediario {}: {}", intermediaryId, e.getMessage(), e);
+        result.put("message", "Error al marcar como revisado: " + e.getMessage());
+        return result;
     }
+}
     
     @Transactional
     public boolean enviarAComplementar(Long intermediaryId) {

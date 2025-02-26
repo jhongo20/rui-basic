@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.List;
 import java.util.Map;
@@ -425,16 +426,40 @@ public class IntermediaryController {
     }
 
     @PostMapping("/status/marcar-revisado/{id}")
-    public String marcarComoRevisado(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        boolean success = firmaDigitalizadaService.marcarComoRevisado(id);
+    public String marcarComoRevisado(@PathVariable Long id, RedirectAttributes redirectAttributes, Model model) {
+        Map<String, Object> result = firmaDigitalizadaService.marcarComoRevisado(id);
         
-        if (success) {
-            redirectAttributes.addFlashAttribute("mensaje", "Registro marcado como revisado correctamente");
+        if ((Boolean) result.get("success")) {
+            redirectAttributes.addFlashAttribute("mensaje", result.get("message"));
+            
+            // Si hay observaciones pendientes, agregar información adicional
+            if (result.containsKey("observacionesPendientes") && (Boolean) result.get("observacionesPendientes")) {
+                redirectAttributes.addFlashAttribute("advertencia", 
+                    "Se ha marcado como revisado, pero existen " + result.get("cantidadObservaciones") + 
+                    " observaciones pendientes.");
+            }
         } else {
-            redirectAttributes.addFlashAttribute("error", "Error al marcar como revisado");
+            redirectAttributes.addFlashAttribute("error", result.get("message"));
         }
         
         return "redirect:/intermediary/review/" + id;
+    }
+
+    @GetMapping("/check-observaciones/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> verificarObservaciones(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Long cantidadObservaciones = historyDetailsRepository.countByIntermediaryId(id);
+            response.put("observacionesPendientes", cantidadObservaciones > 0);
+            response.put("cantidadObservaciones", cantidadObservaciones);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error al verificar observaciones: {}", e.getMessage(), e);
+            response.put("error", "Error al verificar observaciones");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     @PostMapping("/status/enviar-complementar/{id}")
