@@ -41,14 +41,17 @@ import com.rui.basic.app.basic.service.email.EmailService;
 import com.rui.basic.app.basic.web.dto.EmailTemplateDTO;
 import com.rui.basic.app.basic.web.dto.ExperienciaLaboralDTO;
 import com.rui.basic.app.basic.web.dto.FormFieldStateDTO;
+import com.rui.basic.app.basic.web.dto.IdoneidadProfesionalDTO;
 import com.rui.basic.app.basic.web.dto.InfrastructuraHumanaDTO;
 
 import jakarta.persistence.EntityNotFoundException;
 
 import com.rui.basic.app.basic.domain.entities.RuiCity;
 import com.rui.basic.app.basic.domain.entities.RuiDepartment;
+import com.rui.basic.app.basic.domain.entities.RuiHistoryDetails;
 import com.rui.basic.app.basic.domain.entities.RuiIntermediary;
 import com.rui.basic.app.basic.domain.enums.IntermediaryState;
+import com.rui.basic.app.basic.repository.RuiHistoryDetailsRepository;
 
 @Controller
 @RequestMapping("/intermediary")
@@ -65,6 +68,8 @@ public class IntermediaryController {
     private final FirmaDigitalizadaService firmaDigitalizadaService;
     private final DocumentoService documentoService;
     private final UbicacionService ubicacionService;
+    private final RuiHistoryDetailsRepository historyDetailsRepository;
+
     
 
     
@@ -78,7 +83,8 @@ public class IntermediaryController {
             DocumentoService documentoService,
             InfraestructuraOperativaService infraestructuraOperativaService,
             FirmaDigitalizadaService firmaDigitalizadaService,
-            UbicacionService ubicacionService) {
+            UbicacionService ubicacionService,
+            RuiHistoryDetailsRepository historyDetailsRepository) {
         this.intermediaryService = intermediaryService;
         this.emailService = emailService;
         this.fileStorageService = fileStorageService;
@@ -88,6 +94,7 @@ public class IntermediaryController {
         this.infraestructuraOperativaService = infraestructuraOperativaService;
         this.firmaDigitalizadaService = firmaDigitalizadaService;
         this.ubicacionService = ubicacionService;
+        this.historyDetailsRepository = historyDetailsRepository;
     }
     
     @PostMapping("/status/update")
@@ -301,10 +308,62 @@ public class IntermediaryController {
 
     
 
-    @GetMapping("/view")
-    public String viewIntermediary() {
-        return "intermediary/view";
+    @GetMapping("/view/{id}")
+    public String viewIntermediary(@PathVariable Long id, Model model) {
+        try {
+            RuiIntermediary intermediary = intermediaryService.findById(id);
+            
+            // Verificar permisos según el tipo de usuario...
+            
+            // Cargar datos principales
+            model.addAttribute("intermediary", intermediary);
+
+            // Determinar tipo de intermediario
+            boolean isAgente = intermediary.getTypeIntermediarieId() != null && 
+                            intermediary.getTypeIntermediarieId().getId() == 4L;
+            model.addAttribute("isAgente", isAgente);
+
+            // Cargar idoneidad con indicador de observaciones
+            List<IdoneidadProfesionalDTO> idoneidadList = idoneidadService.findMostRecentByIntermediary(id);
+            // Marcar si tienen observaciones
+            for (IdoneidadProfesionalDTO dto : idoneidadList) {
+                dto.setHasObservation(idoneidadService.hasObservation(dto.getId()));
+            }
+            model.addAttribute("idoneidadList", idoneidadList);
+            
+            // Cargar estados de campos para observaciones
+            Map<String, FormFieldStateDTO> fieldStates = intermediaryService.getFieldStates(id);
+            model.addAttribute("fieldStates", fieldStates);
+            
+            // Cargar ubicación
+            loadLocationData(intermediary, model);
+            
+            // Cargar infraestructuras y firma
+            loadInfrastructuraHumana(id, model);
+            
+            // Marcar si las experiencias laborales tienen observaciones
+            if (model.getAttribute("experienciasLaborales") != null) {
+                List<ExperienciaLaboralDTO> experiencias = (List<ExperienciaLaboralDTO>) model.getAttribute("experienciasLaborales");
+                for (ExperienciaLaboralDTO exp : experiencias) {
+                    exp.setHasObservation(infraestructuraHumanaService.hasWorkExpObservation(exp.getId()));
+                }
+            }
+            
+            loadInfrastructuraOperativa(id, model);
+            loadFirmaDigitalizada(id, model);
+            
+            return "intermediary/view";
+            
+        } catch (EntityNotFoundException e) {
+            log.error("Intermediario no encontrado: {}", id);
+            return "redirect:/error";
+        } catch (Exception e) {
+            log.error("Error al cargar los detalles del intermediario: {}", e.getMessage(), e);
+            return "redirect:/error";
+        }
     }
+
+
 
     @GetMapping("/review")
     public String reviewIntermediary() {

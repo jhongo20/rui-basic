@@ -15,4 +15,5 @@ public class ExperienciaLaboralDTO {
     private Short status;
     private Boolean supportUpload;
     private Boolean checked; // Para el estado del checkbox
+    private boolean hasObservation;
 }

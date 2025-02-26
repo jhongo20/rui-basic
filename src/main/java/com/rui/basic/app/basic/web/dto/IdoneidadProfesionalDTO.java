@@ -18,4 +18,5 @@ public class IdoneidadProfesionalDTO {
     private Boolean supportUpload;
     private String documentPath;
     private Boolean checked;  // para manejar el estado del checkbox
+    private boolean hasObservation;
 }

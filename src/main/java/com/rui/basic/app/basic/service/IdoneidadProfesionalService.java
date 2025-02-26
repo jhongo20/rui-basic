@@ -361,4 +361,21 @@ public FormFieldStateDTO updateObservation(Long idoniedadId, String observation)
             return intermediaryHistoryRepository.save(history);
         }
     }
+
+    /**
+ * Verifica si un registro de idoneidad tiene observaciones
+ */
+    public boolean hasObservation(Long idoniedadId) {
+        if (idoniedadId == null) {
+            return false;
+        }
+        
+        List<RuiHistoryDetails> details = historyDetailsRepository
+            .findByTableIdAndTableName(idoniedadId, "RUI_IDONIEDAD");
+        
+        return details.stream()
+            .anyMatch(d -> "general".equals(d.getFieldName()) && 
+                    d.getObservation() != null && 
+                    !d.getObservation().trim().isEmpty());
+    }
 }

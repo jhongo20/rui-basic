@@ -431,5 +431,22 @@ public class InfraestructuraHumanaService {
         
         return fieldStates;
     }
+
+    /**
+     * Verifica si una experiencia laboral tiene observaciones
+     */
+    public boolean hasWorkExpObservation(Long workExpId) {
+        if (workExpId == null) {
+            return false;
+        }
+        
+        List<RuiHistoryDetails> details = historyDetailsRepository
+            .findByTableIdAndTableName(workExpId, "RUI_WORK_EXPERIENCE");
+        
+        return details.stream()
+            .anyMatch(d -> "general".equals(d.getFieldName()) && 
+                    d.getObservation() != null && 
+                    !d.getObservation().trim().isEmpty());
+    }
     
 }
