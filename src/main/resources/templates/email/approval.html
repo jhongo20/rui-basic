@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Aprobación Registro de Intermediarios</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+    <table style="width:80%;margin:0 auto;font-family:Arial;">
+        <tr style="background-color:#35348A;color:#FFFFFF;">
+            <td style="padding:10px 0;text-align:center;font-size:16px;font-weight:bolder;">SISTEMA DE REGISTRO ÚNICO DE INTERMEDIARIOS</td>
+        </tr>
+        <tr><td>&nbsp;</td></tr>
+        <tr style="font-size:14px;">
+            <td>
+                <p>Bogotá D.C. <span th:text="${currentDate}">FECHA</span></p>
+                <br>
+                <p th:text="${name}">NOMBRE</p>
+                <p th:text="${address}">DIRECCIÓN</p>
+                <p th:text="${city}">CIUDAD</p>
+                <p>Asunto: Aprobación registro de intermediarios.</p>
+                <p>Respetado(a) Intermediario(a).</p>
+                <br>
+                <p>Una vez validada la información suministrada, le informamos que el registro con el número <span th:text="${radicateNumber}">NÚMERO</span>, ha sido aprobado de acuerdo con los requisitos establecidos en el Decreto 1072 de 2015, Decreto 1117 de 2016 y Resolución 4247 de 2016.</p>
+                <br>
+                <p>Cordial Saludo,</p>
+                <br>
+                <p><strong>MINISTERIO DEL TRABAJO</strong></p>
+                <p><strong>Registro de Único de Intermediarios</strong></p>
+                <p>*** Importante: por favor, no responda a este correo electrónico. Este buzón no se ha configurado para recibir correo electrónico. ***</p>
+            </td>
+        </tr>
+        <tr><td>&nbsp;</td></tr>
+        <tr style="background-color:#35348A;color:#FFFFFF;">
+            <td style="padding:10px 0;text-align:center;font-size:16px;font-weight:bolder;">MINISTERIO DEL TRABAJO</td>
+        </tr>
+    </table>
+</body>
+</html>

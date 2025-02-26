@@ -310,14 +310,52 @@ public class FirmaDigitalizadaService {
             }
             
             RuiIntermediary intermediary = intermediaryOpt.get();
+            
+            // Cambiar estado a APPROVED
             intermediary.setState(IntermediaryState.APPROVED);
             intermediaryRepository.save(intermediary);
+            
+            // Enviar correo electrónico de aprobación
+            sendApprovalEmail(intermediary);
             
             log.info("Intermediario {} APROBADO", intermediaryId);
             return true;
         } catch (Exception e) {
             log.error("Error al aprobar el intermediario {}: {}", intermediaryId, e.getMessage(), e);
             return false;
+        }
+    }
+
+    private void sendApprovalEmail(RuiIntermediary intermediary) {
+        try {
+            // Obtener información del intermediario para la plantilla
+            String name = getIntermediaryName(intermediary);
+            String email = getIntermediaryEmail(intermediary);
+            String address = getIntermediaryAddress(intermediary);
+            String city = getIntermediaryCity(intermediary);
+            String radicateNumber = intermediary.getRadicateNumber();
+            String intermediaryType = intermediary.getTypeIntermediarieId().getValue();
+            
+            EmailTemplateDTO emailDTO = new EmailTemplateDTO();
+            emailDTO.setTo(email);
+            emailDTO.setSubject("Aprobación registro de intermediarios");
+            emailDTO.setTemplate("email/approval.html");
+            
+            Map<String, String> templateVariables = new HashMap<>();
+            templateVariables.put("name", name);
+            templateVariables.put("address", address);
+            templateVariables.put("city", city);
+            templateVariables.put("radicateNumber", radicateNumber);
+            templateVariables.put("intermediaryType", intermediaryType);
+            templateVariables.put("currentDate", getCurrentFormattedDate());
+            emailDTO.setTemplateVariables(templateVariables);
+            
+            // Enviar el correo
+            emailService.sendEmail(emailDTO);
+            
+            log.info("Correo de aprobación enviado a {}", email);
+        } catch (Exception e) {
+            log.error("Error enviando correo de aprobación: {}", e.getMessage(), e);
         }
     }
     
@@ -332,14 +370,54 @@ public class FirmaDigitalizadaService {
             }
             
             RuiIntermediary intermediary = intermediaryOpt.get();
-            intermediary.setState(IntermediaryState.RENEWAL);
+            
+            // Cambiar estado a DILIGENTED (volver a estado 2)
+            intermediary.setState(IntermediaryState.DILIGENTED);
             intermediaryRepository.save(intermediary);
+            
+            // Enviar correo electrónico de cambio de estado
+            sendStatusChangeEmail(intermediary);
             
             log.info("Intermediario {} regresado a FUNCIONARIO", intermediaryId);
             return true;
         } catch (Exception e) {
             log.error("Error al regresar a funcionario el intermediario {}: {}", intermediaryId, e.getMessage(), e);
             return false;
+        }
+    }
+
+    private void sendStatusChangeEmail(RuiIntermediary intermediary) {
+        try {
+            // Obtener información del intermediario para la plantilla
+            String name = getIntermediaryName(intermediary);
+            String email = getIntermediaryEmail(intermediary);
+            String address = getIntermediaryAddress(intermediary);
+            String city = getIntermediaryCity(intermediary);
+            String radicateNumber = intermediary.getRadicateNumber();
+            String intermediaryType = intermediary.getTypeIntermediarieId().getValue();
+            
+            EmailTemplateDTO emailDTO = new EmailTemplateDTO();
+            emailDTO.setTo(email);
+            emailDTO.setSubject("Cambio de Estado en Solicitud");
+            emailDTO.setTemplate("email/status-change.html");
+            
+            Map<String, String> templateVariables = new HashMap<>();
+            templateVariables.put("name", name);
+            templateVariables.put("address", address);
+            templateVariables.put("city", city);
+            templateVariables.put("radicateNumber", radicateNumber);
+            templateVariables.put("intermediaryType", intermediaryType);
+            templateVariables.put("currentDate", getCurrentFormattedDate());
+            templateVariables.put("newStatus", "DILIGENCIADO");
+            templateVariables.put("statusMessage", "Su solicitud ha sido regresada a un funcionario para revisión adicional.");
+            emailDTO.setTemplateVariables(templateVariables);
+            
+            // Enviar el correo
+            emailService.sendEmail(emailDTO);
+            
+            log.info("Correo de cambio de estado enviado a {}", email);
+        } catch (Exception e) {
+            log.error("Error enviando correo de cambio de estado: {}", e.getMessage(), e);
         }
     }
     
