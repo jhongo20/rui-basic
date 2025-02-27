@@ -1,6 +1,8 @@
 package com.rui.basic.app.basic.web.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -660,10 +662,56 @@ public class IntermediaryController {
     }
 
     
-    // Método auxiliar para obtener el ID del usuario actual
-    private Long getCurrentUserId() {
-        // Implementa esto según tu sistema de autenticación
-        // Por ejemplo, usando Spring Security
-        return 1L; // Valor temporal
+
+
+    //--------------------------------------------------------------------------------
+    // Otros métodos del controlador
+    @GetMapping("/my-registries")
+    public String listUserRegistries(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "DESC") String direction,
+            Model model) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                log.error("No hay usuario autenticado");
+                return "redirect:/auth/login";
+            }
+            String username = authentication.getName();
+            log.debug("Usuario autenticado: {}", username);
+
+            Page<RuiIntermediary> userRegistries = intermediaryService.findByUser(username, page, size, sort, direction);
+
+            model.addAttribute("registries", userRegistries.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", userRegistries.getTotalPages());
+            model.addAttribute("totalItems", userRegistries.getTotalElements());
+            model.addAttribute("sort", sort);
+            model.addAttribute("direction", direction);
+
+            if (userRegistries.isEmpty()) {
+                model.addAttribute("noResults", true);
+            }
+
+            return "intermediary/my-registries";
+        } catch (Exception e) {
+            log.error("Error al listar registros del usuario: {}", e.getMessage(), e);
+            model.addAttribute("error", "Error al cargar los registros: " + e.getMessage());
+            return "error";
+        }
     }
+
+// Método auxiliar para obtener el ID del usuario actual (mejorado)
+private Long getCurrentUserId() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.isAuthenticated()) {
+        // Asumimos que el ID del usuario está en los detalles del Authentication o como principal
+        // Debes ajustarlo según tu implementación de autenticación
+        return 1L; // Temporal, reemplaza con la lógica real
+    }
+    throw new IllegalStateException("No hay usuario autenticado");
+}
+    
 }

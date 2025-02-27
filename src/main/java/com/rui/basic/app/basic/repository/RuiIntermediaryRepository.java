@@ -111,5 +111,12 @@ public interface RuiIntermediaryRepository extends JpaRepository<RuiIntermediary
 
        @Query("SELECT i FROM RuiIntermediary i WHERE i.infrastructureHumanId.id = :infraHumanId")
         Optional<RuiIntermediary> findByInfrastructureHumanId(@Param("infraHumanId") Long infraHumanId);
+
+    // Nuevos métodos con paginación
+    @Query("SELECT i FROM RuiIntermediary i WHERE i.personId = :personId")
+    Page<RuiIntermediary> findAllByPersonId(@Param("personId") RuiPerson personId, Pageable pageable);
+
+    @Query("SELECT i FROM RuiIntermediary i WHERE i.companyId = :companyId")
+    Page<RuiIntermediary> findAllByCompanyId(@Param("companyId") RuiCompany companyId, Pageable pageable);
        
 }

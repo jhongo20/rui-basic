@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Retiro Voluntario de Registro</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="cid:logo" alt="Logo Ministerio del Trabajo" style="max-width: 200px;" />
+        </div>
+        
+        <h2 style="color: #7f8c8d;">Confirmación de Retiro Voluntario</h2>
+        
+        <p>Estimado/a <span th:text="${name}">Nombre</span>,</p>
+        
+        <p>Confirmamos que hemos recibido y procesado su solicitud de <strong>retiro voluntario</strong> del registro como intermediario.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-left: 4px solid #7f8c8d;">
+            <p><strong>Detalles del registro:</strong></p>
+            <ul style="list-style-type: none; padding-left: 0;">
+                <li><strong>Número de Registro:</strong> <span th:text="${radicateNumber}">RUI-001</span></li>
+                <li><strong>Fecha de Retiro:</strong> <span th:text="${currentDate}">01/01/2025</span></li>
+                <li><strong>Tipo de Intermediario:</strong> <span th:text="${intermediaryType}">Agente</span></li>
+            </ul>
+        </div>
+        
+        <p>A partir de ahora, su registro ya no se encuentra activo en nuestra base de datos. Si en el futuro desea volver a registrarse como intermediario, deberá realizar una nueva solicitud a través de nuestro sistema.</p>
+        
+        <p>Agradecemos su participación en el Sistema Único de Registro de Intermediarios y esperamos poder servirle nuevamente en el futuro.</p>
+        
+        <p>Si tiene alguna pregunta o requiere asistencia adicional, no dude en contactarnos.</p>
+        
+        <p>Atentamente,</p>
+        <p><strong>Ministerio del Trabajo</strong><br/>Sistema Único de Registro de Intermediarios</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #777;">
+            <p>Este es un correo automático, por favor no responda a este mensaje.</p>
+        </div>
+    </div>
+</body>
+</html>

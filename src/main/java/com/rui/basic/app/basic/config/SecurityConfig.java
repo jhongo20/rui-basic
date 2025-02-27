@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**", "/css/**", "/js/**", "/img/**", "/error", "/api/test/**").permitAll()
                 .requestMatchers("/api/idoneidad/**").hasRole("Soporte") // Permitir acceso a /api/idoneidad/** para ROLE_Soporte
                 .requestMatchers("/api/intermediary/**").hasRole("Soporte") // Asegurar permisos para "Información General"
+                .requestMatchers("/intermediary/my-registries").hasRole("Intermediario") // Asegura acceso para Intermediario
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

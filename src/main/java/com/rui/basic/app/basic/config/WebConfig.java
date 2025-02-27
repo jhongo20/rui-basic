@@ -18,7 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .setCachePeriod(0);
         
         registry.addResourceHandler("/img/**")
-                .addResourceLocations("classpath:/static/img/")
+                .addResourceLocations("classpath:/img/")
                 .setCacheControl(CacheControl.noCache())
                 .setCachePeriod(0);
 

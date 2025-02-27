@@ -1,6 +1,7 @@
 package com.rui.basic.app.basic.service;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -10,11 +11,13 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.rui.basic.app.basic.domain.entities.RuiCompany;
 import com.rui.basic.app.basic.domain.entities.RuiGenerics;
 import com.rui.basic.app.basic.domain.entities.RuiHistoryDetails;
 import com.rui.basic.app.basic.domain.entities.RuiIdoniedad;
@@ -31,6 +34,7 @@ import com.rui.basic.app.basic.repository.RuiHistoryDetailsRepository;
 import com.rui.basic.app.basic.repository.RuiIntermediaryHistoryRepository;
 import com.rui.basic.app.basic.repository.RuiIntermediaryRepository;
 import com.rui.basic.app.basic.repository.RuiSupportRepository;
+import com.rui.basic.app.basic.repository.RuiUserRepository;
 import com.rui.basic.app.basic.service.email.EmailService;
 import com.rui.basic.app.basic.web.dto.EmailTemplateDTO;
 import com.rui.basic.app.basic.web.dto.FormFieldStateDTO;
@@ -51,6 +55,7 @@ public class IntermediaryService {
     private final EmailService emailService;
     private final AuditService auditService;
     private final RuiGenericsRepository genericsRepository;
+    private final RuiUserRepository userRepository;
 
     @Autowired
 private RuiSupportRepository supportRepository;
@@ -64,13 +69,15 @@ private RuiSupportRepository supportRepository;
                              EmailService emailService,
                              FileStorageService fileStorageService,
                              AuditService auditService,
-                             RuiGenericsRepository genericsRepository) {
+                             RuiGenericsRepository genericsRepository,
+                             RuiUserRepository userRepository) {
         this.intermediaryRepository = intermediaryRepository;
         this.historyDetailsRepository = historyDetailsRepository;
         this.intermediaryHistoryRepository = intermediaryHistoryRepository;
         this.emailService = emailService;
         this.auditService = auditService;
         this.genericsRepository = genericsRepository;
+        this.userRepository = userRepository;
     }
 
     public void updateIntermediaryStatus(Long intermediaryId, IntermediaryState newState, String observations, RuiUser currentUser) throws BusinessException {
@@ -704,6 +711,39 @@ private String determineTableName(String field) {
             states.put(field, state); 
         } 
         return states; 
+    }
+
+    //--------------------------------------------------------------------------------
+    // Métodos para la paginación y búsqueda de usuarios para usuarios registrados
+    public Page<RuiIntermediary> findByUser(String username, int page, int size, String sortField, String sortDirection) {
+        try {
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+            Pageable pageable = PageRequest.of(page, size, sort);
+
+            // Obtener el usuario por username
+            RuiUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + username));
+
+            // Verificar si el usuario tiene una persona asociada
+            if (user.getPerson() != null) {
+                return intermediaryRepository.findAllByPersonId(user.getPerson(), pageable);
+            } else {
+                RuiCompany company = findCompanyByUser(user);
+                if (company != null) {
+                    return intermediaryRepository.findAllByCompanyId(company, pageable);
+                } else {
+                    return new PageImpl<>(Collections.emptyList(), pageable, 0);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error al buscar registros para el usuario {}: {}", username, e.getMessage(), e);
+            throw new BusinessException("Error al buscar registros del usuario", e);
+        }
+    }
+
+    // Método auxiliar para encontrar la empresa asociada al usuario
+    private RuiCompany findCompanyByUser(RuiUser user) {
+        return user.getCompany();
     }
     
 }
