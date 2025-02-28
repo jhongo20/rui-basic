@@ -48,5 +48,7 @@ public interface RuiUserRepository extends JpaRepository<RuiUser, Long> {
     @Query("SELECT u FROM RuiUser u WHERE u.status = :status AND u.roleId.id != 1")
     List<RuiUser> findAllOfficials(@Param("status") Integer status);
     
+    //---
+    
     
 }

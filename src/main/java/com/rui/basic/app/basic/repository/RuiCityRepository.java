@@ -14,4 +14,6 @@ public interface RuiCityRepository extends JpaRepository<RuiCity, Long> {
     List<RuiCity> findByDepartmentId_IdOrderByNameAsc(Long departmentId);
     
     List<RuiCity> findByDepartmentId(RuiDepartment department);
+
+    List<RuiCity> findAllByOrderByNameAsc();
 }

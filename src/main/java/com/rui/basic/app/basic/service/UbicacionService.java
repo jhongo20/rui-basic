@@ -34,6 +34,13 @@ public class UbicacionService {
         return departmentRepository.findById(id)
                 .map(this::convertToDepartmentDTO);
     }
+
+    // Nuevo método para obtener todas las ciudades
+    public List<CityDTO> getAllCities() {
+        return cityRepository.findAllByOrderByNameAsc().stream()
+                .map(this::convertToCityDTO)
+                .collect(Collectors.toList());
+    }
     
     public List<CityDTO> getCitiesByDepartmentId(Long departmentId) {
         return cityRepository.findByDepartmentId_IdOrderByNameAsc(departmentId).stream()

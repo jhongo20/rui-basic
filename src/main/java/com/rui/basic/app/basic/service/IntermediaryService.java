@@ -745,5 +745,8 @@ private String determineTableName(String field) {
     private RuiCompany findCompanyByUser(RuiUser user) {
         return user.getCompany();
     }
+
+    
+    
     
 }

@@ -99,7 +99,8 @@
                                                     <a class="dropdown-item" th:href="@{/intermediary/update/{id}(id=${registry.id})}">Actualizar Registro</a>
                                                 </li>
                                                 <li th:if="${registry.state.state == 3}">
-                                                    <a class="dropdown-item" th:href="@{/intermediary/complement/{id}(id=${registry.id})}">Complementar</a>
+                                                    <!--a class="dropdown-item" th:href="@{/intermediary/complement/{id}(id=${registry.id})}">Complementar</a-->
+                                                    <a class="dropdown-item" th:href="@{/intermediary/complement/{id}(id=${registry.id})}" th:if="${registry.state.state == 3}">Complementar</a>
                                                 </li>
                                             </ul>
                                         </div>

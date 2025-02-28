@@ -29,10 +29,28 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                // Recursos públicos
                 .requestMatchers("/auth/**", "/css/**", "/js/**", "/img/**", "/error", "/api/test/**").permitAll()
-                .requestMatchers("/api/idoneidad/**").hasRole("Soporte") // Permitir acceso a /api/idoneidad/** para ROLE_Soporte
-                .requestMatchers("/api/intermediary/**").hasRole("Soporte") // Asegurar permisos para "Información General"
-                .requestMatchers("/intermediary/my-registries").hasRole("Intermediario") // Asegura acceso para Intermediario
+                
+                // Endpoints para observaciones - Accesibles para todos los autenticados
+                .requestMatchers("/intermediary/field-observation/**", 
+                                "/intermediary/fields-with-observations/**", 
+                                "/intermediary/idoneidad-has-observation/**", 
+                                "/intermediary/workexp-has-observation/**").permitAll()
+                
+                // Endpoints específicos para roles
+                .requestMatchers("/api/idoneidad/**").hasRole("Soporte")
+                .requestMatchers("/api/intermediary/**").hasRole("Soporte")
+                
+                // Rutas de intermediario
+                .requestMatchers("/intermediary/my-registries").hasAnyRole("Intermediario", "Soporte", "ADMIN")
+                .requestMatchers("/intermediary/complement/**").hasAnyRole("Intermediario", "Soporte", "ADMIN")
+                .requestMatchers("/intermediary/edit-intermediary").hasAnyRole("Intermediario", "Soporte", "ADMIN")
+                
+                // Dashboard accesible para todos los autenticados
+                .requestMatchers("/dashboard").authenticated()
+                
+                // Cualquier otra solicitud requiere autenticación
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

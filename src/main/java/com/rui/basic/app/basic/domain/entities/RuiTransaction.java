@@ -22,21 +22,27 @@ public class RuiTransaction implements Serializable {
     @SequenceGenerator(name = "RUI_TRANSACTIONS_SEQ", sequenceName = "RUI_TRANSACTIONS_SEQUENCE", allocationSize = 1)
     private Long id;
     
-    @Column(name = "TRANSACTION_TYPE")
-    private String transactionType;
+    @Column(name = "IP_ADDRESS")
+    private String ipAddress;
     
-    @Column(name = "DESCRIPTION")
-    private String description;
+    @Column(name = "MAC_ADDRESS")
+    private String macAddress;
+    
+    @Column(name = "DATETIME")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date datetime; // Cambiado de transactionDate a datetime
+    
+    @Column(name = "EVENT_TYPE")
+    private String eventType;
+    
+    @Column(name = "EVENT_DESCRIPTION")
+    private String eventDescription; // Cambiado de description a eventDescription
     
     @Column(name = "TABLE_NAME")
     private String tableName;
     
     @Column(name = "TABLE_ID")
     private Long tableId;
-    
-    @Column(name = "TRANSACTION_DATE")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date transactionDate;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID")
