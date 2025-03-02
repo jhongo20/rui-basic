@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.rui.basic.app.basic.domain.entities.RuiCompany;
 import com.rui.basic.app.basic.domain.entities.RuiGenerics;
+import com.rui.basic.app.basic.domain.entities.RuiIdoniedad;
 import com.rui.basic.app.basic.domain.entities.RuiIntermediary;
 import com.rui.basic.app.basic.domain.entities.RuiPerson;
 import com.rui.basic.app.basic.domain.enums.IntermediaryState;
@@ -118,5 +119,8 @@ public interface RuiIntermediaryRepository extends JpaRepository<RuiIntermediary
 
     @Query("SELECT i FROM RuiIntermediary i WHERE i.companyId = :companyId")
     Page<RuiIntermediary> findAllByCompanyId(@Param("companyId") RuiCompany companyId, Pageable pageable);
+
+    @Query("SELECT i FROM RuiIdoniedad i WHERE i.id = :id")
+    Optional<RuiIdoniedad> findIdoneidadById(@Param("id") Long id);
        
 }

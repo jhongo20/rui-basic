@@ -16,9 +16,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.data.domain.Page;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,6 +29,7 @@ import org.springframework.http.MediaType;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
@@ -35,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.io.FilenameUtils;
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +63,7 @@ import com.rui.basic.app.basic.web.dto.IdoneidadProfesionalDTO;
 import com.rui.basic.app.basic.web.dto.InfrastructuraHumanaDTO;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 
 import com.rui.basic.app.basic.domain.entities.RuiCity;
@@ -69,13 +75,20 @@ import com.rui.basic.app.basic.domain.entities.RuiInfraHuman;
 import com.rui.basic.app.basic.domain.entities.RuiInfraOperational;
 import com.rui.basic.app.basic.domain.entities.RuiIntermediary;
 import com.rui.basic.app.basic.domain.entities.RuiPerson;
+import com.rui.basic.app.basic.domain.entities.RuiSupport;
 import com.rui.basic.app.basic.domain.entities.RuiUser;
 import com.rui.basic.app.basic.domain.entities.RuiWorkExperience;
 import com.rui.basic.app.basic.domain.enums.IntermediaryState;
 import com.rui.basic.app.basic.repository.RuiCityRepository;
 import com.rui.basic.app.basic.repository.RuiDepartmentRepository;
 import com.rui.basic.app.basic.repository.RuiHistoryDetailsRepository;
+import com.rui.basic.app.basic.repository.RuiInfraHumanRepository;
+import com.rui.basic.app.basic.repository.RuiInfraOperationalRepository;
+import com.rui.basic.app.basic.repository.RuiIntermediaryRepository;
+import com.rui.basic.app.basic.repository.RuiPersonRepository;
+import com.rui.basic.app.basic.repository.RuiSupportRepository;
 import com.rui.basic.app.basic.repository.RuiUserRepository;
+import com.rui.basic.app.basic.repository.RuiWorkExperienceRepository;
 
 @Controller
 @RequestMapping("/intermediary")
@@ -97,6 +110,20 @@ public class IntermediaryController {
     private final RuiUserRepository ruiUserRepository;
     private final RuiCityRepository ruiCityRepository;
     private final RuiDepartmentRepository ruiDepartmentRepository;
+    @Autowired
+    private RuiSupportRepository ruiSupportRepository;
+    @Autowired
+    private RuiInfraOperationalRepository infraOperativaRepository;
+    @Autowired
+    private RuiWorkExperienceRepository workExperienceRepository;
+    @Autowired
+    private RuiIntermediaryRepository ruiIntermediaryRepository;
+    @Autowired
+    private RuiPersonRepository ruiPersonRepository;
+    @Autowired
+    private RuiInfraHumanRepository infraHumanaRepository;
+    @Autowired
+    private IdoneidadProfesionalService idoniedadService;
 
     
 
@@ -749,172 +776,257 @@ public class IntermediaryController {
 
     //--------------------------------------------------------------------------------
     // métodos para editar 
+    
     @PostMapping("/complement/{id}")
-public String complementIntermediary(@PathVariable Long id,
-                                    @ModelAttribute RuiIntermediary intermediary,
-                                    // Parámetros para los archivos
-                                    @RequestParam(required = false) MultipartFile ccFile,
-                                    @RequestParam(required = false) MultipartFile softFile,
-                                    @RequestParam(required = false) MultipartFile hardFile,
-                                    @RequestParam(required = false) MultipartFile signatureFile,
-                                    @RequestParam(name = "idoneidadFiles", required = false) List<MultipartFile> idoneidadFiles,
-                                    // Parámetros para experiencias laborales
-                                    @RequestParam(name = "workExperienceIds", required = false) List<Long> workExpIds,
-                                    @RequestParam(name = "workExperienceCompanies", required = false) List<String> workExpCompanies,
-                                    @RequestParam(name = "workExperienceCharges", required = false) List<String> workExpCharges,
-                                    @RequestParam(name = "workExperienceNameBosses", required = false) List<String> workExpNameBosses,
-                                    @RequestParam(name = "workExperiencePhoneBosses", required = false) List<String> workExpPhoneBosses,
-                                    @RequestParam(name = "workExperienceStartDates", required = false) List<String> workExpStartDates,
-                                    @RequestParam(name = "workExperienceEndDates", required = false) List<String> workExpEndDates,
-                                    @RequestParam(name = "workExperienceFiles", required = false) List<MultipartFile> workExperienceFiles,
-                                    // Otros parámetros
-                                    @RequestParam Map<String, String> allParams,
-                                    RedirectAttributes redirectAttributes) {
+public String complementIntermediary(
+        @PathVariable Long id,
+        @ModelAttribute RuiIntermediary intermediary,
+        @RequestParam(required = false) MultipartFile ccFile,
+        @RequestParam(required = false) MultipartFile softFile,
+        @RequestParam(required = false) MultipartFile hardFile,
+        @RequestParam(required = false) MultipartFile signatureFile,
+        @RequestParam Map<String, String> allParams,
+        MultipartHttpServletRequest request,
+        RedirectAttributes redirectAttributes) {
     try {
-        // Obtener el usuario actual
+        log.debug("Inicio de complementIntermediary para ID: {}", id);
+
+        // Depuración detallada
+        log.debug("Request Content-Type: {}", request.getContentType());
+        log.debug("Todos los parámetros de formulario: {}", allParams);
+        log.debug("Todos los archivos recibidos en request.getFileMap():");
+        request.getFileMap().forEach((name, file) -> 
+            log.debug("Archivo: name={}, originalFilename={}, size={}", name, file.getOriginalFilename(), file.getSize()));
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             log.error("No hay usuario autenticado");
             return "redirect:/auth/login";
         }
-        
         String username = authentication.getName();
         Long currentUserId = getCurrentUserId();
-        
-        // Obtener el intermediario existente con todos sus detalles
+
         RuiIntermediary existingIntermediary = intermediaryService.findByIdWithDetails(id);
-        
-        // Verificar que el intermediario pertenece al usuario actual
-        boolean authorized = isUserAuthorizedForIntermediary(existingIntermediary, username);
-        if (!authorized) {
-            log.warn("Usuario {} no autorizado para editar intermediario {}", username, id);
+        if (!isUserAuthorizedForIntermediary(existingIntermediary, username)) {
             redirectAttributes.addFlashAttribute("error", "No está autorizado para editar este registro");
             return "redirect:/intermediary/my-registries";
         }
 
-        // Actualizar datos básicos
+        // 1. Actualizar Información General
         updateIntermediaryDetails(existingIntermediary, intermediary);
 
-        // Actualizar idoneidad desde los parámetros del formulario
+        // 2. Actualizar Idoneidad Profesional
         List<RuiIdoniedad> existingIdoneidad = existingIntermediary.getRuiIdoniedadList();
-        if (existingIdoneidad != null) {
-            for (int i = 0; i < existingIdoneidad.size(); i++) {
-                String courseEntityKey = "idoneidadList[" + i + "].courseEntity";
-                String dateCourseKey = "idoneidadList[" + i + "].dateCourse";
-                if (allParams.containsKey(courseEntityKey)) {
-                    existingIdoneidad.get(i).setCourseEntity(allParams.get(courseEntityKey));
+        List<Long> idoneidadIds = new ArrayList<>();
+        for (int i = 0; i < existingIdoneidad.size(); i++) {
+            String idKey = "idoneidadIds[" + i + "]";
+            if (allParams.containsKey(idKey)) {
+                idoneidadIds.add(Long.parseLong(allParams.get(idKey)));
+            }
+        }
+        for (int i = 0; i < idoneidadIds.size(); i++) {
+            Long idoneidadId = idoneidadIds.get(i);
+            RuiIdoniedad idoniedad = existingIdoneidad.stream()
+                    .filter(idon -> idon.getId().equals(idoneidadId))
+                    .findFirst().orElse(null);
+            if (idoniedad != null) {
+                idoniedad.setCourseEntity(allParams.get("idoneidadCourseEntities[" + i + "]"));
+                String dateStr = allParams.get("idoneidadDateCourses[" + i + "]");
+                if (dateStr != null && !dateStr.isEmpty()) {
+                    idoniedad.setDateCourse(new SimpleDateFormat("yyyy-MM-dd").parse(dateStr));
                 }
-                if (allParams.containsKey(dateCourseKey)) {
-                    String dateStr = allParams.get(dateCourseKey);
-                    if (dateStr != null && !dateStr.isEmpty()) {
-                        try {
-                            existingIdoneidad.get(i).setDateCourse(new SimpleDateFormat("yyyy-MM-dd").parse(dateStr));
-                        } catch (Exception e) {
-                            log.warn("Error al parsear fecha {}: {}", dateStr, e.getMessage());
-                        }
+                RuiPerson person = idoniedad.getPersonId();
+                if (person != null) {
+                    person.setDocumentType(allParams.getOrDefault("idoneidadDocumentTypes[" + i + "]", person.getDocumentType()));
+                    person.setDocumentNumber(allParams.getOrDefault("idoneidadDocumentNumbers[" + i + "]", person.getDocumentNumber()));
+                    person.setFirstName(allParams.getOrDefault("idoneidadFirstNames[" + i + "]", person.getFirstName()));
+                    person.setSecondName(allParams.getOrDefault("idoneidadSecondNames[" + i + "]", person.getSecondName()));
+                    person.setFirstSurname(allParams.getOrDefault("idoneidadFirstSurnames[" + i + "]", person.getFirstSurname()));
+                    person.setSecondSurname(allParams.getOrDefault("idoneidadSecondSurnames[" + i + "]", person.getSecondSurname()));
+                    ruiPersonRepository.save(person);
+                }
+                idoniedadService.saveIdoneidad(idoniedad);
+
+                MultipartFile idoneidadFile = request.getFile("idoneidadFiles[" + i + "]");
+                if (idoneidadFile != null && !idoneidadFile.isEmpty()) {
+                    String filePath = fileStorageService.storeFile(idoneidadFile, "IDONIEDAD/" + idoneidadId, currentUserId, id);
+                    RuiSupport support = ruiSupportRepository.findByIdoniedadId(idoneidadId).orElse(new RuiSupport());
+                    support.setIdoniedadId(idoniedad);
+                    support.setFilename(FilenameUtils.getName(filePath));
+                    support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+                    support.setExtencion(FilenameUtils.getExtension(filePath));
+                    support.setStatus((short) 1);
+                    ruiSupportRepository.save(support);
+                    log.info("Archivo de idoneidad guardado para ID {}: {}", idoneidadId, filePath);
+                } else {
+                    log.debug("No se proporcionó archivo para idoneidad ID: {} en índice: {}", idoneidadId, i);
+                }
+            }
+        }
+
+        // 3. Actualizar Infraestructura Humana
+        RuiInfraHuman infraHuman = existingIntermediary.getInfrastructureHumanId();
+        if (infraHuman != null && intermediary.getInfrastructureHumanId() != null) {
+            RuiPerson lawyer = infraHuman.getLawyerId();
+            if (lawyer != null) {
+                lawyer.setDocumentType(intermediary.getInfrastructureHumanId().getLawyerId().getDocumentType());
+                lawyer.setDocumentNumber(intermediary.getInfrastructureHumanId().getLawyerId().getDocumentNumber());
+                lawyer.setFirstName(intermediary.getInfrastructureHumanId().getLawyerId().getFirstName());
+                lawyer.setSecondName(intermediary.getInfrastructureHumanId().getLawyerId().getSecondName());
+                lawyer.setFirstSurname(intermediary.getInfrastructureHumanId().getLawyerId().getFirstSurname());
+                lawyer.setSecondSurname(intermediary.getInfrastructureHumanId().getLawyerId().getSecondSurname());
+                ruiPersonRepository.save(lawyer);
+            }
+
+            Set<RuiWorkExperience> existingExp = infraHuman.getWorkExperiences();
+            List<Long> workExpIds = new ArrayList<>();
+            for (int i = 0; i < existingExp.size(); i++) {
+                String idKey = "workExperienceIds[" + i + "]";
+                if (allParams.containsKey(idKey)) {
+                    workExpIds.add(Long.parseLong(allParams.get(idKey)));
+                }
+            }
+            int index = 0;
+            for (RuiWorkExperience exp : existingExp) {
+                if (index < workExpIds.size() && exp.getId().equals(workExpIds.get(index))) {
+                    exp.setCompany(allParams.get("workExperienceCompanies[" + index + "]"));
+                    exp.setCharge(allParams.get("workExperienceCharges[" + index + "]"));
+                    exp.setNameBoss(allParams.get("workExperienceNameBosses[" + index + "]"));
+                    exp.setPhoneBoss(allParams.get("workExperiencePhoneBosses[" + index + "]"));
+                    String startDateStr = allParams.get("workExperienceStartDates[" + index + "]");
+                    String endDateStr = allParams.get("workExperienceEndDates[" + index + "]");
+                    if (startDateStr != null && !startDateStr.isEmpty()) {
+                        exp.setStartDate(new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr));
                     }
-                }
-            }
-        }
-        
-        // Actualizar experiencias laborales
-        if (workExpIds != null && !workExpIds.isEmpty() && 
-            existingIntermediary.getInfrastructureHumanId() != null) {
-            
-            Set<RuiWorkExperience> experiences = existingIntermediary.getInfrastructureHumanId().getWorkExperiences();
-            if (experiences != null) {
-                for (int i = 0; i < workExpIds.size(); i++) {
-                    Long expId = workExpIds.get(i);
-                    
-                    for (RuiWorkExperience exp : experiences) {
-                        if (exp.getId().equals(expId)) {
-                            // Actualizar datos
-                            if (i < workExpCompanies.size()) exp.setCompany(workExpCompanies.get(i));
-                            if (i < workExpCharges.size()) exp.setCharge(workExpCharges.get(i));
-                            if (i < workExpNameBosses.size()) exp.setNameBoss(workExpNameBosses.get(i));
-                            if (i < workExpPhoneBosses.size()) exp.setPhoneBoss(workExpPhoneBosses.get(i));
-                            
-                            // Convertir fechas si están presentes
-                            if (i < workExpStartDates.size() && workExpStartDates.get(i) != null && !workExpStartDates.get(i).isEmpty()) {
-                                try {
-                                    exp.setStartDate(new SimpleDateFormat("yyyy-MM-dd").parse(workExpStartDates.get(i)));
-                                } catch (Exception e) {
-                                    log.warn("Error parsing start date: {}", e.getMessage());
-                                }
-                            }
-                            
-                            if (i < workExpEndDates.size() && workExpEndDates.get(i) != null && !workExpEndDates.get(i).isEmpty()) {
-                                try {
-                                    exp.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(workExpEndDates.get(i)));
-                                } catch (Exception e) {
-                                    log.warn("Error parsing end date: {}", e.getMessage());
-                                }
-                            }
-                            
-                            break;
-                        }
+                    if (endDateStr != null && !endDateStr.isEmpty()) {
+                        exp.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
                     }
+                    workExperienceRepository.save(exp);
+
+                    MultipartFile workExperienceFile = request.getFile("workExperienceFiles[" + index + "]");
+                    if (workExperienceFile != null && !workExperienceFile.isEmpty()) {
+                        String filePath = fileStorageService.storeFile(workExperienceFile, "WORK_EXPERIENCE/" + exp.getId(), currentUserId, id);
+                        RuiSupport support = ruiSupportRepository.findFirstByWorkExperienceId(exp).orElse(new RuiSupport());
+                        support.setWorkExperienceId(exp);
+                        support.setFilename(FilenameUtils.getName(filePath));
+                        support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+                        support.setExtencion(FilenameUtils.getExtension(filePath));
+                        support.setStatus((short) 1);
+                        ruiSupportRepository.save(support);
+                        log.info("Archivo de experiencia laboral guardado para ID {}: {}", exp.getId(), filePath);
+                    } else {
+                        log.debug("No se proporcionó archivo para experiencia laboral ID: {} en índice: {}", exp.getId(), index);
+                    }
+                    index++;
                 }
             }
+            infraHumanaRepository.save(infraHuman);
         }
 
-        // Cambiar estado a COMPLEMENTED
-        intermediaryService.updateIntermediaryStatus(id, IntermediaryState.COMPLEMENTED, "Información complementada", null);
+        // 4. Actualizar Infraestructura Operativa
+        // 4. Actualizar Infraestructura Operativa
+        // 4. Actualizar Infraestructura Operativa
+RuiInfraOperational infraOp = existingIntermediary.getInfrastructureOperationalId();
+if (infraOp != null && intermediary.getInfrastructureOperationalId() != null) {
+    infraOp.setPhone1(intermediary.getInfrastructureOperationalId().getPhone1());
+    infraOp.setPhone2(intermediary.getInfrastructureOperationalId().getPhone2());
+    infraOp.setPhone3(intermediary.getInfrastructureOperationalId().getPhone3());
+    infraOp.setPhoneFax(intermediary.getInfrastructureOperationalId().getPhoneFax());
+    infraOp.setEmail(intermediary.getInfrastructureOperationalId().getEmail());
+    infraOp.setAddressServiceOffice(intermediary.getInfrastructureOperationalId().getAddressServiceOffice());
+    infraOperativaRepository.save(infraOp);
 
-        // Cargar archivos de Infraestructura Operativa
-        if (ccFile != null && !ccFile.isEmpty()) {
-            String filePath = fileStorageService.storeFile(ccFile, "INFRA_OPERACIONAL/CC", currentUserId, id);
-            intermediaryService.saveSupport(id, filePath, "INFRA_OPERACIONAL");
-        }
-        if (softFile != null && !softFile.isEmpty()) {
-            String filePath = fileStorageService.storeFile(softFile, "INFRA_OPERACIONAL/SOFT", currentUserId, id);
-            intermediaryService.saveSupport(id, filePath, "INFRA_OPERACIONAL");
-        }
-        if (hardFile != null && !hardFile.isEmpty()) {
-            String filePath = fileStorageService.storeFile(hardFile, "INFRA_OPERACIONAL/HARD", currentUserId, id);
-            intermediaryService.saveSupport(id, filePath, "INFRA_OPERACIONAL");
-        }
-
-        // Cargar archivos de Idoneidad
-        if (idoneidadFiles != null && existingIdoneidad != null) {
-            for (int i = 0; i < idoneidadFiles.size() && i < existingIdoneidad.size(); i++) {
-                MultipartFile file = idoneidadFiles.get(i);
-                if (file != null && !file.isEmpty()) {
-                    Long idoneidadId = existingIdoneidad.get(i).getId();
-                    String filePath = fileStorageService.storeFile(file, "IDONIEDAD/" + idoneidadId, currentUserId, id);
-                    intermediaryService.saveSupport(id, filePath, "IDONIEDAD");
-                }
+    // ccFile
+    if (ccFile != null && !ccFile.isEmpty()) {
+        String filePath = fileStorageService.storeFile(ccFile, "INFRA_OPERACIONAL/CC", currentUserId, id);
+        List<RuiSupport> existingCcSupports = ruiSupportRepository.findAllByInfraOperationalCc(infraOp);
+        for (RuiSupport support : existingCcSupports) {
+            if (support.getStatus() == 1) {
+                support.setStatus((short) 0); // Desactivar soportes anteriores
+                ruiSupportRepository.save(support);
             }
         }
+        RuiSupport support = new RuiSupport();
+        support.setInfraOperationalCc(infraOp);
+        support.setFilename(FilenameUtils.getName(filePath));
+        support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+        support.setExtencion(FilenameUtils.getExtension(filePath));
+        support.setStatus((short) 1);
+        ruiSupportRepository.save(support);
+        log.info("Archivo ccFile guardado: {}", filePath);
+    }
 
-        // Cargar archivos de Experiencia Laboral
-        if (workExperienceFiles != null && workExpIds != null && 
-            existingIntermediary.getInfrastructureHumanId() != null) {
-            
-            for (int i = 0; i < workExperienceFiles.size() && i < workExpIds.size(); i++) {
-                MultipartFile file = workExperienceFiles.get(i);
-                if (file != null && !file.isEmpty()) {
-                    Long workExpId = workExpIds.get(i);
-                    String filePath = fileStorageService.storeFile(file, "WORK_EXPERIENCE/" + workExpId, currentUserId, id);
-                    intermediaryService.saveSupport(id, filePath, "WORK_EXPERIENCE");
-                }
+    // softFile
+    if (softFile != null && !softFile.isEmpty()) {
+        String filePath = fileStorageService.storeFile(softFile, "INFRA_OPERACIONAL/SOFT", currentUserId, id);
+        List<RuiSupport> existingSoftSupports = ruiSupportRepository.findAllByInfraOperationalSoft(infraOp);
+        for (RuiSupport support : existingSoftSupports) {
+            if (support.getStatus() == 1) {
+                support.setStatus((short) 0); // Desactivar soportes anteriores
+                ruiSupportRepository.save(support);
             }
         }
+        RuiSupport support = new RuiSupport();
+        support.setInfraOperationalSoft(infraOp);
+        support.setFilename(FilenameUtils.getName(filePath));
+        support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+        support.setExtencion(FilenameUtils.getExtension(filePath));
+        support.setStatus((short) 1);
+        ruiSupportRepository.save(support);
+        log.info("Archivo softFile guardado: {}", filePath);
+    }
 
-        // Cargar firma digitalizada
+    // hardFile
+    if (hardFile != null && !hardFile.isEmpty()) {
+        String filePath = fileStorageService.storeFile(hardFile, "INFRA_OPERACIONAL/HARD", currentUserId, id);
+        List<RuiSupport> existingHardSupports = ruiSupportRepository.findAllByInfraOperationalHard(infraOp);
+        for (RuiSupport support : existingHardSupports) {
+            if (support.getStatus() == 1) {
+                support.setStatus((short) 0); // Desactivar soportes anteriores
+                ruiSupportRepository.save(support);
+            }
+        }
+        RuiSupport support = new RuiSupport();
+        support.setInfraOperationalHard(infraOp);
+        support.setFilename(FilenameUtils.getName(filePath));
+        support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+        support.setExtencion(FilenameUtils.getExtension(filePath));
+        support.setStatus((short) 1);
+        ruiSupportRepository.save(support);
+        log.info("Archivo hardFile guardado: {}", filePath);
+    }
+}
+        // 5. Guardar Firma Digitalizada
         if (signatureFile != null && !signatureFile.isEmpty()) {
             String filePath = fileStorageService.storeFile(signatureFile, "FIRMA_DIGITALIZADA", currentUserId, id);
-            intermediaryService.saveSupport(id, filePath, "FIRMA_DIGITALIZADA");
+            RuiSupport support = ruiSupportRepository.findByInfraOperationalSign(existingIntermediary.getInfrastructureOperationalId())
+                    .orElse(new RuiSupport());
+            support.setInfraOperationalSign(existingIntermediary.getInfrastructureOperationalId());
+            support.setFilename(FilenameUtils.getName(filePath));
+            support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+            support.setExtencion(FilenameUtils.getExtension(filePath));
+            support.setStatus((short) 1);
+            ruiSupportRepository.save(support);
+            log.info("Archivo signatureFile guardado: {}", filePath);
         }
+
+        intermediaryService.updateIntermediaryStatus(id, IntermediaryState.COMPLEMENTED, "Información complementada", null);
+        ruiIntermediaryRepository.save(existingIntermediary);
 
         redirectAttributes.addFlashAttribute("mensaje", "Registro complementado correctamente");
         return "redirect:/intermediary/my-registries";
+    } catch (MaxUploadSizeExceededException e) {
+        log.error("Tamaño de carga excedido: {}", e.getMessage());
+        redirectAttributes.addFlashAttribute("error", "El tamaño total de los archivos excede el límite permitido. Por favor, suba archivos más pequeños.");
+        return "redirect:/intermediary/complement/" + id;
     } catch (Exception e) {
         log.error("Error al complementar el registro: {}", e.getMessage(), e);
         redirectAttributes.addFlashAttribute("error", "Error al complementar el registro: " + e.getMessage());
         return "redirect:/intermediary/complement/" + id;
     }
 }
+
+
 
 /**
  * Método auxiliar para actualizar los detalles del intermediario
@@ -1263,4 +1375,59 @@ public String showComplementForm(@PathVariable Long id, Model model) {
         }
     }
 
+    // Método GET para mostrar el formulario simplificado
+    @GetMapping("/test/{id}")
+    public String showTestForm(@PathVariable Long id, Model model) {
+        log.debug("Mostrando formulario simplificado para ID: {}", id);
+        model.addAttribute("intermediaryId", id); // Pasar el ID al formulario
+        return "intermediary/test"; // Nombre del template (test.html)
+    }
+
+    // Método POST para procesar el formulario simplificado
+    @PostMapping("/test/{id}")
+public String complementIntermediarySimplified(
+        @PathVariable Long id,
+        @RequestParam(name = "idoneidadFile", required = false) MultipartFile idoneidadFile,
+        @RequestParam(name = "workExperienceFile", required = false) MultipartFile workExperienceFile,
+        MultipartHttpServletRequest request,
+        RedirectAttributes redirectAttributes) {
+    try {
+        log.debug("Inicio de complementIntermediarySimplified para ID: {}", id);
+
+        // Autenticación
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            log.error("No hay usuario autenticado");
+            return "redirect:/auth/login";
+        }
+        String username = authentication.getName();
+        log.debug("Usuario autenticado: {}", username);
+        Long currentUserId = getCurrentUserId();
+
+        // Depuración
+        log.debug("Request Content-Type: {}", request.getContentType());
+        log.debug("Todos los archivos recibidos:");
+        request.getFileMap().forEach((name, file) -> 
+            log.debug("Archivo: name={}, originalFilename={}, size={}", name, file.getOriginalFilename(), file.getSize()));
+        log.debug("idoneidadFile: {}", idoneidadFile != null ? idoneidadFile.getOriginalFilename() : "null");
+        log.debug("workExperienceFile: {}", workExperienceFile != null ? workExperienceFile.getOriginalFilename() : "null");
+
+        // Procesar archivos
+        if (idoneidadFile != null && !idoneidadFile.isEmpty()) {
+            String filePath = fileStorageService.storeFile(idoneidadFile, "IDONIEDAD/test", currentUserId, id);
+            log.info("Archivo de idoneidad guardado en: {}", filePath);
+        }
+        if (workExperienceFile != null && !workExperienceFile.isEmpty()) {
+            String filePath = fileStorageService.storeFile(workExperienceFile, "WORK_EXPERIENCE/test", currentUserId, id);
+            log.info("Archivo de experiencia laboral guardado en: {}", filePath);
+        }
+
+        redirectAttributes.addFlashAttribute("mensaje", "Formulario simplificado procesado correctamente");
+        return "redirect:/intermediary/my-registries";
+    } catch (Exception e) {
+        log.error("Error al procesar el formulario simplificado: {}", e.getMessage(), e);
+        redirectAttributes.addFlashAttribute("error", "Error al procesar el formulario: " + e.getMessage());
+        return "redirect:/intermediary/my-registries";
+    }
+}
 }

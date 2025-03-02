@@ -82,7 +82,6 @@ public interface RuiSupportRepository extends JpaRepository<RuiSupport, Long> {
     List<RuiSupport> findAllByInfraOperationalSsl(RuiInfraOperational infraOperational);
 
     //--------------------------------------------------------------------------------
-    
 
     
 }

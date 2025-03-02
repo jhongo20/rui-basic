@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -288,74 +289,79 @@ public class DocumentoService {
         }
     }
 
-public Resource loadInfraOperativaDocument(Long id, String tipo) {
-    try {
-        // Obtener la infraestructura operativa
-        RuiInfraOperational infraOperativa = infraOperativaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Infraestructura operativa no encontrada para ID: " + id));
-        
-        // Determinar qué campo buscar según el tipo
-        List<RuiSupport> supports;
-        
-        switch (tipo.toLowerCase()) {
-            case "camara":
-                supports = ruiSupportRepository.findAllByInfraOperationalCc(infraOperativa);
-                break;
-            case "software":
-                supports = ruiSupportRepository.findAllByInfraOperationalSoft(infraOperativa);
-                break;
-            case "equipos":
-                supports = ruiSupportRepository.findAllByInfraOperationalHard(infraOperativa);
-                break;
-            case "procesamiento":
-                supports = ruiSupportRepository.findAllByInfraOperationalProce(infraOperativa);
-                break;
-            case "ssl":
-                supports = ruiSupportRepository.findAllByInfraOperationalSsl(infraOperativa);
-                break;
-            default:
-                throw new RuntimeException("Tipo de documento no reconocido: " + tipo);
+    public Resource loadInfraOperativaDocument(Long id, String tipo) {
+        try {
+            // Obtener la infraestructura operativa
+            RuiInfraOperational infraOperativa = infraOperativaRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Infraestructura operativa no encontrada para ID: " + id));
+            
+            // Determinar qué campo buscar según el tipo
+            List<RuiSupport> supports;
+            
+            switch (tipo.toLowerCase()) {
+                case "camara":
+                    supports = ruiSupportRepository.findAllByInfraOperationalCc(infraOperativa);
+                    break;
+                case "software":
+                    supports = ruiSupportRepository.findAllByInfraOperationalSoft(infraOperativa);
+                    break;
+                case "equipos":
+                    supports = ruiSupportRepository.findAllByInfraOperationalHard(infraOperativa);
+                    break;
+                case "procesamiento":
+                    supports = ruiSupportRepository.findAllByInfraOperationalProce(infraOperativa);
+                    break;
+                case "ssl":
+                    supports = ruiSupportRepository.findAllByInfraOperationalSsl(infraOperativa);
+                    break;
+                default:
+                    throw new RuntimeException("Tipo de documento no reconocido: " + tipo);
+            }
+            
+            if (supports.isEmpty()) {
+                log.error("Soporte no encontrado para la infraestructura operativa con ID: {} y tipo: {}", id, tipo);
+                throw new RuntimeException("Soporte no encontrado para la infraestructura operativa");
+            }
+            
+            // Seleccionar el soporte más reciente con status=1
+            RuiSupport support = supports.stream()
+                    .filter(s -> s.getStatus() == 1) // Filtrar solo soportes activos
+                    .max(Comparator.comparing(RuiSupport::getId)) // Tomar el más reciente por ID
+                    .orElseThrow(() -> new RuntimeException("No se encontró soporte activo para el tipo: " + tipo));
+            
+            log.info("Soporte encontrado: ID: {}, Filename: {}, Route: {}", 
+                    support.getId(), support.getFilename(), support.getRoute());
+            
+            // Construir la ruta completa al archivo
+            String filePath = support.getRoute() + "/" + support.getFilename();
+            log.info("Intentando acceder al archivo en: {}", filePath);
+            
+            // Verificar si el archivo existe
+            File file = new File(filePath);
+            if (!file.exists()) {
+                log.warn("El archivo no existe en la ruta original: {}", filePath);
+                throw new RuntimeException("El archivo no existe en la ruta especificada");
+            }
+            
+            // Cargar el recurso
+            Path path = Paths.get(filePath);
+            Resource resource = new UrlResource(path.toUri());
+            
+            if (resource.exists() && resource.isReadable()) {
+                log.info("Recurso cargado correctamente desde: {}", filePath);
+                return resource;
+            } else {
+                log.error("No se pudo leer el archivo aunque existe en el sistema de archivos: {}", filePath);
+                throw new RuntimeException("No se pudo leer el archivo");
+            }
+        } catch (MalformedURLException e) {
+            log.error("Error URL malformada: {}", e.getMessage(), e);
+            throw new RuntimeException("Error: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Error al cargar documento de infraestructura operativa: {}", e.getMessage(), e);
+            throw new RuntimeException("Error al cargar documento de infraestructura operativa", e);
         }
-        
-        if (supports.isEmpty()) {
-            log.error("Soporte no encontrado para la infraestructura operativa con ID: {} y tipo: {}", id, tipo);
-            throw new RuntimeException("Soporte no encontrado para la infraestructura operativa");
-        }
-        
-        // Obtener el primer soporte (o el más reciente si hay alguna manera de determinarlo)
-        RuiSupport support = supports.get(0);
-        
-        log.info("Soporte encontrado: ID: {}, Filename: {}, Route: {}", 
-                support.getId(), support.getFilename(), support.getRoute());
-        
-        // Construir la ruta completa al archivo
-        String filePath = support.getRoute() + "/" + support.getFilename();
-        log.info("Intentando acceder al archivo en: {}", filePath);
-        
-        // Verificar si el archivo existe
-        File file = new File(filePath);
-        if (!file.exists()) {
-            log.warn("El archivo no existe en la ruta original: {}", filePath);
-            throw new RuntimeException("El archivo no existe en la ruta especificada");
-        }
-        
-        // Cargar el recurso
-        Path path = Paths.get(filePath);
-        Resource resource = new UrlResource(path.toUri());
-        
-        if (resource.exists() && resource.isReadable()) {
-            log.info("Recurso cargado correctamente desde: {}", filePath);
-            return resource;
-        } else {
-            log.error("No se pudo leer el archivo aunque existe en el sistema de archivos: {}", filePath);
-            throw new RuntimeException("No se pudo leer el archivo");
-        }
-    } catch (MalformedURLException e) {
-        log.error("Error URL malformada: {}", e.getMessage(), e);
-        throw new RuntimeException("Error: " + e.getMessage(), e);
-    } catch (Exception e) {
-        log.error("Error al cargar documento de infraestructura operativa: {}", e.getMessage(), e);
-        throw new RuntimeException("Error al cargar documento de infraestructura operativa", e);
     }
-}
+
+
 }

@@ -378,4 +378,22 @@ public FormFieldStateDTO updateObservation(Long idoniedadId, String observation)
                     d.getObservation() != null && 
                     !d.getObservation().trim().isEmpty());
     }
+
+    public List<RuiIdoniedad> findByIntermediaryIdForUpdate(Long intermediaryId) {
+        return idoniedadRepository.findByIntermediaryId_Id(intermediaryId);
+    }
+    
+    public RuiIdoniedad save(RuiIdoniedad idoneidad) {
+        return idoniedadRepository.save(idoneidad);
+    }
+
+    /**
+ * Guarda un registro de idoneidad en la base de datos
+ */
+public RuiIdoniedad saveIdoneidad(RuiIdoniedad idoneidad) {
+    log.info("Guardando registro de idoneidad ID={}", idoneidad.getId());
+    return idoniedadRepository.save(idoneidad);
+}
+
+
 }

@@ -746,7 +746,30 @@ private String determineTableName(String field) {
         return user.getCompany();
     }
 
+    public void saveSupportForIdoneidad(Long idoneidadId, String filePath, String type) {
+        try {
+            RuiIdoniedad idoneidad = intermediaryRepository.findIdoneidadById(idoneidadId)
+                    .orElseThrow(() -> new EntityNotFoundException("Idoneidad not found with id: " + idoneidadId));
+    
+            RuiSupport support = supportRepository.findByIdoniedadIdAndPersonStatus(idoneidad, 1) // Suponiendo status activo = 1
+                    .orElse(new RuiSupport());
+            
+            support.setIdoniedadId(idoneidad);
+            support.setFilename(getFileNameFromPath(filePath));
+            support.setRoute(getFilePathWithoutName(filePath));
+            support.setExtencion(getFileExtension(filePath));
+            support.setStatus((short) 1);
+    
+            supportRepository.save(support);
+    
+            auditService.createTransaction("CREATE", "CREACIÓN DE SOPORTE PARA IDONEIDAD", "RUI_SUPPORT", support.getId(), null);
+        } catch (Exception e) {
+            log.error("Error saving support for idoneidad {}: {}", idoneidadId, e.getMessage());
+            throw new BusinessException("Error saving support for idoneidad: " + e.getMessage());
+        }
+    }
     
     
+
     
 }
