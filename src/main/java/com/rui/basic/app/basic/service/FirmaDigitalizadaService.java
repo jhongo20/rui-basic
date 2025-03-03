@@ -79,13 +79,17 @@ public class FirmaDigitalizadaService {
                 return null;
             }
             
-            Optional<RuiSupport> supportOpt = supportRepository.findByInfraOperationalSign(intermediary.getInfrastructureOperationalId());
-            
+            //Optional<RuiSupport> supportOpt = supportRepository.findByInfraOperationalSign(intermediary.getInfrastructureOperationalId());
+            Optional<RuiSupport> supportOpt = supportRepository.findByInfraOperationalSignAndStatus(
+                    intermediary.getInfrastructureOperationalId(), (short) 1);
+
             if (supportOpt.isEmpty()) {
                 log.info("No se encontró firma digitalizada para el intermediario: {}", intermediaryId);
                 return null;
             }
             
+            RuiSupport support = supportOpt.get();
+            log.info("Firma digitalizada encontrada: ID={}, Filename={}", support.getId(), support.getFilename());
             return convertToDTO(supportOpt.get(), intermediaryId);  // Pasar el ID del intermediario
         } catch (Exception e) {
             log.error("Error al buscar firma digitalizada: {}", e.getMessage(), e);
@@ -110,8 +114,11 @@ public class FirmaDigitalizadaService {
             }
             
             // Buscar el soporte de firma
-            Optional<RuiSupport> supportOpt = supportRepository.findByInfraOperationalSign(intermediary.getInfrastructureOperationalId());
-            
+            //Optional<RuiSupport> supportOpt = supportRepository.findByInfraOperationalSign(intermediary.getInfrastructureOperationalId());
+            // Buscar el soporte activo
+            Optional<RuiSupport> supportOpt = supportRepository.findByInfraOperationalSignAndStatus(
+            intermediary.getInfrastructureOperationalId(), (short) 1);
+
             if (supportOpt.isEmpty()) {
                 log.error("No se encontró firma digitalizada para el intermediario: {}", intermediaryId);
                 throw new RuntimeException("Firma digitalizada no encontrada");

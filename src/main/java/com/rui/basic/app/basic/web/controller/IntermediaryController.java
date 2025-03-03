@@ -22,11 +22,13 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -125,6 +127,9 @@ public class IntermediaryController {
     @Autowired
     private IdoneidadProfesionalService idoniedadService;
 
+    // Inyectar app.documentos.ruta como un campo en el controlador
+    @Value("${app.documentos.ruta}")
+    private String attachmentsDir;
     
 
     
@@ -778,79 +783,83 @@ public class IntermediaryController {
     // métodos para editar 
     
     @PostMapping("/complement/{id}")
-public String complementIntermediary(
-        @PathVariable Long id,
-        @ModelAttribute RuiIntermediary intermediary,
-        @RequestParam(required = false) MultipartFile ccFile,
-        @RequestParam(required = false) MultipartFile softFile,
-        @RequestParam(required = false) MultipartFile hardFile,
-        @RequestParam(required = false) MultipartFile signatureFile,
-        @RequestParam Map<String, String> allParams,
-        MultipartHttpServletRequest request,
-        RedirectAttributes redirectAttributes) {
-    try {
-        log.debug("Inicio de complementIntermediary para ID: {}", id);
+    public String complementIntermediary(
+            @PathVariable Long id,
+            @ModelAttribute RuiIntermediary intermediary,
+            @RequestParam(required = false) MultipartFile ccFile,
+            @RequestParam(required = false) MultipartFile softFile,
+            @RequestParam(required = false) MultipartFile hardFile,
+            @RequestParam(required = false) MultipartFile signatureFile,
+            @RequestParam Map<String, String> allParams,
+            MultipartHttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        try {
+            log.debug("Inicio de complementIntermediary para ID: {}", id);
 
-        // Depuración detallada
-        log.debug("Request Content-Type: {}", request.getContentType());
-        log.debug("Todos los parámetros de formulario: {}", allParams);
-        log.debug("Todos los archivos recibidos en request.getFileMap():");
-        request.getFileMap().forEach((name, file) -> 
-            log.debug("Archivo: name={}, originalFilename={}, size={}", name, file.getOriginalFilename(), file.getSize()));
+            // Depuración detallada
+            log.debug("Request Content-Type: {}", request.getContentType());
+            log.debug("Todos los parámetros de formulario: {}", allParams);
+            log.debug("Todos los archivos recibidos en request.getFileMap():");
+            request.getFileMap().forEach((name, file) -> 
+                log.debug("Archivo: name={}, originalFilename={}, size={}", name, file.getOriginalFilename(), file.getSize()));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            log.error("No hay usuario autenticado");
-            return "redirect:/auth/login";
-        }
-        String username = authentication.getName();
-        Long currentUserId = getCurrentUserId();
-
-        RuiIntermediary existingIntermediary = intermediaryService.findByIdWithDetails(id);
-        if (!isUserAuthorizedForIntermediary(existingIntermediary, username)) {
-            redirectAttributes.addFlashAttribute("error", "No está autorizado para editar este registro");
-            return "redirect:/intermediary/my-registries";
-        }
-
-        // 1. Actualizar Información General
-        updateIntermediaryDetails(existingIntermediary, intermediary);
-
-        // 2. Actualizar Idoneidad Profesional
-        List<RuiIdoniedad> existingIdoneidad = existingIntermediary.getRuiIdoniedadList();
-        List<Long> idoneidadIds = new ArrayList<>();
-        for (int i = 0; i < existingIdoneidad.size(); i++) {
-            String idKey = "idoneidadIds[" + i + "]";
-            if (allParams.containsKey(idKey)) {
-                idoneidadIds.add(Long.parseLong(allParams.get(idKey)));
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                log.error("No hay usuario autenticado");
+                return "redirect:/auth/login";
             }
-        }
-        for (int i = 0; i < idoneidadIds.size(); i++) {
-            Long idoneidadId = idoneidadIds.get(i);
-            RuiIdoniedad idoniedad = existingIdoneidad.stream()
-                    .filter(idon -> idon.getId().equals(idoneidadId))
-                    .findFirst().orElse(null);
-            if (idoniedad != null) {
-                idoniedad.setCourseEntity(allParams.get("idoneidadCourseEntities[" + i + "]"));
-                String dateStr = allParams.get("idoneidadDateCourses[" + i + "]");
-                if (dateStr != null && !dateStr.isEmpty()) {
-                    idoniedad.setDateCourse(new SimpleDateFormat("yyyy-MM-dd").parse(dateStr));
-                }
-                RuiPerson person = idoniedad.getPersonId();
-                if (person != null) {
-                    person.setDocumentType(allParams.getOrDefault("idoneidadDocumentTypes[" + i + "]", person.getDocumentType()));
-                    person.setDocumentNumber(allParams.getOrDefault("idoneidadDocumentNumbers[" + i + "]", person.getDocumentNumber()));
-                    person.setFirstName(allParams.getOrDefault("idoneidadFirstNames[" + i + "]", person.getFirstName()));
-                    person.setSecondName(allParams.getOrDefault("idoneidadSecondNames[" + i + "]", person.getSecondName()));
-                    person.setFirstSurname(allParams.getOrDefault("idoneidadFirstSurnames[" + i + "]", person.getFirstSurname()));
-                    person.setSecondSurname(allParams.getOrDefault("idoneidadSecondSurnames[" + i + "]", person.getSecondSurname()));
-                    ruiPersonRepository.save(person);
-                }
-                idoniedadService.saveIdoneidad(idoniedad);
+            String username = authentication.getName();
+            Long currentUserId = getCurrentUserId();
 
-                MultipartFile idoneidadFile = request.getFile("idoneidadFiles[" + i + "]");
+            RuiIntermediary existingIntermediary = intermediaryService.findByIdWithDetails(id);
+            if (!isUserAuthorizedForIntermediary(existingIntermediary, username)) {
+                redirectAttributes.addFlashAttribute("error", "No está autorizado para editar este registro");
+                return "redirect:/intermediary/my-registries";
+            }
+
+            // 1. Actualizar Información General
+            updateIntermediaryDetails(existingIntermediary, intermediary);
+
+            // 2. Actualizar Idoneidad Profesional
+            List<RuiIdoniedad> existingIdoneidad = existingIntermediary.getRuiIdoniedadList();
+            List<Long> idoneidadIds = new ArrayList<>();
+            for (int i = 0; i < existingIdoneidad.size(); i++) {
+                String idKey = "idoneidadIds[" + i + "]";
+                if (allParams.containsKey(idKey)) {
+                    idoneidadIds.add(Long.parseLong(allParams.get(idKey)));
+                }
+            }
+            for (int i = 0; i < idoneidadIds.size(); i++) {
+                Long idoneidadId = idoneidadIds.get(i);
+                RuiIdoniedad idoniedad = existingIdoneidad.stream()
+                        .filter(idon -> idon.getId().equals(idoneidadId))
+                        .findFirst().orElse(null);
+                if (idoniedad != null) {
+                    idoniedad.setCourseEntity(allParams.get("idoneidadCourseEntities[" + i + "]"));
+                    String dateStr = allParams.get("idoneidadDateCourses[" + i + "]");
+                    if (dateStr != null && !dateStr.isEmpty()) {
+                        idoniedad.setDateCourse(new SimpleDateFormat("yyyy-MM-dd").parse(dateStr));
+                    }
+                    RuiPerson person = idoniedad.getPersonId();
+                    if (person != null) {
+                        person.setDocumentType(allParams.getOrDefault("idoneidadDocumentTypes[" + i + "]", person.getDocumentType()));
+                        person.setDocumentNumber(allParams.getOrDefault("idoneidadDocumentNumbers[" + i + "]", person.getDocumentNumber()));
+                        person.setFirstName(allParams.getOrDefault("idoneidadFirstNames[" + i + "]", person.getFirstName()));
+                        person.setSecondName(allParams.getOrDefault("idoneidadSecondNames[" + i + "]", person.getSecondName()));
+                        person.setFirstSurname(allParams.getOrDefault("idoneidadFirstSurnames[" + i + "]", person.getFirstSurname()));
+                        person.setSecondSurname(allParams.getOrDefault("idoneidadSecondSurnames[" + i + "]", person.getSecondSurname()));
+                        ruiPersonRepository.save(person);
+                    }
+                    idoniedadService.saveIdoneidad(idoniedad);
+
+                    MultipartFile idoneidadFile = request.getFile("idoneidadFiles[" + i + "]");
                 if (idoneidadFile != null && !idoneidadFile.isEmpty()) {
-                    String filePath = fileStorageService.storeFile(idoneidadFile, "IDONIEDAD/" + idoneidadId, currentUserId, id);
-                    RuiSupport support = ruiSupportRepository.findByIdoniedadId(idoneidadId).orElse(new RuiSupport());
+                    String filePath = fileStorageService.storeFile(idoneidadFile, "IDONIEDAD/" + idoneidadId, currentUserId, id, Paths.get(attachmentsDir));
+                    ruiSupportRepository.findByIdoniedadId(idoneidadId).ifPresent(support -> {
+                        support.setStatus((short) 0);
+                        ruiSupportRepository.save(support);
+                    });
+                    RuiSupport support = new RuiSupport();
                     support.setIdoniedadId(idoniedad);
                     support.setFilename(FilenameUtils.getName(filePath));
                     support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
@@ -859,54 +868,58 @@ public String complementIntermediary(
                     ruiSupportRepository.save(support);
                     log.info("Archivo de idoneidad guardado para ID {}: {}", idoneidadId, filePath);
                 } else {
-                    log.debug("No se proporcionó archivo para idoneidad ID: {} en índice: {}", idoneidadId, i);
+                        log.debug("No se proporcionó archivo para idoneidad ID: {} en índice: {}", idoneidadId, i);
+                    }
                 }
             }
-        }
 
-        // 3. Actualizar Infraestructura Humana
-        RuiInfraHuman infraHuman = existingIntermediary.getInfrastructureHumanId();
-        if (infraHuman != null && intermediary.getInfrastructureHumanId() != null) {
-            RuiPerson lawyer = infraHuman.getLawyerId();
-            if (lawyer != null) {
-                lawyer.setDocumentType(intermediary.getInfrastructureHumanId().getLawyerId().getDocumentType());
-                lawyer.setDocumentNumber(intermediary.getInfrastructureHumanId().getLawyerId().getDocumentNumber());
-                lawyer.setFirstName(intermediary.getInfrastructureHumanId().getLawyerId().getFirstName());
-                lawyer.setSecondName(intermediary.getInfrastructureHumanId().getLawyerId().getSecondName());
-                lawyer.setFirstSurname(intermediary.getInfrastructureHumanId().getLawyerId().getFirstSurname());
-                lawyer.setSecondSurname(intermediary.getInfrastructureHumanId().getLawyerId().getSecondSurname());
-                ruiPersonRepository.save(lawyer);
-            }
-
-            Set<RuiWorkExperience> existingExp = infraHuman.getWorkExperiences();
-            List<Long> workExpIds = new ArrayList<>();
-            for (int i = 0; i < existingExp.size(); i++) {
-                String idKey = "workExperienceIds[" + i + "]";
-                if (allParams.containsKey(idKey)) {
-                    workExpIds.add(Long.parseLong(allParams.get(idKey)));
+            // 3. Actualizar Infraestructura Humana
+            RuiInfraHuman infraHuman = existingIntermediary.getInfrastructureHumanId();
+            if (infraHuman != null && intermediary.getInfrastructureHumanId() != null) {
+                RuiPerson lawyer = infraHuman.getLawyerId();
+                if (lawyer != null) {
+                    lawyer.setDocumentType(intermediary.getInfrastructureHumanId().getLawyerId().getDocumentType());
+                    lawyer.setDocumentNumber(intermediary.getInfrastructureHumanId().getLawyerId().getDocumentNumber());
+                    lawyer.setFirstName(intermediary.getInfrastructureHumanId().getLawyerId().getFirstName());
+                    lawyer.setSecondName(intermediary.getInfrastructureHumanId().getLawyerId().getSecondName());
+                    lawyer.setFirstSurname(intermediary.getInfrastructureHumanId().getLawyerId().getFirstSurname());
+                    lawyer.setSecondSurname(intermediary.getInfrastructureHumanId().getLawyerId().getSecondSurname());
+                    ruiPersonRepository.save(lawyer);
                 }
-            }
-            int index = 0;
-            for (RuiWorkExperience exp : existingExp) {
-                if (index < workExpIds.size() && exp.getId().equals(workExpIds.get(index))) {
-                    exp.setCompany(allParams.get("workExperienceCompanies[" + index + "]"));
-                    exp.setCharge(allParams.get("workExperienceCharges[" + index + "]"));
-                    exp.setNameBoss(allParams.get("workExperienceNameBosses[" + index + "]"));
-                    exp.setPhoneBoss(allParams.get("workExperiencePhoneBosses[" + index + "]"));
-                    String startDateStr = allParams.get("workExperienceStartDates[" + index + "]");
-                    String endDateStr = allParams.get("workExperienceEndDates[" + index + "]");
-                    if (startDateStr != null && !startDateStr.isEmpty()) {
-                        exp.setStartDate(new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr));
-                    }
-                    if (endDateStr != null && !endDateStr.isEmpty()) {
-                        exp.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
-                    }
-                    workExperienceRepository.save(exp);
 
-                    MultipartFile workExperienceFile = request.getFile("workExperienceFiles[" + index + "]");
+                Set<RuiWorkExperience> existingExp = infraHuman.getWorkExperiences();
+                List<Long> workExpIds = new ArrayList<>();
+                for (int i = 0; i < existingExp.size(); i++) {
+                    String idKey = "workExperienceIds[" + i + "]";
+                    if (allParams.containsKey(idKey)) {
+                        workExpIds.add(Long.parseLong(allParams.get(idKey)));
+                    }
+                }
+                int index = 0;
+                for (RuiWorkExperience exp : existingExp) {
+                    if (index < workExpIds.size() && exp.getId().equals(workExpIds.get(index))) {
+                        exp.setCompany(allParams.get("workExperienceCompanies[" + index + "]"));
+                        exp.setCharge(allParams.get("workExperienceCharges[" + index + "]"));
+                        exp.setNameBoss(allParams.get("workExperienceNameBosses[" + index + "]"));
+                        exp.setPhoneBoss(allParams.get("workExperiencePhoneBosses[" + index + "]"));
+                        String startDateStr = allParams.get("workExperienceStartDates[" + index + "]");
+                        String endDateStr = allParams.get("workExperienceEndDates[" + index + "]");
+                        if (startDateStr != null && !startDateStr.isEmpty()) {
+                            exp.setStartDate(new SimpleDateFormat("yyyy-MM-dd").parse(startDateStr));
+                        }
+                        if (endDateStr != null && !endDateStr.isEmpty()) {
+                            exp.setEndDate(new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr));
+                        }
+                        workExperienceRepository.save(exp);
+
+                        MultipartFile workExperienceFile = request.getFile("workExperienceFiles[" + index + "]");
                     if (workExperienceFile != null && !workExperienceFile.isEmpty()) {
-                        String filePath = fileStorageService.storeFile(workExperienceFile, "WORK_EXPERIENCE/" + exp.getId(), currentUserId, id);
-                        RuiSupport support = ruiSupportRepository.findFirstByWorkExperienceId(exp).orElse(new RuiSupport());
+                        String filePath = fileStorageService.storeFile(workExperienceFile, "WORK_EXPERIENCE/" + exp.getId(), currentUserId, id, Paths.get(attachmentsDir));
+                        ruiSupportRepository.findFirstByWorkExperienceId(exp).ifPresent(support -> {
+                            support.setStatus((short) 0);
+                            ruiSupportRepository.save(support);
+                        });
+                        RuiSupport support = new RuiSupport();
                         support.setWorkExperienceId(exp);
                         support.setFilename(FilenameUtils.getName(filePath));
                         support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
@@ -915,403 +928,404 @@ public String complementIntermediary(
                         ruiSupportRepository.save(support);
                         log.info("Archivo de experiencia laboral guardado para ID {}: {}", exp.getId(), filePath);
                     } else {
-                        log.debug("No se proporcionó archivo para experiencia laboral ID: {} en índice: {}", exp.getId(), index);
+                            log.debug("No se proporcionó archivo para experiencia laboral ID: {} en índice: {}", exp.getId(), index);
+                        }
+                        index++;
                     }
-                    index++;
+                }
+                infraHumanaRepository.save(infraHuman);
+            }
+
+            // 4. Actualizar Infraestructura Operativa
+            RuiInfraOperational infraOp = existingIntermediary.getInfrastructureOperationalId();
+            if (infraOp != null && intermediary.getInfrastructureOperationalId() != null) {
+                infraOp.setPhone1(intermediary.getInfrastructureOperationalId().getPhone1());
+                infraOp.setPhone2(intermediary.getInfrastructureOperationalId().getPhone2());
+                infraOp.setPhone3(intermediary.getInfrastructureOperationalId().getPhone3());
+                infraOp.setPhoneFax(intermediary.getInfrastructureOperationalId().getPhoneFax());
+                infraOp.setEmail(intermediary.getInfrastructureOperationalId().getEmail());
+                infraOp.setAddressServiceOffice(intermediary.getInfrastructureOperationalId().getAddressServiceOffice());
+                infraOperativaRepository.save(infraOp);
+
+                // ccFile
+                if (ccFile != null && !ccFile.isEmpty()) {
+                    String filePath = fileStorageService.storeFile(ccFile, "INFRA_OPERACIONAL/CC", currentUserId, id, Paths.get(attachmentsDir));
+                    List<RuiSupport> existingCcSupports = ruiSupportRepository.findAllByInfraOperationalCc(infraOp);
+                    for (RuiSupport support : existingCcSupports) {
+                        if (support.getStatus() == 1) {
+                            support.setStatus((short) 0);
+                            ruiSupportRepository.save(support);
+                        }
+                    }
+                    RuiSupport support = new RuiSupport();
+                    support.setInfraOperationalCc(infraOp);
+                    support.setFilename(FilenameUtils.getName(filePath));
+                    support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+                    support.setExtencion(FilenameUtils.getExtension(filePath));
+                    support.setStatus((short) 1);
+                    ruiSupportRepository.save(support);
+                    log.info("Archivo ccFile guardado: {}", filePath);
+                }
+
+                // softFile
+                if (softFile != null && !softFile.isEmpty()) {
+                    String filePath = fileStorageService.storeFile(softFile, "INFRA_OPERACIONAL/SOFT", currentUserId, id, Paths.get(attachmentsDir));
+                    List<RuiSupport> existingSoftSupports = ruiSupportRepository.findAllByInfraOperationalSoft(infraOp);
+                    for (RuiSupport support : existingSoftSupports) {
+                        if (support.getStatus() == 1) {
+                            support.setStatus((short) 0);
+                            ruiSupportRepository.save(support);
+                        }
+                    }
+                    RuiSupport support = new RuiSupport();
+                    support.setInfraOperationalSoft(infraOp);
+                    support.setFilename(FilenameUtils.getName(filePath));
+                    support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+                    support.setExtencion(FilenameUtils.getExtension(filePath));
+                    support.setStatus((short) 1);
+                    ruiSupportRepository.save(support);
+                    log.info("Archivo softFile guardado: {}", filePath);
+                }
+
+                // hardFile
+                if (hardFile != null && !hardFile.isEmpty()) {
+                    String filePath = fileStorageService.storeFile(hardFile, "INFRA_OPERACIONAL/HARD", currentUserId, id, Paths.get(attachmentsDir));
+                    List<RuiSupport> existingHardSupports = ruiSupportRepository.findAllByInfraOperationalHard(infraOp);
+                    for (RuiSupport support : existingHardSupports) {
+                        if (support.getStatus() == 1) {
+                            support.setStatus((short) 0);
+                            ruiSupportRepository.save(support);
+                        }
+                    }
+                    RuiSupport support = new RuiSupport();
+                    support.setInfraOperationalHard(infraOp);
+                    support.setFilename(FilenameUtils.getName(filePath));
+                    support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+                    support.setExtencion(FilenameUtils.getExtension(filePath));
+                    support.setStatus((short) 1);
+                    ruiSupportRepository.save(support);
+                    log.info("Archivo hardFile guardado: {}", filePath);
                 }
             }
-            infraHumanaRepository.save(infraHuman);
-        }
-
-        // 4. Actualizar Infraestructura Operativa
-        // 4. Actualizar Infraestructura Operativa
-        // 4. Actualizar Infraestructura Operativa
-RuiInfraOperational infraOp = existingIntermediary.getInfrastructureOperationalId();
-if (infraOp != null && intermediary.getInfrastructureOperationalId() != null) {
-    infraOp.setPhone1(intermediary.getInfrastructureOperationalId().getPhone1());
-    infraOp.setPhone2(intermediary.getInfrastructureOperationalId().getPhone2());
-    infraOp.setPhone3(intermediary.getInfrastructureOperationalId().getPhone3());
-    infraOp.setPhoneFax(intermediary.getInfrastructureOperationalId().getPhoneFax());
-    infraOp.setEmail(intermediary.getInfrastructureOperationalId().getEmail());
-    infraOp.setAddressServiceOffice(intermediary.getInfrastructureOperationalId().getAddressServiceOffice());
-    infraOperativaRepository.save(infraOp);
-
-    // ccFile
-    if (ccFile != null && !ccFile.isEmpty()) {
-        String filePath = fileStorageService.storeFile(ccFile, "INFRA_OPERACIONAL/CC", currentUserId, id);
-        List<RuiSupport> existingCcSupports = ruiSupportRepository.findAllByInfraOperationalCc(infraOp);
-        for (RuiSupport support : existingCcSupports) {
-            if (support.getStatus() == 1) {
-                support.setStatus((short) 0); // Desactivar soportes anteriores
+            
+            // 5. Guardar Firma Digitalizada
+            if (signatureFile != null && !signatureFile.isEmpty()) {
+                String filePath = fileStorageService.storeFile(signatureFile, "FIRMA_DIGITALIZADA", currentUserId, id, Paths.get(attachmentsDir));
+                // Buscar soporte existente con status=1 o crear uno nuevo
+                RuiSupport support = ruiSupportRepository.findByInfraOperationalSignAndStatus(
+                        existingIntermediary.getInfrastructureOperationalId(), (short) 1)
+                        .orElse(new RuiSupport());
+                support.setInfraOperationalSign(existingIntermediary.getInfrastructureOperationalId());
+                support.setFilename(FilenameUtils.getName(filePath));
+                support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+                support.setExtencion(FilenameUtils.getExtension(filePath));
+                support.setStatus((short) 1);
                 ruiSupportRepository.save(support);
+                log.info("Archivo signatureFile guardado: {}", filePath);
             }
+
+            intermediaryService.updateIntermediaryStatus(id, IntermediaryState.COMPLEMENTED, "Información complementada", null);
+            ruiIntermediaryRepository.save(existingIntermediary);
+
+            redirectAttributes.addFlashAttribute("mensaje", "Registro complementado correctamente");
+            return "redirect:/intermediary/my-registries";
+        } catch (MaxUploadSizeExceededException e) {
+            log.error("Tamaño de carga excedido: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "El tamaño total de los archivos excede el límite permitido. Por favor, suba archivos más pequeños.");
+            return "redirect:/intermediary/complement/" + id;
+        } catch (Exception e) {
+            log.error("Error al complementar el registro: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Error al complementar el registro: " + e.getMessage());
+            return "redirect:/intermediary/complement/" + id;
         }
-        RuiSupport support = new RuiSupport();
-        support.setInfraOperationalCc(infraOp);
-        support.setFilename(FilenameUtils.getName(filePath));
-        support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
-        support.setExtencion(FilenameUtils.getExtension(filePath));
-        support.setStatus((short) 1);
-        ruiSupportRepository.save(support);
-        log.info("Archivo ccFile guardado: {}", filePath);
     }
 
-    // softFile
-    if (softFile != null && !softFile.isEmpty()) {
-        String filePath = fileStorageService.storeFile(softFile, "INFRA_OPERACIONAL/SOFT", currentUserId, id);
-        List<RuiSupport> existingSoftSupports = ruiSupportRepository.findAllByInfraOperationalSoft(infraOp);
-        for (RuiSupport support : existingSoftSupports) {
-            if (support.getStatus() == 1) {
-                support.setStatus((short) 0); // Desactivar soportes anteriores
-                ruiSupportRepository.save(support);
+
+
+    /**
+     * Método auxiliar para actualizar los detalles del intermediario
+     */
+    private void updateIntermediaryDetails(RuiIntermediary existing, RuiIntermediary updated) {
+        // Actualizar datos de la compañía
+        if (existing.getCompanyId() != null && updated.getCompanyId() != null) {
+            RuiCompany company = existing.getCompanyId();
+            company.setNit(updated.getCompanyId().getNit());
+            company.setName(updated.getCompanyId().getName());
+            
+            // Asegurar que las entidades de departamento y ciudad son las correctas
+            if (updated.getCompanyId().getDepartmentId() != null && updated.getCompanyId().getDepartmentId().getId() != null) {
+                Long deptId = updated.getCompanyId().getDepartmentId().getId();
+                Optional<RuiDepartment> department = ruiDepartmentRepository.findById(deptId);
+                department.ifPresent(company::setDepartmentId);
             }
-        }
-        RuiSupport support = new RuiSupport();
-        support.setInfraOperationalSoft(infraOp);
-        support.setFilename(FilenameUtils.getName(filePath));
-        support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
-        support.setExtencion(FilenameUtils.getExtension(filePath));
-        support.setStatus((short) 1);
-        ruiSupportRepository.save(support);
-        log.info("Archivo softFile guardado: {}", filePath);
-    }
-
-    // hardFile
-    if (hardFile != null && !hardFile.isEmpty()) {
-        String filePath = fileStorageService.storeFile(hardFile, "INFRA_OPERACIONAL/HARD", currentUserId, id);
-        List<RuiSupport> existingHardSupports = ruiSupportRepository.findAllByInfraOperationalHard(infraOp);
-        for (RuiSupport support : existingHardSupports) {
-            if (support.getStatus() == 1) {
-                support.setStatus((short) 0); // Desactivar soportes anteriores
-                ruiSupportRepository.save(support);
+            
+            if (updated.getCompanyId().getCityId() != null && updated.getCompanyId().getCityId().getId() != null) {
+                Long cityId = updated.getCompanyId().getCityId().getId();
+                Optional<RuiCity> city = ruiCityRepository.findById(cityId);
+                city.ifPresent(company::setCityId);
             }
-        }
-        RuiSupport support = new RuiSupport();
-        support.setInfraOperationalHard(infraOp);
-        support.setFilename(FilenameUtils.getName(filePath));
-        support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
-        support.setExtencion(FilenameUtils.getExtension(filePath));
-        support.setStatus((short) 1);
-        ruiSupportRepository.save(support);
-        log.info("Archivo hardFile guardado: {}", filePath);
-    }
-}
-        // 5. Guardar Firma Digitalizada
-        if (signatureFile != null && !signatureFile.isEmpty()) {
-            String filePath = fileStorageService.storeFile(signatureFile, "FIRMA_DIGITALIZADA", currentUserId, id);
-            RuiSupport support = ruiSupportRepository.findByInfraOperationalSign(existingIntermediary.getInfrastructureOperationalId())
-                    .orElse(new RuiSupport());
-            support.setInfraOperationalSign(existingIntermediary.getInfrastructureOperationalId());
-            support.setFilename(FilenameUtils.getName(filePath));
-            support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
-            support.setExtencion(FilenameUtils.getExtension(filePath));
-            support.setStatus((short) 1);
-            ruiSupportRepository.save(support);
-            log.info("Archivo signatureFile guardado: {}", filePath);
-        }
-
-        intermediaryService.updateIntermediaryStatus(id, IntermediaryState.COMPLEMENTED, "Información complementada", null);
-        ruiIntermediaryRepository.save(existingIntermediary);
-
-        redirectAttributes.addFlashAttribute("mensaje", "Registro complementado correctamente");
-        return "redirect:/intermediary/my-registries";
-    } catch (MaxUploadSizeExceededException e) {
-        log.error("Tamaño de carga excedido: {}", e.getMessage());
-        redirectAttributes.addFlashAttribute("error", "El tamaño total de los archivos excede el límite permitido. Por favor, suba archivos más pequeños.");
-        return "redirect:/intermediary/complement/" + id;
-    } catch (Exception e) {
-        log.error("Error al complementar el registro: {}", e.getMessage(), e);
-        redirectAttributes.addFlashAttribute("error", "Error al complementar el registro: " + e.getMessage());
-        return "redirect:/intermediary/complement/" + id;
-    }
-}
-
-
-
-/**
- * Método auxiliar para actualizar los detalles del intermediario
- */
-private void updateIntermediaryDetails(RuiIntermediary existing, RuiIntermediary updated) {
-    // Actualizar datos de la compañía
-    if (existing.getCompanyId() != null && updated.getCompanyId() != null) {
-        RuiCompany company = existing.getCompanyId();
-        company.setNit(updated.getCompanyId().getNit());
-        company.setName(updated.getCompanyId().getName());
-        
-        // Asegurar que las entidades de departamento y ciudad son las correctas
-        if (updated.getCompanyId().getDepartmentId() != null && updated.getCompanyId().getDepartmentId().getId() != null) {
-            Long deptId = updated.getCompanyId().getDepartmentId().getId();
-            Optional<RuiDepartment> department = ruiDepartmentRepository.findById(deptId);
-            department.ifPresent(company::setDepartmentId);
-        }
-        
-        if (updated.getCompanyId().getCityId() != null && updated.getCompanyId().getCityId().getId() != null) {
-            Long cityId = updated.getCompanyId().getCityId().getId();
-            Optional<RuiCity> city = ruiCityRepository.findById(cityId);
-            city.ifPresent(company::setCityId);
-        }
-        
-        company.setAddress(updated.getCompanyId().getAddress());
-        company.setEmail(updated.getCompanyId().getEmail());
-        company.setPhone(updated.getCompanyId().getPhone());
-    } 
-    // Actualizar datos de persona
-    else if (existing.getPersonId() != null && updated.getPersonId() != null) {
-        RuiPerson person = existing.getPersonId();
-        person.setDocumentType(updated.getPersonId().getDocumentType());
-        person.setDocumentNumber(updated.getPersonId().getDocumentNumber());
-        person.setFirstName(updated.getPersonId().getFirstName());
-        person.setSecondName(updated.getPersonId().getSecondName());
-        person.setFirstSurname(updated.getPersonId().getFirstSurname());
-        person.setSecondSurname(updated.getPersonId().getSecondSurname());
-        
-        // Asegurar que las entidades de departamento y ciudad son las correctas
-        if (updated.getPersonId().getDepartmentId() != null && updated.getPersonId().getDepartmentId().getId() != null) {
-            Long deptId = updated.getPersonId().getDepartmentId().getId();
-            Optional<RuiDepartment> department = ruiDepartmentRepository.findById(deptId);
-            department.ifPresent(person::setDepartmentId);
-        }
-        
-        if (updated.getPersonId().getCityId() != null && updated.getPersonId().getCityId().getId() != null) {
-            Long cityId = updated.getPersonId().getCityId().getId();
-            Optional<RuiCity> city = ruiCityRepository.findById(cityId);
-            city.ifPresent(person::setCityId);
-        }
-        
-        person.setAddress(updated.getPersonId().getAddress());
-        person.setEmail(updated.getPersonId().getEmail());
-        person.setPhone(updated.getPersonId().getPhone());
-        person.setCellphone(updated.getPersonId().getCellphone());
-    }
-
-    // Actualizar infraestructura humana (abogado y experiencias laborales)
-    if (existing.getInfrastructureHumanId() != null && updated.getInfrastructureHumanId() != null) {
-        RuiInfraHuman infraHuman = existing.getInfrastructureHumanId();
-        
-        // Actualizar datos del abogado
-        if (infraHuman.getLawyerId() != null && updated.getInfrastructureHumanId().getLawyerId() != null) {
-            RuiPerson lawyer = infraHuman.getLawyerId();
-            lawyer.setDocumentType(updated.getInfrastructureHumanId().getLawyerId().getDocumentType());
-            lawyer.setDocumentNumber(updated.getInfrastructureHumanId().getLawyerId().getDocumentNumber());
-            lawyer.setFirstName(updated.getInfrastructureHumanId().getLawyerId().getFirstName());
-            lawyer.setSecondName(updated.getInfrastructureHumanId().getLawyerId().getSecondName());
-            lawyer.setFirstSurname(updated.getInfrastructureHumanId().getLawyerId().getFirstSurname());
-            lawyer.setSecondSurname(updated.getInfrastructureHumanId().getLawyerId().getSecondSurname());
+            
+            company.setAddress(updated.getCompanyId().getAddress());
+            company.setEmail(updated.getCompanyId().getEmail());
+            company.setPhone(updated.getCompanyId().getPhone());
+        } 
+        // Actualizar datos de persona
+        else if (existing.getPersonId() != null && updated.getPersonId() != null) {
+            RuiPerson person = existing.getPersonId();
+            person.setDocumentType(updated.getPersonId().getDocumentType());
+            person.setDocumentNumber(updated.getPersonId().getDocumentNumber());
+            person.setFirstName(updated.getPersonId().getFirstName());
+            person.setSecondName(updated.getPersonId().getSecondName());
+            person.setFirstSurname(updated.getPersonId().getFirstSurname());
+            person.setSecondSurname(updated.getPersonId().getSecondSurname());
+            
+            // Asegurar que las entidades de departamento y ciudad son las correctas
+            if (updated.getPersonId().getDepartmentId() != null && updated.getPersonId().getDepartmentId().getId() != null) {
+                Long deptId = updated.getPersonId().getDepartmentId().getId();
+                Optional<RuiDepartment> department = ruiDepartmentRepository.findById(deptId);
+                department.ifPresent(person::setDepartmentId);
+            }
+            
+            if (updated.getPersonId().getCityId() != null && updated.getPersonId().getCityId().getId() != null) {
+                Long cityId = updated.getPersonId().getCityId().getId();
+                Optional<RuiCity> city = ruiCityRepository.findById(cityId);
+                city.ifPresent(person::setCityId);
+            }
+            
+            person.setAddress(updated.getPersonId().getAddress());
+            person.setEmail(updated.getPersonId().getEmail());
+            person.setPhone(updated.getPersonId().getPhone());
+            person.setCellphone(updated.getPersonId().getCellphone());
         }
 
-        // Actualizar experiencias laborales
-        Set<RuiWorkExperience> existingExpSet = infraHuman.getWorkExperiences();
-        Set<RuiWorkExperience> updatedExpSet = updated.getInfrastructureHumanId().getWorkExperiences();
+        // Actualizar infraestructura humana (abogado y experiencias laborales)
+        if (existing.getInfrastructureHumanId() != null && updated.getInfrastructureHumanId() != null) {
+            RuiInfraHuman infraHuman = existing.getInfrastructureHumanId();
+            
+            // Actualizar datos del abogado
+            if (infraHuman.getLawyerId() != null && updated.getInfrastructureHumanId().getLawyerId() != null) {
+                RuiPerson lawyer = infraHuman.getLawyerId();
+                lawyer.setDocumentType(updated.getInfrastructureHumanId().getLawyerId().getDocumentType());
+                lawyer.setDocumentNumber(updated.getInfrastructureHumanId().getLawyerId().getDocumentNumber());
+                lawyer.setFirstName(updated.getInfrastructureHumanId().getLawyerId().getFirstName());
+                lawyer.setSecondName(updated.getInfrastructureHumanId().getLawyerId().getSecondName());
+                lawyer.setFirstSurname(updated.getInfrastructureHumanId().getLawyerId().getFirstSurname());
+                lawyer.setSecondSurname(updated.getInfrastructureHumanId().getLawyerId().getSecondSurname());
+            }
 
-        if (existingExpSet != null && updatedExpSet != null) {
-            // Convertir Sets a Listas para poder iterar con índices
-            List<RuiWorkExperience> existingExp = new ArrayList<>(existingExpSet);
-            List<RuiWorkExperience> updatedExp = new ArrayList<>(updatedExpSet);
+            // Actualizar experiencias laborales
+            Set<RuiWorkExperience> existingExpSet = infraHuman.getWorkExperiences();
+            Set<RuiWorkExperience> updatedExpSet = updated.getInfrastructureHumanId().getWorkExperiences();
 
-            // Actualizar solo los elementos que coincidan por ID
-            for (RuiWorkExperience updatedExpItem : updatedExp) {
-                if (updatedExpItem.getId() != null) {
-                    for (RuiWorkExperience existingExpItem : existingExp) {
-                        if (existingExpItem.getId() != null && existingExpItem.getId().equals(updatedExpItem.getId())) {
-                            existingExpItem.setCompany(updatedExpItem.getCompany());
-                            existingExpItem.setCharge(updatedExpItem.getCharge());
-                            existingExpItem.setNameBoss(updatedExpItem.getNameBoss());
-                            existingExpItem.setPhoneBoss(updatedExpItem.getPhoneBoss());
-                            existingExpItem.setStartDate(updatedExpItem.getStartDate());
-                            existingExpItem.setEndDate(updatedExpItem.getEndDate());
-                            break; // Salir del bucle interno una vez encontrado el match
+            if (existingExpSet != null && updatedExpSet != null) {
+                // Convertir Sets a Listas para poder iterar con índices
+                List<RuiWorkExperience> existingExp = new ArrayList<>(existingExpSet);
+                List<RuiWorkExperience> updatedExp = new ArrayList<>(updatedExpSet);
+
+                // Actualizar solo los elementos que coincidan por ID
+                for (RuiWorkExperience updatedExpItem : updatedExp) {
+                    if (updatedExpItem.getId() != null) {
+                        for (RuiWorkExperience existingExpItem : existingExp) {
+                            if (existingExpItem.getId() != null && existingExpItem.getId().equals(updatedExpItem.getId())) {
+                                existingExpItem.setCompany(updatedExpItem.getCompany());
+                                existingExpItem.setCharge(updatedExpItem.getCharge());
+                                existingExpItem.setNameBoss(updatedExpItem.getNameBoss());
+                                existingExpItem.setPhoneBoss(updatedExpItem.getPhoneBoss());
+                                existingExpItem.setStartDate(updatedExpItem.getStartDate());
+                                existingExpItem.setEndDate(updatedExpItem.getEndDate());
+                                break; // Salir del bucle interno una vez encontrado el match
+                            }
                         }
                     }
                 }
             }
         }
+
+        // Actualizar infraestructura operativa
+        if (existing.getInfrastructureOperationalId() != null && updated.getInfrastructureOperationalId() != null) {
+            RuiInfraOperational infraOp = existing.getInfrastructureOperationalId();
+            infraOp.setPhone1(updated.getInfrastructureOperationalId().getPhone1());
+            infraOp.setPhone2(updated.getInfrastructureOperationalId().getPhone2());
+            infraOp.setPhone3(updated.getInfrastructureOperationalId().getPhone3());
+            infraOp.setPhoneFax(updated.getInfrastructureOperationalId().getPhoneFax());
+            infraOp.setEmail(updated.getInfrastructureOperationalId().getEmail());
+            infraOp.setAddressServiceOffice(updated.getInfrastructureOperationalId().getAddressServiceOffice());
+        }
     }
 
-    // Actualizar infraestructura operativa
-    if (existing.getInfrastructureOperationalId() != null && updated.getInfrastructureOperationalId() != null) {
-        RuiInfraOperational infraOp = existing.getInfrastructureOperationalId();
-        infraOp.setPhone1(updated.getInfrastructureOperationalId().getPhone1());
-        infraOp.setPhone2(updated.getInfrastructureOperationalId().getPhone2());
-        infraOp.setPhone3(updated.getInfrastructureOperationalId().getPhone3());
-        infraOp.setPhoneFax(updated.getInfrastructureOperationalId().getPhoneFax());
-        infraOp.setEmail(updated.getInfrastructureOperationalId().getEmail());
-        infraOp.setAddressServiceOffice(updated.getInfrastructureOperationalId().getAddressServiceOffice());
-    }
-}
-
-/**
- * Método auxiliar para verificar si el usuario está autorizado para el intermediario
- */
-private boolean isUserAuthorizedForIntermediary(RuiIntermediary intermediary, String username) {
-    // Verificar si el usuario es un administrador o tiene rol adecuado
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_ADMIN"))) {
-        return true;
-    }
-    
-    // Obtener el usuario por nombre de usuario
-    Optional<RuiUser> userOpt = ruiUserRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
+    /**
+     * Método auxiliar para verificar si el usuario está autorizado para el intermediario
+     */
+    private boolean isUserAuthorizedForIntermediary(RuiIntermediary intermediary, String username) {
+        // Verificar si el usuario es un administrador o tiene rol adecuado
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_ADMIN"))) {
+            return true;
+        }
+        
+        // Obtener el usuario por nombre de usuario
+        Optional<RuiUser> userOpt = ruiUserRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            return false;
+        }
+        
+        RuiUser user = userOpt.get();
+        
+        // Verificar si el intermediario está asociado al usuario
+        if (intermediary.getPersonId() != null && user.getPerson() != null) {
+            return intermediary.getPersonId().getId().equals(user.getPerson().getId());
+        } else if (intermediary.getCompanyId() != null && user.getCompany() != null) {
+            return intermediary.getCompanyId().getId().equals(user.getCompany().getId());
+        }
+        
         return false;
     }
-    
-    RuiUser user = userOpt.get();
-    
-    // Verificar si el intermediario está asociado al usuario
-    if (intermediary.getPersonId() != null && user.getPerson() != null) {
-        return intermediary.getPersonId().getId().equals(user.getPerson().getId());
-    } else if (intermediary.getCompanyId() != null && user.getCompany() != null) {
-        return intermediary.getCompanyId().getId().equals(user.getCompany().getId());
-    }
-    
-    return false;
-}
 
-/**
- * Método auxiliar para obtener el ID del usuario actual
- */
-private Long getCurrentUserId() {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication != null && authentication.isAuthenticated()) {
-        String username = authentication.getName();
-        Optional<RuiUser> userOpt = ruiUserRepository.findByUsername(username);
-        return userOpt.map(RuiUser::getId).orElse(1L); // Devuelve 1 por defecto si no encuentra el usuario
-    }
-    return 1L; // Valor por defecto temporal
-}
-
-@GetMapping("/complement/{id}")
-public String showComplementForm(@PathVariable Long id, Model model) {
-    try {
-        // Obtener intermediario con todos sus detalles
-        RuiIntermediary intermediary = intermediaryService.findByIdWithDetails(id);
-        if (intermediary == null) {
-            log.error("Intermediary con ID {} no encontrado", id);
-            return "redirect:/error";
+    /**
+     * Método auxiliar para obtener el ID del usuario actual
+     */
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            Optional<RuiUser> userOpt = ruiUserRepository.findByUsername(username);
+            return userOpt.map(RuiUser::getId).orElse(1L); // Devuelve 1 por defecto si no encuentra el usuario
         }
-        
-        log.info("Intermediary encontrado: ID={}, TypeIntermediarieId={}", 
-                 intermediary.getId(), 
-                 intermediary.getTypeIntermediarieId() != null ? intermediary.getTypeIntermediarieId().getValue() : "null");
+        return 1L; // Valor por defecto temporal
+    }
 
-        // Determinar si es agente por el tipo de intermediario
-        boolean isAgente = intermediary.getTypeIntermediarieId() != null && intermediary.getTypeIntermediarieId().getId() == 4L;
-
-        // Inicializar objetos del tab de información general para evitar NullPointerException
-        if (isAgente) {
-            // Si es agente, asegurar que personId está inicializado
-            if (intermediary.getPersonId() == null) {
-                intermediary.setPersonId(new RuiPerson());
-                log.info("Inicializando personId para intermediario agente");
-            } else {
-                Hibernate.initialize(intermediary.getPersonId());
-                
-                // Inicializar propiedades anidadas de Person
-                if (intermediary.getPersonId().getDepartmentId() == null) {
-                    intermediary.getPersonId().setDepartmentId(new RuiDepartment());
-                } else {
-                    Hibernate.initialize(intermediary.getPersonId().getDepartmentId());
-                }
-                
-                if (intermediary.getPersonId().getCityId() == null) {
-                    intermediary.getPersonId().setCityId(new RuiCity());
-                } else {
-                    Hibernate.initialize(intermediary.getPersonId().getCityId());
-                }
-            }
-        } else {
-            // Si no es agente, asegurar que companyId está inicializado
-            if (intermediary.getCompanyId() == null) {
-                intermediary.setCompanyId(new RuiCompany());
-                log.info("Inicializando companyId para intermediario empresa");
-            } else {
-                Hibernate.initialize(intermediary.getCompanyId());
-                
-                // Inicializar propiedades anidadas de Company
-                if (intermediary.getCompanyId().getDepartmentId() == null) {
-                    intermediary.getCompanyId().setDepartmentId(new RuiDepartment());
-                } else {
-                    Hibernate.initialize(intermediary.getCompanyId().getDepartmentId());
-                }
-                
-                if (intermediary.getCompanyId().getCityId() == null) {
-                    intermediary.getCompanyId().setCityId(new RuiCity());
-                } else {
-                    Hibernate.initialize(intermediary.getCompanyId().getCityId());
-                }
-            }
-        }
-
-        // Inicializar relaciones para evitar proxies no inicializados
-        if (intermediary.getInfrastructureHumanId() != null) {
-            Hibernate.initialize(intermediary.getInfrastructureHumanId());
-            if (intermediary.getInfrastructureHumanId().getLawyerId() != null) {
-                Hibernate.initialize(intermediary.getInfrastructureHumanId().getLawyerId());
-                if (intermediary.getInfrastructureHumanId().getLawyerId().getDocumentType() != null) {
-                    Hibernate.initialize(intermediary.getInfrastructureHumanId().getLawyerId().getDocumentType());
-                }
+    @GetMapping("/complement/{id}")
+    public String showComplementForm(@PathVariable Long id, Model model) {
+        try {
+            // Obtener intermediario con todos sus detalles
+            RuiIntermediary intermediary = intermediaryService.findByIdWithDetails(id);
+            if (intermediary == null) {
+                log.error("Intermediary con ID {} no encontrado", id);
+                return "redirect:/error";
             }
             
-            // Inicializar workExperiences si es null
-            if (intermediary.getInfrastructureHumanId().getWorkExperiences() == null) {
-                intermediary.getInfrastructureHumanId().setWorkExperiences(new HashSet<>());
+            log.info("Intermediary encontrado: ID={}, TypeIntermediarieId={}", 
+                    intermediary.getId(), 
+                    intermediary.getTypeIntermediarieId() != null ? intermediary.getTypeIntermediarieId().getValue() : "null");
+
+            // Determinar si es agente por el tipo de intermediario
+            boolean isAgente = intermediary.getTypeIntermediarieId() != null && intermediary.getTypeIntermediarieId().getId() == 4L;
+
+            // Inicializar objetos del tab de información general para evitar NullPointerException
+            if (isAgente) {
+                // Si es agente, asegurar que personId está inicializado
+                if (intermediary.getPersonId() == null) {
+                    intermediary.setPersonId(new RuiPerson());
+                    log.info("Inicializando personId para intermediario agente");
+                } else {
+                    Hibernate.initialize(intermediary.getPersonId());
+                    
+                    // Inicializar propiedades anidadas de Person
+                    if (intermediary.getPersonId().getDepartmentId() == null) {
+                        intermediary.getPersonId().setDepartmentId(new RuiDepartment());
+                    } else {
+                        Hibernate.initialize(intermediary.getPersonId().getDepartmentId());
+                    }
+                    
+                    if (intermediary.getPersonId().getCityId() == null) {
+                        intermediary.getPersonId().setCityId(new RuiCity());
+                    } else {
+                        Hibernate.initialize(intermediary.getPersonId().getCityId());
+                    }
+                }
             } else {
-                Hibernate.initialize(intermediary.getInfrastructureHumanId().getWorkExperiences());
+                // Si no es agente, asegurar que companyId está inicializado
+                if (intermediary.getCompanyId() == null) {
+                    intermediary.setCompanyId(new RuiCompany());
+                    log.info("Inicializando companyId para intermediario empresa");
+                } else {
+                    Hibernate.initialize(intermediary.getCompanyId());
+                    
+                    // Inicializar propiedades anidadas de Company
+                    if (intermediary.getCompanyId().getDepartmentId() == null) {
+                        intermediary.getCompanyId().setDepartmentId(new RuiDepartment());
+                    } else {
+                        Hibernate.initialize(intermediary.getCompanyId().getDepartmentId());
+                    }
+                    
+                    if (intermediary.getCompanyId().getCityId() == null) {
+                        intermediary.getCompanyId().setCityId(new RuiCity());
+                    } else {
+                        Hibernate.initialize(intermediary.getCompanyId().getCityId());
+                    }
+                }
             }
-        } else if (!isAgente) {
-            // Si no es agente y no tiene infraestructura humana, inicializarla
-            intermediary.setInfrastructureHumanId(new RuiInfraHuman());
-            intermediary.getInfrastructureHumanId().setWorkExperiences(new HashSet<>());
-            log.info("Inicializando infrastructureHumanId para intermediario empresa");
+
+            // Inicializar relaciones para evitar proxies no inicializados
+            if (intermediary.getInfrastructureHumanId() != null) {
+                Hibernate.initialize(intermediary.getInfrastructureHumanId());
+                if (intermediary.getInfrastructureHumanId().getLawyerId() != null) {
+                    Hibernate.initialize(intermediary.getInfrastructureHumanId().getLawyerId());
+                    if (intermediary.getInfrastructureHumanId().getLawyerId().getDocumentType() != null) {
+                        Hibernate.initialize(intermediary.getInfrastructureHumanId().getLawyerId().getDocumentType());
+                    }
+                }
+                
+                // Inicializar workExperiences si es null
+                if (intermediary.getInfrastructureHumanId().getWorkExperiences() == null) {
+                    intermediary.getInfrastructureHumanId().setWorkExperiences(new HashSet<>());
+                } else {
+                    Hibernate.initialize(intermediary.getInfrastructureHumanId().getWorkExperiences());
+                }
+            } else if (!isAgente) {
+                // Si no es agente y no tiene infraestructura humana, inicializarla
+                intermediary.setInfrastructureHumanId(new RuiInfraHuman());
+                intermediary.getInfrastructureHumanId().setWorkExperiences(new HashSet<>());
+                log.info("Inicializando infrastructureHumanId para intermediario empresa");
+            }
+
+            // Inicializar infraestructuraOperacional si es null
+            if (intermediary.getInfrastructureOperationalId() == null) {
+                intermediary.setInfrastructureOperationalId(new RuiInfraOperational());
+                log.info("Inicializando infrastructureOperationalId");
+            } else {
+                Hibernate.initialize(intermediary.getInfrastructureOperationalId());
+            }
+
+            // Añadir atributos al modelo
+            model.addAttribute("intermediary", intermediary);
+            model.addAttribute("isAgente", isAgente);
+            model.addAttribute("documentTypes", userService.getDocumentTypes());
+            model.addAttribute("idoneidadList", idoneidadService.findMostRecentByIntermediary(id));
+            
+            // Obtener experiencias laborales y asegurar que nunca sea null
+            List<ExperienciaLaboralDTO> experiencias = infraestructuraHumanaService.findWorkExperienceByIntermediary(id);
+            if (experiencias == null) {
+                experiencias = new ArrayList<>();
+            }
+            model.addAttribute("experienciasLaborales", experiencias);
+            
+            model.addAttribute("departments", ubicacionService.getAllDepartments());
+            model.addAttribute("cities", ubicacionService.getAllCities());
+            
+            // Cargar estados de campos para observaciones
+            Map<String, FormFieldStateDTO> fieldStates = intermediaryService.getFieldStates(id);
+            model.addAttribute("fieldStates", fieldStates);
+            
+            // Cargar infraestructuras y firma
+            loadInfrastructuraOperativa(id, model);
+            loadFirmaDigitalizada(id, model);
+
+            log.info("Modelo preparado para renderizar: intermediary={}, idoneidadList.size={}, experienciasLaborales.size={}", 
+                    intermediary.getId(), 
+                    model.getAttribute("idoneidadList") != null ? ((List<?>) model.getAttribute("idoneidadList")).size() : 0,
+                    experiencias.size());
+
+            return "intermediary/edit-intermediary";
+            
+        } catch (Exception e) {
+            log.error("Error al preparar el formulario de complemento para ID {}: {}", id, e.getMessage(), e);
+            return "redirect:/error";
         }
-
-        // Inicializar infraestructuraOperacional si es null
-        if (intermediary.getInfrastructureOperationalId() == null) {
-            intermediary.setInfrastructureOperationalId(new RuiInfraOperational());
-            log.info("Inicializando infrastructureOperationalId");
-        } else {
-            Hibernate.initialize(intermediary.getInfrastructureOperationalId());
-        }
-
-        // Añadir atributos al modelo
-        model.addAttribute("intermediary", intermediary);
-        model.addAttribute("isAgente", isAgente);
-        model.addAttribute("documentTypes", userService.getDocumentTypes());
-        model.addAttribute("idoneidadList", idoneidadService.findMostRecentByIntermediary(id));
-        
-        // Obtener experiencias laborales y asegurar que nunca sea null
-        List<ExperienciaLaboralDTO> experiencias = infraestructuraHumanaService.findWorkExperienceByIntermediary(id);
-        if (experiencias == null) {
-            experiencias = new ArrayList<>();
-        }
-        model.addAttribute("experienciasLaborales", experiencias);
-        
-        model.addAttribute("departments", ubicacionService.getAllDepartments());
-        model.addAttribute("cities", ubicacionService.getAllCities());
-        
-        // Cargar estados de campos para observaciones
-        Map<String, FormFieldStateDTO> fieldStates = intermediaryService.getFieldStates(id);
-        model.addAttribute("fieldStates", fieldStates);
-        
-        // Cargar infraestructuras y firma
-        loadInfrastructuraOperativa(id, model);
-        loadFirmaDigitalizada(id, model);
-
-        log.info("Modelo preparado para renderizar: intermediary={}, idoneidadList.size={}, experienciasLaborales.size={}", 
-                 intermediary.getId(), 
-                 model.getAttribute("idoneidadList") != null ? ((List<?>) model.getAttribute("idoneidadList")).size() : 0,
-                 experiencias.size());
-
-        return "intermediary/edit-intermediary";
-        
-    } catch (Exception e) {
-        log.error("Error al preparar el formulario de complemento para ID {}: {}", id, e.getMessage(), e);
-        return "redirect:/error";
     }
-}
 
-@GetMapping("/field-observation/{id}/{field}")
+    @GetMapping("/field-observation/{id}/{field}")
     @ResponseBody
     public ResponseEntity<?> getFieldObservation(@PathVariable Long id, @PathVariable String field) {
         try {
@@ -1385,7 +1399,7 @@ public String showComplementForm(@PathVariable Long id, Model model) {
 
     // Método POST para procesar el formulario simplificado
     @PostMapping("/test/{id}")
-public String complementIntermediarySimplified(
+    public String complementIntermediarySimplified(
         @PathVariable Long id,
         @RequestParam(name = "idoneidadFile", required = false) MultipartFile idoneidadFile,
         @RequestParam(name = "workExperienceFile", required = false) MultipartFile workExperienceFile,

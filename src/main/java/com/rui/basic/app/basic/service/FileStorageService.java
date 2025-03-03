@@ -30,39 +30,51 @@ import jakarta.transaction.Transactional;
 public class FileStorageService {
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
     
-    private final Path fileStorageLocation;
+    private final Path defaultFileStorageLocation; // Para app.file.upload-dir
+    private final Path attachmentsStorageLocation; // Para app.documentos.ruta
     
     @Value("${app.file.upload-dir}")
     private String uploadDir;
+    
+    @Value("${app.documentos.ruta}")
+    private String attachmentsDir;
 
-    public FileStorageService(@Value("${app.file.upload-dir}") String uploadDir) {
+    public FileStorageService(
+            @Value("${app.file.upload-dir}") String uploadDir,
+            @Value("${app.documentos.ruta}") String attachmentsDir) {
         this.uploadDir = uploadDir;
-        this.fileStorageLocation = Paths.get(uploadDir)
-            .toAbsolutePath().normalize();
+        this.attachmentsDir = attachmentsDir;
+        this.defaultFileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.attachmentsStorageLocation = Paths.get(attachmentsDir).toAbsolutePath().normalize();
         init();
     }
     
     private void init() {
         try {
-            Files.createDirectories(this.fileStorageLocation);
+            Files.createDirectories(this.defaultFileStorageLocation);
+            Files.createDirectories(this.attachmentsStorageLocation);
         } catch (IOException ex) {
-            throw new FileStorageException("No se pudo crear el directorio donde se almacenarán los archivos.", ex);
+            throw new FileStorageException("No se pudo crear los directorios de almacenamiento.", ex);
         }
     }
     
+    // Método original usando app.file.upload-dir
     public String storeFile(MultipartFile file, String subDirectory, Long userId, Long intermediaryId) {
+        return storeFile(file, subDirectory, userId, intermediaryId, defaultFileStorageLocation);
+    }
+    
+    // Método sobrecargado para usar una ruta específica
+    public String storeFile(MultipartFile file, String subDirectory, Long userId, Long intermediaryId, Path baseLocation) {
         try {
             // Validar nombre de archivo
             String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-            if(fileName.contains("..")) {
+            if (fileName.contains("..")) {
                 throw new FileStorageException("El nombre del archivo contiene una ruta inválida " + fileName);
             }
             
             // Crear estructura de directorios
-            Path targetLocation = this.fileStorageLocation.resolve(
-                Paths.get(userId.toString(), 
-                         intermediaryId.toString(), 
-                         subDirectory)
+            Path targetLocation = baseLocation.resolve(
+                Paths.get(userId.toString(), intermediaryId.toString(), subDirectory)
             ).normalize();
             
             Files.createDirectories(targetLocation);
@@ -90,7 +102,7 @@ public class FileStorageService {
         try {
             Path path = Paths.get(filePath);
             Resource resource = new UrlResource(path.toUri());
-            if(resource.exists()) {
+            if (resource.exists()) {
                 return resource;
             } else {
                 throw new FileNotFoundException("Archivo no encontrado " + filePath);
