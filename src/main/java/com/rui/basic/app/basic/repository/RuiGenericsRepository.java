@@ -32,4 +32,7 @@ public interface RuiGenericsRepository extends JpaRepository<RuiGenerics, Long> 
     
     // Para obtener un valor específico
     Optional<RuiGenerics> findByValueAndStatusAndFatherId(String value, Short status, Long fatherId);
+
+    @Query("SELECT g FROM RuiGenerics g WHERE g.id = :id AND g.status = :status")
+    Optional<RuiGenerics> findByIdAndStatus(@Param("id") Long id, @Param("status") Integer status);
 }
