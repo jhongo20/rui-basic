@@ -163,533 +163,426 @@
                 <div class="tab-content">
                     <!-- Información General Tab -->
                 <!-- Tab Información General -->
-                <div class="tab-pane fade show active" id="general" role="tabpanel">
-                    
-                        <div class="progress mb-4">
-                            <div class="progress-bar" role="progressbar" style="width: 20%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+                <!-- Tab Información General -->
+<div class="tab-pane fade show active" id="general" role="tabpanel">
+    <div class="progress mb-4">
+        <div class="progress-bar" role="progressbar" style="width: 20%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Información General</h5>
+            <div th:if="${isAgente == null or !isAgente}">
+                <form class="form-horizontal">
+                    <!-- NIT -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-sm-3">
+                            <label class="col-form-label">NIT: *</label>
                         </div>
-                        
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Información General</h5>
-                                <div th:if="${isAgente == null or !isAgente}">
-                                <form class="form-horizontal">
-                                    <!-- NIT -->
-                                    <div class="row mb-3 align-items-center">
-                                        <div class="col-auto">
-                                            <input type="checkbox" class="form-check-input field-checkbox" 
-                                                   data-field="nit" 
-                                                   onchange="handleCheckboxChange(this)">
-                                        </div>
-                                        <div class="col-sm-3">
-                                            <label class="col-form-label">NIT: *</label>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <input type="text" class="form-control" th:value="${intermediary.companyId?.nit}" readonly>
-                                            <div class="col-auto observation-view-only" data-field="nit">
-                                                <button class="btn btn-info btn-sm view-observation" 
-                                                        type="button" 
-                                                        onclick="viewObservation('nit', event)" 
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        
-                                            
-                                    </div>
-
-                                    <!-- Razón Social -->
-                                    <div class="row mb-3 align-items-center">
-                                        <div class="col-auto">
-                                            <input type="checkbox" class="form-check-input field-checkbox" 
-                                                   data-field="business_name" 
-                                                   onchange="handleCheckboxChange(this)">
-                                        </div>
-                                        <div class="col-sm-3">
-                                            <label class="col-form-label">Razón Social: *</label>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <input type="text" class="form-control" th:value="${intermediary.companyId?.name}" readonly>
-                                            <div class="col-auto observation-view-only" data-field="business_name">
-                                                <button class="btn btn-info btn-sm view-observation" 
-                                                        type="button" 
-                                                        onclick="viewObservation('business_name', event)" 
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        
-                                        
-                                    </div>
-
-                                    <!-- Departamento -->
-                                    <div class="row mb-3 align-items-center">
-                                        <div class="col-auto">
-                                            <input type="checkbox" class="form-check-input field-checkbox" 
-                                                   data-field="department_id" 
-                                                   onchange="handleCheckboxChange(this)">
-                                        </div>
-                                        <div class="col-sm-3">
-                                            <label class="col-form-label">Departamento: *</label>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <select class="form-select" disabled>
-                                                <option th:if="${departamento != null}" 
-                                                        th:selected="true" 
-                                                        th:text="${departamento.name}">DEPARTAMENTO</option>
-                                                <option th:if="${departamento == null}">No especificado</option>
-                                            </select>
-                                            <div class="col-auto observation-view-only" data-field="department_id">
-                                                <button class="btn btn-info btn-sm view-observation" 
-                                                        type="button" 
-                                                        onclick="viewObservation('department_id', event)" 
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Ciudad -->
-                                    <div class="row mb-3 align-items-center">
-                                        <div class="col-auto">
-                                            <input type="checkbox" class="form-check-input field-checkbox" 
-                                                   data-field="city_id" 
-                                                   onchange="handleCheckboxChange(this)">
-                                        </div>
-                                        <div class="col-sm-3">
-                                            <label class="col-form-label">Ciudad: *</label>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <select class="form-select" disabled>
-                                                <option th:if="${ciudad != null}" 
-                                                        th:selected="true" 
-                                                        th:text="${ciudad.name}">CIUDAD</option>
-                                                <option th:if="${ciudad == null}">No especificada</option>
-                                            </select>
-                                            <div class="col-auto observation-view-only" data-field="city_id">
-                                                <button class="btn btn-info btn-sm view-observation" 
-                                                        type="button" 
-                                                        onclick="viewObservation('city_id', event)" 
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        
-                                    </div>
-
-                                    <!-- Dirección -->
-                                    <div class="row mb-3 align-items-center">
-                                        <div class="col-auto">
-                                            <input type="checkbox" class="form-check-input field-checkbox" 
-                                                   data-field="address" 
-                                                   onchange="handleCheckboxChange(this)">
-                                        </div>
-                                        <div class="col-sm-3">
-                                            <label class="col-form-label">Dirección: *</label>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <input type="text" class="form-control" th:value="${intermediary.companyId?.address}" readonly>
-                                            <div class="col-auto observation-view-only" data-field="address">
-                                                <button class="btn btn-info btn-sm view-observation" 
-                                                        type="button" 
-                                                        onclick="viewObservation('address', event)" 
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Correo electrónico -->
-                                    <div class="row mb-3 align-items-center">
-                                        <div class="col-auto">
-                                            <input type="checkbox" class="form-check-input field-checkbox" 
-                                                   data-field="email" 
-                                                   onchange="handleCheckboxChange(this)">
-                                        </div>
-                                        <div class="col-sm-3">
-                                            <label class="col-form-label">Correo electrónico: *</label>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <input type="email" class="form-control" th:value="${intermediary.companyId?.email}" readonly>
-                                            
-                                        <div class="col-auto observation-view-only" data-field="email">
-                                            <button class="btn btn-info btn-sm view-observation" 
-                                                    type="button" 
-                                                    onclick="viewObservation('email', event)" 
-                                                    style="display: none;"
-                                                    title="Ver observación">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                        </div>
-                                        
-                                    </div>
-
-                                    <!-- Teléfono Fijo -->
-                                    <div class="row mb-3 align-items-center">
-                                        <div class="col-auto">
-                                            <input type="checkbox" class="form-check-input field-checkbox" 
-                                                   data-field="phone" 
-                                                   onchange="handleCheckboxChange(this)">
-                                        </div>
-                                        <div class="col-sm-3">
-                                            <label class="col-form-label">Teléfono Fijo: *</label>
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <input type="text" class="form-control" th:value="${intermediary.companyId?.phone}" readonly>
-                                            
-                                        <div class="col-auto observation-view-only" data-field="phone">
-                                            <button class="btn btn-info btn-sm view-observation" 
-                                                    type="button" 
-                                                    onclick="viewObservation('phone', event)" 
-                                                    style="display: none;"
-                                                    title="Ver observación">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                        </div>
-                                        
-                                    </div>
-                                    
-                                </form>
-
-                                <div class="d-flex justify-content-end mt-4">
-                                    <button class="btn btn-primary" onclick="cambiarTab('idoneidad')">
-                                        Siguiente
-                                        <i class="fas fa-arrow-right ms-2"></i>
-                                    </button>
-                                </div>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" th:value="${intermediary.companyId?.nit}" readonly>
+                            <div class="col-auto observation-view-only" data-field="nit">
+                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                        type="button" 
+                                        onclick="viewObservation('nit', event)" 
+                                        style="display: none;" 
+                                        title="Ver observación">
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div th:if="${isAgente != null and isAgente}">
-                        <!-- Contenido para agente -->
-                         <!-- Campos de persona -->
-                        <form class="form-horizontal">
-                            <!-- Tipo de Documento -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="document_type" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Tipo de Documento: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <select class="form-select" disabled>
-                                        <option th:if="${intermediary.personId?.documentType != null}" 
-                                                th:selected="true" 
-                                                th:text="${@intermediaryService.getDocumentTypeName(intermediary.personId.documentType)}"></option>
-                                    </select>
-                                    <div class="col-auto observation-view-only" data-field="document_type">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('document_type', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Número de Documento -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="document_number" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Número de Documento: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.documentNumber : ''}" readonly>
-                                    <div class="col-auto observation-view-only" data-field="document_number">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('document_number', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Primer Nombre -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="first_name" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Primer Nombre: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.firstName : ''}" readonly>
-                                    <div class="col-auto observation-view-only" data-field="first_name">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('first_name', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Segundo Nombre -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="second_name" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Segundo Nombre:</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.secondName : ''}" readonly>
-                                    <div class="col-auto observation-view-only" data-field="second_name">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('second_name', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-    
-                            <!-- Primer Apellido -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="first_surname" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Primer Apellido: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.firstSurname : ''}" readonly>
-                                    <div class="col-auto observation-view-only" data-field="first_surname">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('first_surname', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Segundo Apellido -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="second_surname" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Segundo Apellido:</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.secondSurname : ''}" readonly>
-                                    <div class="col-auto observation-view-only" data-field="second_surname">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('second_surname', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Departamento (compartido) -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="department_id" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Departamento: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <select class="form-select" disabled>
-                                        <option th:if="${departamento != null}" 
-                                                th:selected="true" 
-                                                th:text="${departamento.name}">DEPARTAMENTO</option>
-                                        <option th:if="${departamento == null}">No especificado</option>
-                                    </select>
-                                    <div class="col-auto observation-view-only" data-field="department_id">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('department_id', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-    
-                            <!-- Ciudad (compartido) -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="city_id" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Ciudad: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <select class="form-select" disabled>
-                                        <option th:if="${ciudad != null}" 
-                                                th:selected="true" 
-                                                th:text="${ciudad.name}">CIUDAD</option>
-                                        <option th:if="${ciudad == null}">No especificada</option>
-                                    </select>
-                                    <div class="col-auto observation-view-only" data-field="city_id">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('city_id', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Dirección (compartido) -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="address" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Dirección: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.address : ''}" readonly>
-                                    <div class="col-auto observation-view-only" data-field="address">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('address', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-    
-                            <!-- Correo electrónico (compartido) -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="email" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Correo electrónico: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="email" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.email : ''}" readonly>
-                                    <div class="col-auto observation-view-only" data-field="email">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('email', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Teléfono Fijo (compartido) -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="phone" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Teléfono Fijo: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.phone : ''}" readonly>
-                                    <div class="col-auto observation-view-only" data-field="email">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('email', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Teléfono Móvil -->
-                            <div class="row mb-3 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="cellphone" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
-                                <div class="col-sm-3">
-                                    <label class="col-form-label">Teléfono Móvil: *</label>
-                                </div>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.cellphone : ''}" readonly>
-                                    <div class="col-auto observation-view-only" data-field="cellphone">
-                                        <button class="btn btn-info btn-sm view-observation" 
-                                                type="button" 
-                                                onclick="viewObservation('cellphone', event)" 
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                            </div>
-                        </form>
-                        <div class="d-flex justify-content-end mt-4">
-                            <button class="btn btn-primary" onclick="cambiarTab('idoneidad')">
-                                Siguiente
-                                <i class="fas fa-arrow-right ms-2"></i>
-                            </button>
+                    <!-- Razón Social -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-sm-3">
+                            <label class="col-form-label">Razón Social: *</label>
                         </div>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" th:value="${intermediary.companyId?.name}" readonly>
+                            <div class="col-auto observation-view-only" data-field="business_name">
+                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                        type="button" 
+                                        onclick="viewObservation('business_name', event)" 
+                                        style="display: none;" 
+                                        title="Ver observación">
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Departamento -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-sm-3">
+                            <label class="col-form-label">Departamento: *</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <select class="form-select" disabled>
+                                <option th:if="${departamento != null}" 
+                                        th:selected="true" 
+                                        th:text="${departamento.name}">DEPARTAMENTO</option>
+                                <option th:if="${departamento == null}">No especificado</option>
+                            </select>
+                            <div class="col-auto observation-view-only" data-field="department_id">
+                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                        type="button" 
+                                        onclick="viewObservation('department_id', event)" 
+                                        style="display: none;" 
+                                        title="Ver observación">
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ciudad -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-sm-3">
+                            <label class="col-form-label">Ciudad: *</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <select class="form-select" disabled>
+                                <option th:if="${ciudad != null}" 
+                                        th:selected="true" 
+                                        th:text="${ciudad.name}">CIUDAD</option>
+                                <option th:if="${ciudad == null}">No especificada</option>
+                            </select>
+                            <div class="col-auto observation-view-only" data-field="city_id">
+                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                        type="button" 
+                                        onclick="viewObservation('city_id', event)" 
+                                        style="display: none;" 
+                                        title="Ver observación">
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dirección -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-sm-3">
+                            <label class="col-form-label">Dirección: *</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" th:value="${intermediary.companyId?.address}" readonly>
+                            <div class="col-auto observation-view-only" data-field="address">
+                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                        type="button" 
+                                        onclick="viewObservation('address', event)" 
+                                        style="display: none;" 
+                                        title="Ver observación">
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Correo electrónico -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-sm-3">
+                            <label class="col-form-label">Correo electrónico: *</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <input type="email" class="form-control" th:value="${intermediary.companyId?.email}" readonly>
+                            <div class="col-auto observation-view-only" data-field="email">
+                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                        type="button" 
+                                        onclick="viewObservation('email', event)" 
+                                        style="display: none;" 
+                                        title="Ver observación">
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teléfono Fijo -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-sm-3">
+                            <label class="col-form-label">Teléfono Fijo: *</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" th:value="${intermediary.companyId?.phone}" readonly>
+                            <div class="col-auto observation-view-only" data-field="phone">
+                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                        type="button" 
+                                        onclick="viewObservation('phone', event)" 
+                                        style="display: none;" 
+                                        title="Ver observación">
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button class="btn btn-primary" onclick="cambiarTab('idoneidad')">
+                        Siguiente
+                        <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:if="${isAgente != null and isAgente}">
+        <!-- Contenido para agente -->
+        <form class="form-horizontal">
+            <!-- Tipo de Documento -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Tipo de Documento: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <select class="form-select" disabled>
+                        <option th:if="${intermediary.personId?.documentType != null}" 
+                                th:selected="true" 
+                                th:text="${@intermediaryService.getDocumentTypeName(intermediary.personId.documentType)}"></option>
+                    </select>
+                    <div class="col-auto observation-view-only" data-field="document_type">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('document_type', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
                     </div>
                 </div>
+            </div>
+            <!-- Número de Documento -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Número de Documento: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.documentNumber : ''}" readonly>
+                    <div class="col-auto observation-view-only" data-field="document_number">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('document_number', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Primer Nombre -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Primer Nombre: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.firstName : ''}" readonly>
+                    <div class="col-auto observation-view-only" data-field="first_name">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('first_name', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segundo Nombre -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Segundo Nombre:</label>
+                </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.secondName : ''}" readonly>
+                    <div class="col-auto observation-view-only" data-field="second_name">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('second_name', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Primer Apellido -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Primer Apellido: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.firstSurname : ''}" readonly>
+                    <div class="col-auto observation-view-only" data-field="first_surname">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('first_surname', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segundo Apellido -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Segundo Apellido:</label>
+                </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.secondSurname : ''}" readonly>
+                    <div class="col-auto observation-view-only" data-field="second_surname">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('second_surname', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Departamento (compartido) -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Departamento: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <select class="form-select" disabled>
+                        <option th:if="${departamento != null}" 
+                                th:selected="true" 
+                                th:text="${departamento.name}">DEPARTAMENTO</option>
+                        <option th:if="${departamento == null}">No especificado</option>
+                    </select>
+                    <div class="col-auto observation-view-only" data-field="department_id">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('department_id', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ciudad (compartido) -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Ciudad: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <select class="form-select" disabled>
+                        <option th:if="${ciudad != null}" 
+                                th:selected="true" 
+                                th:text="${ciudad.name}">CIUDAD</option>
+                        <option th:if="${ciudad == null}">No especificada</option>
+                    </select>
+                    <div class="col-auto observation-view-only" data-field="city_id">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('city_id', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dirección (compartido) -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Dirección: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.address : ''}" readonly>
+                    <div class="col-auto observation-view-only" data-field="address">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('address', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Correo electrónico (compartido) -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Correo electrónico: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <input type="email" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.email : ''}" readonly>
+                    <div class="col-auto observation-view-only" data-field="email">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('email', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teléfono Fijo (compartido) -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Teléfono Fijo: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.phone : ''}" readonly>
+                    <div class="col-auto observation-view-only" data-field="phone">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('phone', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teléfono Móvil -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <label class="col-form-label">Teléfono Móvil: *</label>
+                </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" th:value="${intermediary.personId != null ? intermediary.personId.cellphone : ''}" readonly>
+                    <div class="col-auto observation-view-only" data-field="cellphone">
+                        <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                type="button" 
+                                onclick="viewObservation('cellphone', event)" 
+                                style="display: none;" 
+                                title="Ver observación">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="d-flex justify-content-end mt-4">
+            <button class="btn btn-primary" onclick="cambiarTab('idoneidad')">
+                Siguiente
+                <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+        </div>
+    </div>
+</div>
                  <!-- Información General Tab -->
 
                     
                 <!-- Idoneidad Profesional Tab -->    
+                <!-- Idoneidad Profesional Tab -->
                 <div class="tab-pane fade" id="idoneidad">
                     <div class="progress mb-4">
                         <div class="progress-bar" role="progressbar" style="width: 40%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
@@ -718,25 +611,13 @@
                                     <tbody>
                                         <tr th:each="idoniedad : ${idoneidadList}" th:if="${idoniedad != null}">
                                             <td class="text-center">
-                                                <input type="checkbox" class="form-check-input row-checkbox" 
-                                                       th:data-idoniedad-id="${idoniedad.id}" 
-                                                       onchange="handleCheckboxChange(this)">
-                                                       <div class="observation-view-only mt-2" th:attr="data-idoniedad-id=${idoniedad.id}">
-                                                        <button class="btn btn-info btn-sm view-observation"
-                                                                type="button"
-                                                                th:onclick="|viewObservation(null, event, ${idoniedad.id})|"
-                                                                style="display: none;"
-                                                                title="Ver observación">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                    </div>
-                                                <div class="col-auto observation-view-only" data-field="idoniedad.id">
-                                                    <button class="btn btn-info btn-sm view-observation" 
-                                                            type="button" 
-                                                            onclick="viewObservation('idoniedad.id', event)" 
+                                                <div class="observation-view-only mt-2" th:attr="data-idoniedad-id=${idoniedad.id}">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            th:onclick="|viewObservation(null, event, ${idoniedad.id})|"
                                                             style="display: none;"
                                                             title="Ver observación">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -749,7 +630,6 @@
                                             <td th:text="${idoniedad.courseEntity != null ? idoniedad.courseEntity : '-'}"></td>
                                             <td th:text="${idoniedad.dateCourse != null ? #dates.format(idoniedad.dateCourse, 'dd/MM/yyyy') : '-'}"></td>
                                             <td class="text-center">
-                                                
                                                 <button class="btn btn-link text-primary" 
                                                         th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
                                                         th:onclick="'downloadDocument(' + ${idoniedad.id} + ')'">
@@ -765,7 +645,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                
+                            
                             <div class="d-flex justify-content-between mt-4">
                                 <button class="btn btn-secondary" onclick="cambiarTab('general')">
                                     <i class="fas fa-arrow-left me-2"></i>
@@ -782,6 +662,7 @@
                 <!-- Idoneidad Profesional Tab -->
                     
                 <!-- Infraestructura Humana Tab -->     
+                <!-- Infraestructura Humana Tab -->
                 <div class="tab-pane fade" id="infraestructura">
                     <div class="progress mb-4">
                         <div class="progress-bar" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
@@ -796,140 +677,110 @@
                                     <form class="form-horizontal">
                                         <!-- Datos del profesional -->
                                         <div class="row mb-3 align-items-center">
-                                            <div class="col-auto">
-                                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                                    data-field="infra_document_type" 
-                                                    onchange="handleCheckboxChange(this)">
-                                            </div>
                                             <div class="col-sm-3">
                                                 <label class="col-form-label">Tipo de Documento: *</label>
                                             </div>
                                             <div class="col-sm-8">
                                                 <input type="text" class="form-control" th:value="${infraestructuraHumana.documentType != null ? @intermediaryService.getDocumentTypeName(infraestructuraHumana.documentType) : ''}" readonly>
-                                            </div>
-                                            <div class="col-auto observation-view-only" data-field="infra_document_type">
-                                                <button class="btn btn-info btn-sm view-observation"
-                                                        type="button"
-                                                        onclick="viewObservation('infra_document_type', event)"
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                                <div class="col-auto observation-view-only" data-field="infra_document_type">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            onclick="viewObservation('infra_document_type', event)"
+                                                            style="display: none;"
+                                                            title="Ver observación">
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div class="row mb-3 align-items-center">
-                                            <div class="col-auto">
-                                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                                    data-field="infra_document_number" 
-                                                    onchange="handleCheckboxChange(this)">
-                                            </div>
                                             <div class="col-sm-3">
                                                 <label class="col-form-label">Número de Documento: *</label>
                                             </div>
                                             <div class="col-sm-8">
                                                 <input type="text" class="form-control" th:value="${infraestructuraHumana.documentNumber}" readonly>
-                                            </div>
-                                            <div class="col-auto observation-view-only" data-field="infra_document_number">
-                                                <button class="btn btn-info btn-sm view-observation"
-                                                        type="button"
-                                                        onclick="viewObservation('infra_document_number', event)"
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                                <div class="col-auto observation-view-only" data-field="infra_document_number">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            onclick="viewObservation('infra_document_number', event)"
+                                                            style="display: none;"
+                                                            title="Ver observación">
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div class="row mb-3 align-items-center">
-                                            <div class="col-auto">
-                                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                                    data-field="infra_first_name" 
-                                                    onchange="handleCheckboxChange(this)">
-                                            </div>
                                             <div class="col-sm-3">
                                                 <label class="col-form-label">Primer Nombre: *</label>
                                             </div>
                                             <div class="col-sm-8">
                                                 <input type="text" class="form-control" th:value="${infraestructuraHumana.firstName}" readonly>
-                                            </div>
-                                            <div class="col-auto observation-view-only" data-field="infra_first_name">
-                                                <button class="btn btn-info btn-sm view-observation"
-                                                        type="button"
-                                                        onclick="viewObservation('infra_first_name', event)"
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                                <div class="col-auto observation-view-only" data-field="infra_first_name">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            onclick="viewObservation('infra_first_name', event)"
+                                                            style="display: none;"
+                                                            title="Ver observación">
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div class="row mb-3 align-items-center">
-                                            <div class="col-auto">
-                                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                                    data-field="infra_second_name" 
-                                                    onchange="handleCheckboxChange(this)">
-                                            </div>
                                             <div class="col-sm-3">
                                                 <label class="col-form-label">Segundo Nombre:</label>
                                             </div>
                                             <div class="col-sm-8">
                                                 <input type="text" class="form-control" th:value="${infraestructuraHumana.secondName}" readonly>
-                                            </div>
-                                            <div class="col-auto observation-view-only" data-field="infra_second_name">
-                                                <button class="btn btn-info btn-sm view-observation"
-                                                        type="button"
-                                                        onclick="viewObservation('infra_second_name', event)"
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                                <div class="col-auto observation-view-only" data-field="infra_second_name">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            onclick="viewObservation('infra_second_name', event)"
+                                                            style="display: none;"
+                                                            title="Ver observación">
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div class="row mb-3 align-items-center">
-                                            <div class="col-auto">
-                                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                                    data-field="infra_first_surname" 
-                                                    onchange="handleCheckboxChange(this)">
-                                            </div>
                                             <div class="col-sm-3">
                                                 <label class="col-form-label">Primer Apellido: *</label>
                                             </div>
                                             <div class="col-sm-8">
                                                 <input type="text" class="form-control" th:value="${infraestructuraHumana.firstSurname}" readonly>
-                                            </div>
-                                            <div class="col-auto observation-view-only" data-field="infra_first_surname">
-                                                <button class="btn btn-info btn-sm view-observation"
-                                                        type="button"
-                                                        onclick="viewObservation('infra_first_surname', event)"
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                                <div class="col-auto observation-view-only" data-field="infra_first_surname">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            onclick="viewObservation('infra_first_surname', event)"
+                                                            style="display: none;"
+                                                            title="Ver observación">
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div class="row mb-3 align-items-center">
-                                            <div class="col-auto">
-                                                <input type="checkbox" class="form-check-input field-checkbox" 
-                                                    data-field="infra_second_surname" 
-                                                    onchange="handleCheckboxChange(this)">
-                                            </div>
                                             <div class="col-sm-3">
                                                 <label class="col-form-label">Segundo Apellido:</label>
                                             </div>
                                             <div class="col-sm-8">
                                                 <input type="text" class="form-control" th:value="${infraestructuraHumana.secondSurname}" readonly>
-                                            </div>
-                                            <div class="col-auto observation-view-only" data-field="infra_second_surname">
-                                                <button class="btn btn-info btn-sm view-observation"
-                                                        type="button"
-                                                        onclick="viewObservation('infra_second_surname', event)"
-                                                        style="display: none;"
-                                                        title="Ver observación">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                                <div class="col-auto observation-view-only" data-field="infra_second_surname">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            onclick="viewObservation('infra_second_surname', event)"
+                                                            style="display: none;"
+                                                            title="Ver observación">
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </form>
@@ -962,18 +813,15 @@
                                         </tr>
                                         <tr th:each="experiencia : ${experienciasLaborales}" th:if="${experiencia != null}">
                                             <td class="text-center">
-                                                <input type="checkbox" class="form-check-input work-exp-checkbox" 
-                                                    th:attr="data-work-exp-id=${experiencia.id}" 
-                                                    onchange="handleCheckboxChange(this)">
-                                                    <div class="observation-view-only mt-2" th:attr="data-work-exp-id=${experiencia.id}">
-                                                        <button class="btn btn-info btn-sm view-observation"
-                                                                type="button"
-                                                                th:onclick="|viewObservation('work_exp', event, ${experiencia.id})|"
-                                                                style="display: none;"
-                                                                title="Ver observación">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                    </div>
+                                                <div class="observation-view-only mt-2" th:attr="data-work-exp-id=${experiencia.id}">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            th:onclick="|viewObservation('work_exp', event, ${experiencia.id})|"
+                                                            style="display: none;"
+                                                            title="Ver observación">
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                             <td th:text="${experiencia.company}"></td>
                                             <td th:text="${experiencia.charge}"></td>
@@ -1014,6 +862,7 @@
                 <!-- Infraestructura Humana Tab -->
                      
                 <!-- Infraestructura Operativa Tab -->
+               <!-- Infraestructura Operativa Tab -->
                 <div class="tab-pane fade" id="operativa">
                     <div class="progress mb-4">
                         <div class="progress-bar" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
@@ -1025,11 +874,6 @@
                             <form class="form-horizontal">
                                 <!-- Soportes con checkboxes y botones de documento -->
                                 <div class="row mb-4 align-items-center">
-                                    <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input field-checkbox" 
-                                               data-field="operativa_camara" 
-                                               onchange="handleCheckboxChange(this)">
-                                    </div>
                                     <div class="col">
                                         <label class="form-label">* Soporte matrícula de cámara de comercio</label>
                                     </div>
@@ -1045,22 +889,17 @@
                                         </button>
                                     </div>
                                     <div class="col-auto observation-view-only" data-field="operativa_camara">
-                                        <button class="btn btn-info btn-sm view-observation"
+                                        <button class="btn btn-outline-secondary observation-icon view-observation"
                                                 type="button"
                                                 onclick="viewObservation('operativa_camara', event)"
                                                 style="display: none;"
                                                 title="Ver observación">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="fas fa-exclamation-circle text-danger"></i>
                                         </button>
                                     </div>
                                 </div>
-                
+                                
                                 <div class="row mb-4 align-items-center">
-                                    <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input field-checkbox" 
-                                               data-field="operativa_software" 
-                                               onchange="handleCheckboxChange(this)">
-                                    </div>
                                     <div class="col">
                                         <label class="form-label">* Soporte de certificación de Software o Base de Datos</label>
                                     </div>
@@ -1075,22 +914,17 @@
                                         </button>
                                     </div>
                                     <div class="col-auto observation-view-only" data-field="operativa_software">
-                                        <button class="btn btn-info btn-sm view-observation"
+                                        <button class="btn btn-outline-secondary observation-icon view-observation"
                                                 type="button"
                                                 onclick="viewObservation('operativa_software', event)"
                                                 style="display: none;"
                                                 title="Ver observación">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="fas fa-exclamation-circle text-danger"></i>
                                         </button>
                                     </div>
                                 </div>
-                
+                                
                                 <div class="row mb-4 align-items-center">
-                                    <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input field-checkbox" 
-                                               data-field="operativa_equipos" 
-                                               onchange="handleCheckboxChange(this)">
-                                    </div>
                                     <div class="col">
                                         <label class="form-label">* Soporte de certificación de equipos tecnológicos</label>
                                     </div>
@@ -1105,158 +939,126 @@
                                         </button>
                                     </div>
                                     <div class="col-auto observation-view-only" data-field="operativa_equipos">
-                                        <button class="btn btn-info btn-sm view-observation"
+                                        <button class="btn btn-outline-secondary observation-icon view-observation"
                                                 type="button"
                                                 onclick="viewObservation('operativa_equipos', event)"
                                                 style="display: none;"
                                                 title="Ver observación">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="fas fa-exclamation-circle text-danger"></i>
                                         </button>
                                     </div>
                                 </div>
-                
+                                
                                 <!-- Campos de información de contacto con checkboxes -->
                                 <div class="row mb-3 align-items-center">
-                                    <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input field-checkbox" 
-                                               data-field="operativa_phone1" 
-                                               onchange="handleCheckboxChange(this)">
-                                    </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Línea telefónica 1: *</label>
                                     </div>
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone1 : ''}" readonly>
-                                    </div>
-                                    <div class="col-auto observation-view-only" data-field="operativa_phone1">
-                                        <button class="btn btn-info btn-sm view-observation"
-                                                type="button"
-                                                onclick="viewObservation('operativa_phone1', event)"
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                        <div class="col-auto observation-view-only" data-field="operativa_phone1">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                    type="button"
+                                                    onclick="viewObservation('operativa_phone1', event)"
+                                                    style="display: none;"
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                
-                                <!-- Continuar con el mismo patrón para los demás campos -->
+                                
                                 <div class="row mb-3 align-items-center">
-                                    <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input field-checkbox" 
-                                               data-field="operativa_phone2" 
-                                               onchange="handleCheckboxChange(this)">
-                                    </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Línea telefónica 2:</label>
                                     </div>
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone2 : ''}" readonly>
-                                    </div>
-                                    <div class="col-auto observation-view-only" data-field="operativa_phone2">
-                                        <button class="btn btn-info btn-sm view-observation"
-                                                type="button"
-                                                onclick="viewObservation('operativa_phone2', event)"
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                        <div class="col-auto observation-view-only" data-field="operativa_phone2">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                    type="button"
+                                                    onclick="viewObservation('operativa_phone2', event)"
+                                                    style="display: none;"
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                
-                                <!-- Continúa agregando el mismo patrón para el resto de los campos -->
+                                
                                 <div class="row mb-3 align-items-center">
-                                    <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input field-checkbox" 
-                                               data-field="operativa_phone3" 
-                                               onchange="handleCheckboxChange(this)">
-                                    </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Línea telefónica 3:</label>
                                     </div>
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phone3 : ''}" readonly>
-                                    </div>
-                                    <div class="col-auto observation-view-only" data-field="operativa_phone3">
-                                        <button class="btn btn-info btn-sm view-observation"
-                                                type="button"
-                                                onclick="viewObservation('operativa_phone3', event)"
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                        <div class="col-auto observation-view-only" data-field="operativa_phone3">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                    type="button"
+                                                    onclick="viewObservation('operativa_phone3', event)"
+                                                    style="display: none;"
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                
+                                
                                 <div class="row mb-3 align-items-center">
-                                    <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input field-checkbox" 
-                                               data-field="operativa_phone_fax" 
-                                               onchange="handleCheckboxChange(this)">
-                                    </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Número del Fax:</label>
                                     </div>
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.phoneFax : ''}" readonly>
-                                    </div>
-                                    <div class="col-auto observation-view-only" data-field="operativa_phone_fax">
-                                        <button class="btn btn-info btn-sm view-observation"
-                                                type="button"
-                                                onclick="viewObservation('operativa_phone_fax', event)"
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                        <div class="col-auto observation-view-only" data-field="operativa_phone_fax">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                    type="button"
+                                                    onclick="viewObservation('operativa_phone_fax', event)"
+                                                    style="display: none;"
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                
+                                
                                 <div class="row mb-3 align-items-center">
-                                    <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input field-checkbox" 
-                                               data-field="operativa_email" 
-                                               onchange="handleCheckboxChange(this)">
-                                    </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Correo Electrónico: *</label>
                                     </div>
                                     <div class="col">
                                         <input type="email" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.email : ''}" readonly>
-                                    </div>
-                                    <div class="col-auto observation-view-only" data-field="operativa_email">
-                                        <button class="btn btn-info btn-sm view-observation"
-                                                type="button"
-                                                onclick="viewObservation('operativa_email', event)"
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                        <div class="col-auto observation-view-only" data-field="operativa_email">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                    type="button"
+                                                    onclick="viewObservation('operativa_email', event)"
+                                                    style="display: none;"
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                
+                                
                                 <div class="row mb-3 align-items-center">
-                                    <div class="col-auto">
-                                        <input type="checkbox" class="form-check-input field-checkbox" 
-                                               data-field="operativa_address" 
-                                               onchange="handleCheckboxChange(this)">
-                                    </div>
                                     <div class="col-sm-4">
                                         <label class="col-form-label">Dirección de oficina de atención al ciudadano: *</label>
                                     </div>
                                     <div class="col">
                                         <input type="text" class="form-control" th:value="${infraestructuraOperativa != null ? infraestructuraOperativa.addressServiceOffice : ''}" readonly>
-                                    </div>
-                                    <div class="col-auto observation-view-only" data-field="operativa_address">
-                                        <button class="btn btn-info btn-sm view-observation"
-                                                type="button"
-                                                onclick="viewObservation('operativa_address', event)"
-                                                style="display: none;"
-                                                title="Ver observación">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                        <div class="col-auto observation-view-only" data-field="operativa_address">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                    type="button"
+                                                    onclick="viewObservation('operativa_address', event)"
+                                                    style="display: none;"
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </form>
-                
+                            
                             <div class="d-flex justify-content-between mt-4">
                                 <button class="btn btn-secondary" onclick="cambiarTab('infraestructura')">
                                     <i class="fas fa-arrow-left me-2"></i>
@@ -1272,6 +1074,7 @@
                 </div>
                 <!-- Infraestructura Operativa Tab -->
                 <!-- Firma Digitalizada Tab -->
+                <!-- Firma Digitalizada Tab -->
                 <div class="tab-pane fade" id="firma">
                     <div class="progress mb-4">
                         <div class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
@@ -1280,45 +1083,38 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="row mb-4 align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input field-checkbox" 
-                                           data-field="firma_digitalizada" 
-                                           onchange="handleCheckboxChange(this)">
-                                </div>
                                 <div class="col">
                                     <h5 class="card-title mb-0">Firma Digitalizada</h5>
                                 </div>
                                 <div class="col-auto observation-view-only" data-field="firma_digitalizada">
-                                    <button class="btn btn-info btn-sm view-observation"
+                                    <button class="btn btn-outline-secondary observation-icon view-observation"
                                             type="button"
                                             onclick="viewObservation('firma_digitalizada', event)"
                                             style="display: none;"
                                             title="Ver observación">
-                                        <i class="fas fa-eye"></i>
+                                        <i class="fas fa-exclamation-circle text-danger"></i>
                                     </button>
                                 </div>
                             </div>
-                
+                            
                             <!-- Mostrar alerta de éxito o error si existen -->
                             <div class="alert alert-success" th:if="${mensaje != null}" th:text="${mensaje}"></div>
                             <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
-                
                             
                             <!-- Contenedor de la firma -->
                             <div class="text-center mb-4">
                                 <img th:if="${firmaDigitalizada != null}"
-                                     th:src="${firmaDigitalizada.imagenUrl}"
-                                     alt="Firma Digitalizada" 
-                                     class="img-fluid" 
-                                     style="max-width: 500px;">
-                
+                                    th:src="${firmaDigitalizada.imagenUrl}"
+                                    alt="Firma Digitalizada" 
+                                    class="img-fluid" 
+                                    style="max-width: 500px;">
+                                
                                 <!-- Mensaje si no hay firma -->
                                 <p th:if="${firmaDigitalizada == null}" class="text-muted">No hay firma digitalizada disponible</p>
                             </div>
-                
+                            
                             <!-- Botones de acción -->
                             <div class="d-flex justify-content-between mt-4">
-                                
                                 <button class="btn btn-secondary" onclick="cambiarTab('operativa')">
                                     <i class="fas fa-arrow-left me-2"></i>
                                     Atrás
