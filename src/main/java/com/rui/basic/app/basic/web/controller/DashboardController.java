@@ -54,6 +54,7 @@ public class DashboardController {
                 
                 model.addAttribute("roles", roles);
                 model.addAttribute("usersByRole", usersByRole);
+                model.addAttribute("activeTab", "dashboard");
                 
                 log.debug("Dashboard cargado para usuario: {}", username);
                 log.debug("Usuarios por rol: {}", usersByRole);

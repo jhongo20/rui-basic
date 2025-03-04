@@ -20,8 +20,7 @@
         .tab-content {
             padding: 20px;
         }
-    </style>
-    <style>
+        
         .btn-secondary {
             background-color: #f8f9fa;
             border-color: #ddd;
@@ -43,74 +42,40 @@
             background-color: #303f9f;
             border-color: #303f9f;
         }
-        </style>
-        <style>
-            .form-check-input {
-                margin-top: 0;
-            }
-            
-            .btn-primary {
-                background-color: #3f51b5;
-                border-color: #3f51b5;
-            }
-            
-            .btn-primary:hover {
-                background-color: #303f9f;
-                border-color: #303f9f;
-            }
-            
-            .form-select {
-                background-color: #f8f9fa;
-            }
-            </style>
-            <style>
-                .table th {
-                    background-color: #f8f9fa;
-                    color: #333;
-                    font-weight: 500;
-                }
-                
-                .btn-link {
-                    padding: 0.25rem 0.5rem;
-                    text-decoration: none;
-                }
-                
-                .btn-link:hover {
-                    background-color: #f8f9fa;
-                    border-radius: 4px;
-                }
-                
-                .table td {
-                    vertical-align: middle;
-                }
-                
-                .form-check-input {
-                    margin: 0;
-                }
-                
-                .btn-secondary {
-                    background-color: #f8f9fa;
-                    border-color: #ddd;
-                    color: #333;
-                }
-                
-                .btn-primary {
-                    background-color: #3f51b5;
-                    border-color: #3f51b5;
-                }
-                </style>
-                <style>
-                    
-                    
-                    .view-only-badge {
-                        background-color: #f8f9fa;
-                        color: #3f51b5;
-                        font-size: 0.8rem;
-                        padding: 0.25rem 0.5rem;
-                        border-radius: 4px;
-                        margin-left: 10px;
-                    }
-                </style>
+        
+        .form-check-input {
+            margin-top: 0;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .btn-link {
+            padding: 0.25rem 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-link:hover {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .table td {
+            vertical-align: middle;
+        }
+        
+        .view-only-badge {
+            background-color: #f8f9fa;
+            color: #3f51b5;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
     <!-- Agrega esto en algún lugar de tu plantilla, puede ser oculto -->
@@ -119,6 +84,48 @@
 
 <!-- Agrega un contenedor para los toasts -->
 <div id="toast-container" class="position-fixed top-0 end-0 p-3"></div>
+    <!-- Header igual que en list.html y edit-intermediary.html -->
+    <<nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img th:src="@{/img/mintrabajo_logo.png}" height="35" alt="MinTrabajo">
+                <img th:src="@{/img/nuevopais_logo.png}" height="60" alt="Nuevo País">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" 
+                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Opciones que NO se muestran para Intermediario -->
+                    <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+                        <a class="nav-link" th:href="@{/dashboard}" th:classappend="${activeTab == 'dashboard' ? 'active fw-bold' : ''}">
+                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+                        <a class="nav-link" th:href="@{/intermediary/list}" th:classappend="${activeTab == 'intermediaryList' ? 'active fw-bold' : ''}">
+                            <i class="fas fa-list me-1"></i> Listado de Intermediarios
+                        </a>
+                    </li>
+                    
+                    <!-- Opción "Mis Registros" visible para todos los roles -->
+                    <li class="nav-item" th:if="${#authentication.authorities[0].authority.equals('Intermediario')}">
+                        <a class="nav-link" th:href="@{/intermediary/my-registries}" th:classappend="${activeTab == 'myRegistries' ? 'active fw-bold' : ''}">
+                            <i class="fas fa-folder-open me-1"></i> Mis Registros
+                        </a>
+                    </li>
+                    
+                    <!-- Cerrar sesión siempre visible -->
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/logout}">
+                            <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
     <div class="container-fluid">
         <div class="card mt-4">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -1023,7 +1030,7 @@
                                             <td th:text="${idoniedad.courseEntity != null ? idoniedad.courseEntity : '-'}"></td>
                                             <td th:text="${idoniedad.dateCourse != null ? #dates.format(idoniedad.dateCourse, 'dd/MM/yyyy') : '-'}"></td>
                                             <td class="text-center">
-                                                <small class="text-muted" th:text="${'Support: ' + idoniedad.supportUpload}"></small>
+                                                
                                                 <button class="btn btn-link text-primary" 
                                                         th:if="${idoniedad.supportUpload != null && idoniedad.supportUpload}" 
                                                         th:onclick="'downloadDocument(' + ${idoniedad.id} + ')'">

@@ -43,10 +43,37 @@
                 <img th:src="@{/img/mintrabajo_logo.png}" height="35" alt="MinTrabajo">
                 <img th:src="@{/img/nuevopais_logo.png}" height="60" alt="Nuevo País">
             </a>
-            <div class="collapse navbar-collapse">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" 
+                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" th:href="@{/intermediary/my-registries}">Mis registros</a></li>
-                    <li class="nav-item"><a class="nav-link" th:href="@{/logout}">Cerrar sesión</a></li>
+                    <!-- Opciones que NO se muestran para Intermediario -->
+                    <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+                        <a class="nav-link" th:href="@{/dashboard}" th:classappend="${activeTab == 'dashboard' ? 'active fw-bold' : ''}">
+                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+                        <a class="nav-link" th:href="@{/intermediary/list}" th:classappend="${activeTab == 'intermediaryList' ? 'active fw-bold' : ''}">
+                            <i class="fas fa-list me-1"></i> Listado de Intermediarios
+                        </a>
+                    </li>
+                    
+                    <!-- Opción "Mis Registros" visible para todos los roles -->
+                    <li class="nav-item" th:if="${#authentication.authorities[0].authority.equals('Intermediario')}">
+                        <a class="nav-link" th:href="@{/intermediary/my-registries}" th:classappend="${activeTab == 'myRegistries' ? 'active fw-bold' : ''}">
+                            <i class="fas fa-folder-open me-1"></i> Mis Registros
+                        </a>
+                    </li>
+                    
+                    <!-- Cerrar sesión siempre visible -->
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/logout}">
+                            <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -445,6 +472,7 @@
                                             <th>Entidad curso</th>
                                             <th>Fecha curso</th>
                                             <th>Soporte</th>
+                                            <th>Observación</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -464,6 +492,16 @@
                                                     <a th:href="@{/api/idoniedad/{id}/download(id=${idoniedad.id})}" class="btn btn-link btn-sm"><i class="fas fa-file-download"></i> Ver actual</a>
                                                 </div>
                                             </td>
+                                            <td class="text-center">
+                                                <div class="observation-view-only" th:attr="data-idoniedad-id=${idoniedad.id}">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            th:onclick="|viewObservation(null, event, ${idoniedad.id})|"
+                                                            style="display: none;"
+                                                            title="Ver observación">
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -486,10 +524,10 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" th:field="*{infrastructureHumanId.lawyerId.documentType}" required maxlength="50">
                                             <button th:if="${fieldStates != null && fieldStates['infra_document_type'] != null && fieldStates['infra_document_type'].iconClose}" 
-                                                  class="btn btn-outline-secondary observation-icon" 
-                                                  type="button" 
-                                                  onclick="viewObservation('infra_document_type', event)" 
-                                                  title="Ver observación">
+                                                    class="btn btn-outline-secondary observation-icon" 
+                                                    type="button" 
+                                                    onclick="viewObservation('infra_document_type', event)" 
+                                                    title="Ver observación">
                                                 <i class="fas fa-exclamation-circle text-danger"></i>
                                             </button>
                                         </div>
@@ -602,10 +640,15 @@
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <button th:if="${exp.hasObservation}" class="btn btn-link btn-sm" type="button" 
-                                                        th:onclick="'viewWorkExpObservation(' + ${exp.id} + ')'">
-                                                    <i class="fas fa-exclamation-circle text-danger"></i>
-                                                </button>
+                                                <div class="observation-view-only" th:attr="data-work-exp-id=${exp.id}">
+                                                    <button class="btn btn-outline-secondary observation-icon view-observation"
+                                                            type="button"
+                                                            th:onclick="|viewObservation('work_exp', event, ${exp.id})|"
+                                                            style="display: none;"
+                                                            title="Ver observación">
+                                                        <i class="fas fa-exclamation-circle text-danger"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -951,5 +994,94 @@
         
        
     </script>
+    <script>
+        // Sobrescribir viewObservation para usar el endpoint correcto en idoneidad
+        function viewObservation(field, event, id = null) {
+            if (event) event.preventDefault();
+    
+            const intermediaryId = document.getElementById('intermediaryId').value;
+            let url;
+            let title;
+    
+            if (field === 'work_exp' && id) {
+                url = `/intermediary/workexp/${id}/observation`;
+                title = 'Experiencia Laboral';
+            } else if (id) {
+                url = `/api/idoniedad/${id}/observation`; // Endpoint correcto
+                title = 'Registro de Idoneidad';
+            } else if (field) {
+                url = `/intermediary/field-observation/${intermediaryId}/${field}`;
+                title = getFieldLabel(field);
+            } else {
+                console.error('No se proporcionó field ni id');
+                return;
+            }
+    
+            // Mostrar el modal con mensaje de carga
+            document.getElementById('viewObservationText').value = "Cargando observación...";
+            document.getElementById('viewObservationTitle').textContent = `Observación sobre ${title}`;
+            const viewModal = new bootstrap.Modal(document.getElementById('viewObservationModal'));
+            viewModal.show();
+    
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            throw new Error('No se encontró observación para este campo');
+                        }
+                        throw new Error('Error al cargar observación');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('viewObservationText').value = data.observation || "No hay observación disponible";
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('viewObservationText').value = error.message || "Error al cargar la observación";
+                });
+        }
+    
+        // Redefinir getFieldLabel para mantener consistencia
+        function getFieldLabel(field) {
+            if (field === 'work_exp') return 'Experiencia Laboral';
+            if (!field) return 'Registro de Idoneidad';
+            
+            const labels = {
+                'nit': 'NIT',
+                'business_name': 'Razón Social',
+                'department_id': 'Departamento',
+                'city_id': 'Ciudad',
+                'address': 'Dirección',
+                'email': 'Correo electrónico',
+                'phone': 'Teléfono Fijo',
+                'document_type': 'Tipo de Identificación',
+                'document_number': 'No. Identificación',
+                'first_name': 'Primer Nombre',
+                'second_name': 'Segundo Nombre',
+                'first_surname': 'Primer Apellido',
+                'second_surname': 'Segundo Apellido',
+                'cellphone': 'Teléfono Móvil',
+                'infra_document_type': 'Tipo de Documento (Infraestructura)',
+                'infra_document_number': 'Número de Documento (Infraestructura)',
+                'infra_first_name': 'Primer Nombre (Infraestructura)',
+                'infra_second_name': 'Segundo Nombre (Infraestructura)',
+                'infra_first_surname': 'Primer Apellido (Infraestructura)',
+                'infra_second_surname': 'Segundo Apellido (Infraestructura)',
+                'operativa_camara': 'Soporte matrícula de cámara de comercio',
+                'operativa_software': 'Soporte de certificación de Software o Base de Datos',
+                'operativa_equipos': 'Soporte de certificación de equipos tecnológicos',
+                'operativa_phone1': 'Línea telefónica 1',
+                'operativa_phone2': 'Línea telefónica 2',
+                'operativa_phone3': 'Línea telefónica 3',
+                'operativa_phone_fax': 'Número del Fax',
+                'operativa_email': 'Correo Electrónico (Operativa)',
+                'operativa_address': 'Dirección de oficina de atención al ciudadano',
+                'firma_digitalizada': 'Firma Digitalizada'
+            };
+            return labels[field] || field;
+        }
+    </script>
+
 </body>
 </html>

@@ -361,6 +361,7 @@ public class IntermediaryController {
             model.addAttribute("sort", sort);
             model.addAttribute("direction", direction);
             model.addAttribute("search", search);
+            model.addAttribute("activeTab", "intermediaryList");
             
             // Agregar mensaje cuando no hay resultados
             if (intermediariesPage.isEmpty() && StringUtils.hasText(search)) {
@@ -755,7 +756,8 @@ public class IntermediaryController {
             model.addAttribute("totalItems", userRegistries.getTotalElements());
             model.addAttribute("sort", sort);
             model.addAttribute("direction", direction);
-
+            model.addAttribute("activeTab", "myRegistries");
+            
             if (userRegistries.isEmpty()) {
                 model.addAttribute("noResults", true);
             }

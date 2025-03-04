@@ -12,37 +12,104 @@
         .btn-secondary:hover { background-color: #e9ecef; border-color: #ccc; }
         .table th { background-color: #f8f9fa; color: #333; font-weight: 500; }
         .dropdown-menu { min-width: 120px; }
+        
+        /* Solución para el problema del dropdown */
+        .card-body {
+            min-height: 500px; /* Altura mínima para evitar scroll */
+            position: relative; /* Necesario para posicionamiento de elementos internos */
+        }
+        
+        /* Asegurar que el dropdown se muestre por encima de otros elementos */
+        .dropdown-menu {
+            z-index: 1030;
+        }
+        
+        /* Posición absoluta para asegurar que el dropdown no cause scroll */
+        .table .dropdown {
+            position: static;
+        }
+        
+        .table .dropdown-menu {
+            position: absolute;
+        }
+    </style>
+    <style>
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-nav .nav-item {
+            margin: 0 5px;
+        }
+        
+        .navbar-nav .nav-link {
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            background-color: #f0f0f0;
+            color: #3f51b5;
+        }
+        
+        .navbar-nav .nav-link.active {
+            background-color: #3f51b5;
+            color: white !important;
+        }
+        
+        /* Media query para dispositivos móviles */
+        @media (max-width: 991.98px) {
+            .navbar-nav .nav-item {
+                margin: 5px 0;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid">
         <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container">
-        <a class="navbar-brand" href="#">
-            <img th:src="@{/img/mintrabajo_logo.png}" height="35" alt="MinTrabajo">
-            <img th:src="@{/img/nuevopais_logo.png}" height="60" alt="Nuevo País">
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" th:href="@{/intermediary/my-registries}">Mis registros</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                        Mi Cuenta
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" th:href="@{/logout}">Cerrar sesión</a></li>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <img th:src="@{/img/mintrabajo_logo.png}" height="35" alt="MinTrabajo">
+                    <img th:src="@{/img/nuevopais_logo.png}" height="60" alt="Nuevo País">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" 
+                        aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav ms-auto">
+                        <!-- Opciones que NO se muestran para Intermediario -->
+                        <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+                            <a class="nav-link" th:href="@{/dashboard}" th:classappend="${activeTab == 'dashboard' ? 'active fw-bold' : ''}">
+                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+                            <a class="nav-link" th:href="@{/intermediary/list}" th:classappend="${activeTab == 'intermediaryList' ? 'active fw-bold' : ''}">
+                                <i class="fas fa-list me-1"></i> Listado de Intermediarios
+                            </a>
+                        </li>
+                        
+                        <!-- Opción "Mis Registros" visible para todos los roles -->
+                        <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+                            <a class="nav-link" th:href="@{/intermediary/my-registries}" th:classappend="${activeTab == 'myRegistries' ? 'active fw-bold' : ''}">
+                                <i class="fas fa-folder-open me-1"></i> Mis Registros
+                            </a>
+                        </li>
+                        
+                        <!-- Cerrar sesión siempre visible -->
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/logout}">
+                                <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
+                            </a>
+                        </li>
                     </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+                </div>
+            </div>
+        </nav>
 
         <!-- Contenido -->
         <div class="container mt-4">
@@ -101,10 +168,6 @@
                                                 <li th:if="${registry.state.state == 3}">
                                                     <!--a class="dropdown-item" th:href="@{/intermediary/complement/{id}(id=${registry.id})}">Complementar</a-->
                                                     <a class="dropdown-item" th:href="@{/intermediary/complement/{id}(id=${registry.id})}" th:if="${registry.state.state == 3}">Complementar</a>
-                                                </li>
-                                                <li th:if="${registry.state.state == 3}">
-                                                    <!--a class="dropdown-item" th:href="@{/intermediary/complement/{id}(id=${registry.id})}">Complementar</a-->
-                                                    <a class="dropdown-item" th:href="@{/intermediary/test/{id}(id=${registry.id})}" th:if="${registry.state.state == 3}">test</a>
                                                 </li>
                                             </ul>
                                         </div>
