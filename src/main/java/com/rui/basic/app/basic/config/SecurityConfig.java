@@ -64,10 +64,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/intermediary/**").hasRole("Soporte")
                 
                 // Rutas de intermediario
-                .requestMatchers("/intermediary/my-registries").hasAnyRole("Intermediario", "Soporte", "ADMIN")
-                .requestMatchers("/intermediary/complement/**").hasAnyRole("Intermediario", "Soporte", "ADMIN")
-                .requestMatchers("/intermediary/edit-intermediary").hasAnyRole("Intermediario", "Soporte", "ADMIN")
+                .requestMatchers("/intermediary/my-registries").hasAnyRole("Intermediario", "Soporte", "Administrador")
+                .requestMatchers("/intermediary/complement/**").hasAnyRole("Intermediario", "Soporte", "Administrador")
+                .requestMatchers("/intermediary/edit-intermediary").hasAnyRole("Intermediario", "Soporte", "Administrador")
                 
+                // Lista de intermediarios restringida para Intermediario
+                .requestMatchers("/intermediary/list").hasAnyRole("Soporte", "Funcionario","Administrador","Funcionario2","Aprobador")
+
                 // Dashboard accesible para todos los autenticados
                 .requestMatchers("/dashboard").authenticated()
                 
@@ -85,6 +88,12 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/auth/login?logout=true")
                 .permitAll()
+            )
+            // Manejo de acceso denegado
+            .exceptionHandling(exception -> exception
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.sendRedirect("/dashboard");
+                })
             );
 
         return http.build();
