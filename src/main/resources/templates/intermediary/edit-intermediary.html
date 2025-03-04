@@ -514,6 +514,7 @@
                         </div>
 
                         <!-- Tab de Infraestructura Humana -->
+                        <!-- Tab de Infraestructura Humana -->
                         <div class="tab-pane fade" id="human">
                             <div class="progress mb-4"><div class="progress-bar" style="width: 60%"></div></div>
                             <h5>Infraestructura Humana</h5>
@@ -523,13 +524,15 @@
                                     <div class="col-sm-8">
                                         <div class="input-group">
                                             <input type="text" class="form-control" th:field="*{infrastructureHumanId.lawyerId.documentType}" required maxlength="50">
-                                            <button th:if="${fieldStates != null && fieldStates['infra_document_type'] != null && fieldStates['infra_document_type'].iconClose}" 
-                                                    class="btn btn-outline-secondary observation-icon" 
-                                                    type="button" 
-                                                    onclick="viewObservation('infra_document_type', event)" 
-                                                    title="Ver observación">
-                                                <i class="fas fa-exclamation-circle text-danger"></i>
-                                            </button>
+                                            <div class="observation-view-only" data-field="infra_document_type">
+                                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                        type="button" 
+                                                        onclick="viewObservation('infra_document_type', event)" 
+                                                        style="display: none;" 
+                                                        title="Ver observación">
+                                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -538,13 +541,15 @@
                                     <div class="col-sm-8">
                                         <div class="input-group">
                                             <input type="text" class="form-control" th:field="*{infrastructureHumanId.lawyerId.documentNumber}" required maxlength="15">
-                                            <button th:if="${fieldStates != null && fieldStates['infra_document_number'] != null && fieldStates['infra_document_number'].iconClose}" 
-                                                  class="btn btn-outline-secondary observation-icon" 
-                                                  type="button" 
-                                                  onclick="viewObservation('infra_document_number', event)" 
-                                                  title="Ver observación">
-                                                <i class="fas fa-exclamation-circle text-danger"></i>
-                                            </button>
+                                            <div class="observation-view-only" data-field="infra_document_number">
+                                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                        type="button" 
+                                                        onclick="viewObservation('infra_document_number', event)" 
+                                                        style="display: none;" 
+                                                        title="Ver observación">
+                                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -553,13 +558,15 @@
                                     <div class="col-sm-8">
                                         <div class="input-group">
                                             <input type="text" class="form-control" th:field="*{infrastructureHumanId.lawyerId.firstName}" required maxlength="25">
-                                            <button th:if="${fieldStates != null && fieldStates['infra_first_name'] != null && fieldStates['infra_first_name'].iconClose}" 
-                                                  class="btn btn-outline-secondary observation-icon" 
-                                                  type="button" 
-                                                  onclick="viewObservation('infra_first_name', event)" 
-                                                  title="Ver observación">
-                                                <i class="fas fa-exclamation-circle text-danger"></i>
-                                            </button>
+                                            <div class="observation-view-only" data-field="infra_first_name">
+                                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                        type="button" 
+                                                        onclick="viewObservation('infra_first_name', event)" 
+                                                        style="display: none;" 
+                                                        title="Ver observación">
+                                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -568,13 +575,15 @@
                                     <div class="col-sm-8">
                                         <div class="input-group">
                                             <input type="text" class="form-control" th:field="*{infrastructureHumanId.lawyerId.secondName}" maxlength="25">
-                                            <button th:if="${fieldStates != null && fieldStates['infra_second_name'] != null && fieldStates['infra_second_name'].iconClose}" 
-                                                  class="btn btn-outline-secondary observation-icon" 
-                                                  type="button" 
-                                                  onclick="viewObservation('infra_second_name', event)" 
-                                                  title="Ver observación">
-                                                <i class="fas fa-exclamation-circle text-danger"></i>
-                                            </button>
+                                            <div class="observation-view-only" data-field="infra_second_name">
+                                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                        type="button" 
+                                                        onclick="viewObservation('infra_second_name', event)" 
+                                                        style="display: none;" 
+                                                        title="Ver observación">
+                                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -583,13 +592,15 @@
                                     <div class="col-sm-8">
                                         <div class="input-group">
                                             <input type="text" class="form-control" th:field="*{infrastructureHumanId.lawyerId.firstSurname}" required maxlength="25">
-                                            <button th:if="${fieldStates != null && fieldStates['infra_first_surname'] != null && fieldStates['infra_first_surname'].iconClose}" 
-                                                  class="btn btn-outline-secondary observation-icon" 
-                                                  type="button" 
-                                                  onclick="viewObservation('infra_first_surname', event)" 
-                                                  title="Ver observación">
-                                                <i class="fas fa-exclamation-circle text-danger"></i>
-                                            </button>
+                                            <div class="observation-view-only" data-field="infra_first_surname">
+                                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                        type="button" 
+                                                        onclick="viewObservation('infra_first_surname', event)" 
+                                                        style="display: none;" 
+                                                        title="Ver observación">
+                                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -598,18 +609,21 @@
                                     <div class="col-sm-8">
                                         <div class="input-group">
                                             <input type="text" class="form-control" th:field="*{infrastructureHumanId.lawyerId.secondSurname}" maxlength="25">
-                                            <button th:if="${fieldStates != null && fieldStates['infra_second_surname'] != null && fieldStates['infra_second_surname'].iconClose}" 
-                                                  class="btn btn-outline-secondary observation-icon" 
-                                                  type="button" 
-                                                  onclick="viewObservation('infra_second_surname', event)" 
-                                                  title="Ver observación">
-                                                <i class="fas fa-exclamation-circle text-danger"></i>
-                                            </button>
+                                            <div class="observation-view-only" data-field="infra_second_surname">
+                                                <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                        type="button" 
+                                                        onclick="viewObservation('infra_second_surname', event)" 
+                                                        style="display: none;" 
+                                                        title="Ver observación">
+                                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
+                            <!-- Tabla de experiencias laborales (sin cambios) -->
                             <div class="table-responsive mt-4" th:if="${experienciasLaborales != null && !experienciasLaborales.isEmpty()}">
                                 <table class="table table-bordered">
                                     <thead>
@@ -666,6 +680,7 @@
                         </div>
 
                         <!-- Tab de Infraestructura Operativa -->
+                        <!-- Tab de Infraestructura Operativa -->
                         <div class="tab-pane fade" id="operational">
                             <div class="progress mb-4"><div class="progress-bar" style="width: 80%"></div></div>
                             <h5>Infraestructura Operativa</h5>
@@ -676,13 +691,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="file" class="form-control" name="ccFile" accept=".pdf,.jpg,.jpeg,.png">
-                                        <button th:if="${fieldStates != null && fieldStates['operativa_camara'] != null && fieldStates['operativa_camara'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('operativa_camara', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="operativa_camara">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('operativa_camara', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div th:if="${infraestructuraOperativa != null && infraestructuraOperativa.camaraComercioUploaded}" class="mt-2">
                                         <a th:href="@{/intermediary/infraoperativa/soporte/camara/{id}(id=${infraestructuraOperativa.id})}" class="btn btn-link btn-sm"><i class="fas fa-file-download"></i> Ver actual</a>
@@ -695,13 +712,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="file" class="form-control" name="softFile" accept=".pdf,.jpg,.jpeg,.png">
-                                        <button th:if="${fieldStates != null && fieldStates['operativa_software'] != null && fieldStates['operativa_software'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('operativa_software', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="operativa_software">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('operativa_software', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div th:if="${infraestructuraOperativa != null && infraestructuraOperativa.softwareCertificationUploaded}" class="mt-2">
                                         <a th:href="@{/intermediary/infraoperativa/soporte/software/{id}(id=${infraestructuraOperativa.id})}" class="btn btn-link btn-sm"><i class="fas fa-file-download"></i> Ver actual</a>
@@ -714,13 +733,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="file" class="form-control" name="hardFile" accept=".pdf,.jpg,.jpeg,.png">
-                                        <button th:if="${fieldStates != null && fieldStates['operativa_equipos'] != null && fieldStates['operativa_equipos'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('operativa_equipos', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="operativa_equipos">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('operativa_equipos', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div th:if="${infraestructuraOperativa != null && infraestructuraOperativa.equiposTecnologicosUploaded}" class="mt-2">
                                         <a th:href="@{/intermediary/infraoperativa/soporte/equipos/{id}(id=${infraestructuraOperativa.id})}" class="btn btn-link btn-sm"><i class="fas fa-file-download"></i> Ver actual</a>
@@ -734,13 +755,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="text" class="form-control" th:field="*{infrastructureOperationalId.phone1}" required maxlength="10">
-                                        <button th:if="${fieldStates != null && fieldStates['operativa_phone1'] != null && fieldStates['operativa_phone1'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('operativa_phone1', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="operativa_phone1">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('operativa_phone1', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -750,13 +773,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="text" class="form-control" th:field="*{infrastructureOperationalId.phone2}" maxlength="10">
-                                        <button th:if="${fieldStates != null && fieldStates['operativa_phone2'] != null && fieldStates['operativa_phone2'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('operativa_phone2', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="operativa_phone2">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('operativa_phone2', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -766,13 +791,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="text" class="form-control" th:field="*{infrastructureOperationalId.phone3}" maxlength="10">
-                                        <button th:if="${fieldStates != null && fieldStates['operativa_phone3'] != null && fieldStates['operativa_phone3'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('operativa_phone3', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="operativa_phone3">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('operativa_phone3', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -782,13 +809,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="text" class="form-control" th:field="*{infrastructureOperationalId.phoneFax}" maxlength="7">
-                                        <button th:if="${fieldStates != null && fieldStates['operativa_phone_fax'] != null && fieldStates['operativa_phone_fax'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('operativa_phone_fax', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="operativa_phone_fax">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('operativa_phone_fax', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -798,13 +827,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="email" class="form-control" th:field="*{infrastructureOperationalId.email}" required maxlength="200">
-                                        <button th:if="${fieldStates != null && fieldStates['operativa_email'] != null && fieldStates['operativa_email'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('operativa_email', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="operativa_email">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('operativa_email', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -814,13 +845,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="text" class="form-control" th:field="*{infrastructureOperationalId.addressServiceOffice}" required maxlength="50">
-                                        <button th:if="${fieldStates != null && fieldStates['operativa_address'] != null && fieldStates['operativa_address'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('operativa_address', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="operativa_address">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('operativa_address', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -832,6 +865,7 @@
                         </div>
 
                         <!-- Tab de Firma Digitalizada -->
+                        <!-- Tab de Firma Digitalizada -->
                         <div class="tab-pane fade" id="digital">
                             <div class="progress mb-4"><div class="progress-bar" style="width: 100%"></div></div>
                             <h5>Firma Digitalizada</h5>
@@ -841,13 +875,15 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input type="file" class="form-control" name="signatureFile" accept=".jpg,.jpeg,.png">
-                                        <button th:if="${fieldStates != null && fieldStates['firma_digitalizada'] != null && fieldStates['firma_digitalizada'].iconClose}" 
-                                              class="btn btn-outline-secondary observation-icon" 
-                                              type="button" 
-                                              onclick="viewObservation('firma_digitalizada', event)" 
-                                              title="Ver observación">
-                                            <i class="fas fa-exclamation-circle text-danger"></i>
-                                        </button>
+                                        <div class="observation-view-only" data-field="firma_digitalizada">
+                                            <button class="btn btn-outline-secondary observation-icon view-observation" 
+                                                    type="button" 
+                                                    onclick="viewObservation('firma_digitalizada', event)" 
+                                                    style="display: none;" 
+                                                    title="Ver observación">
+                                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div th:if="${firmaDigitalizada != null}" class="mt-3 text-center">
                                         <p>Firma actual:</p>
