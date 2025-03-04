@@ -87,6 +87,7 @@
 </style>
 </head>
 <body>
+    <!--div th:each="auth : ${#authentication.authorities}" th:text="${auth.authority}"></div-->
     <!-- Header del mismo estilo que los otros templates -->
     <!-- Header con mejoras visuales - sin usar variables de request -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -101,26 +102,28 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav ms-auto">
-                    <!-- Opciones que NO se muestran para Intermediario -->
-                    <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+                    <!-- Dashboard (visible para todos) -->
+                    <li class="nav-item">
                         <a class="nav-link" th:href="@{/dashboard}" th:classappend="${activeTab == 'dashboard' ? 'active fw-bold' : ''}">
                             <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                         </a>
                     </li>
-                    <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+
+                    <!-- Listado de Intermediarios (NO visible para Intermediario) -->
+                    <li class="nav-item" sec:authorize="!hasRole('ROLE_Intermediario')">
                         <a class="nav-link" th:href="@{/intermediary/list}" th:classappend="${activeTab == 'intermediaryList' ? 'active fw-bold' : ''}">
                             <i class="fas fa-list me-1"></i> Listado de Intermediarios
                         </a>
                     </li>
                     
-                    <!-- Opción "Mis Registros" visible para todos los roles -->
-                    <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
-                        <a class="nav-link" th:href="@{/intermediary/my-registries}">
+                    <!-- Mis Registros (visible para todos) -->
+                    <li class="nav-item" sec:authorize="!hasRole('ROLE_Funcionario')">
+                        <a class="nav-link" th:href="@{/intermediary/my-registries}" th:classappend="${activeTab == 'myRegistries' ? 'active fw-bold' : ''}">
                             <i class="fas fa-folder-open me-1"></i> Mis Registros
                         </a>
                     </li>
                     
-                    <!-- Cerrar sesión siempre visible -->
+                    <!-- Cerrar sesión (visible para todos) -->
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/logout}">
                             <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
@@ -183,7 +186,7 @@
             </div>
             
             <!-- Total Users Card -->
-            <div class="col-xl-3 col-md-6 mb-4">
+            <div class="col-xl-3 col-md-6 mb-4" sec:authorize="!hasRole('ROLE_Intermediario')">
                 <div class="card border-left-info h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -202,7 +205,7 @@
             </div>
 
             <!-- Active Users Card -->
-            <div class="col-xl-3 col-md-6 mb-4">
+            <div class="col-xl-3 col-md-6 mb-4" sec:authorize="!hasRole('ROLE_Intermediario')">
                 <div class="card border-left-warning h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -244,7 +247,7 @@
                                     <span class="badge bg-danger" th:unless="${currentUser.status == 1}">Inactivo</span>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="row mb-3" sec:authorize="!hasRole('ROLE_Intermediario')">
                                 <div class="col-6 text-muted">ID:</div>
                                 <div class="col-6" th:text="${currentUser.id}">0</div>
                             </div>
@@ -254,7 +257,7 @@
             </div>
 
             <!-- Users by Role Card -->
-            <div class="col-xl-8 col-lg-7">
+            <div class="col-xl-8 col-lg-7" sec:authorize="!hasRole('ROLE_Intermediario')">
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                         <h6 class="m-0 font-weight-bold text-primary">Usuarios por Rol</h6>

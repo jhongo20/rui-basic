@@ -72,7 +72,7 @@
     <div id="toast-container" class="position-fixed top-0 end-0 p-3"></div>
     
     <!-- Header igual que en list.html y edit-intermediary.html -->
-    <<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="#">
                 <img th:src="@{/img/mintrabajo_logo.png}" height="35" alt="MinTrabajo">
@@ -84,26 +84,28 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav ms-auto">
-                    <!-- Opciones que NO se muestran para Intermediario -->
-                    <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+                    <!-- Dashboard (visible para todos) -->
+                    <li class="nav-item">
                         <a class="nav-link" th:href="@{/dashboard}" th:classappend="${activeTab == 'dashboard' ? 'active fw-bold' : ''}">
                             <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                         </a>
                     </li>
-                    <li class="nav-item" th:if="${!#authentication.authorities[0].authority.equals('Intermediario')}">
+    
+                    <!-- Listado de Intermediarios (NO visible para Intermediario) -->
+                    <li class="nav-item" sec:authorize="!hasRole('ROLE_Intermediario')">
                         <a class="nav-link" th:href="@{/intermediary/list}" th:classappend="${activeTab == 'intermediaryList' ? 'active fw-bold' : ''}">
                             <i class="fas fa-list me-1"></i> Listado de Intermediarios
                         </a>
                     </li>
                     
-                    <!-- Opción "Mis Registros" visible para todos los roles -->
-                    <li class="nav-item" th:if="${#authentication.authorities[0].authority.equals('Intermediario')}">
+                    <!-- Mis Registros (visible para todos) -->
+                    <li class="nav-item" sec:authorize="!hasRole('ROLE_Funcionario')">
                         <a class="nav-link" th:href="@{/intermediary/my-registries}" th:classappend="${activeTab == 'myRegistries' ? 'active fw-bold' : ''}">
                             <i class="fas fa-folder-open me-1"></i> Mis Registros
                         </a>
                     </li>
                     
-                    <!-- Cerrar sesión siempre visible -->
+                    <!-- Cerrar sesión (visible para todos) -->
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/logout}">
                             <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
