@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,8 +15,6 @@ import org.springframework.security.ldap.userdetails.UserDetailsContextMapper;
 import org.springframework.security.web.SecurityFilterChain;
 
 import com.rui.basic.app.basic.service.CustomUserDetailsService;
-import java.util.ArrayList;
-import java.util.Collection;
 
 
 @Configuration
@@ -148,7 +145,6 @@ public class SecurityConfig {
         public void mapUserToContext(
                 UserDetails user, 
                 org.springframework.ldap.core.DirContextAdapter ctx) {
-            // No implementado, ya que no escribimos en LDAP
         }
     }
 }

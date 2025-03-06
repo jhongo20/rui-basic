@@ -23,7 +23,7 @@ public class CodingAES {
             byte[] encrypted = cipher.doFinal(value.getBytes());
             return Base64.getEncoder().encodeToString(encrypted);
         } catch (Exception e) {
-            throw new RuntimeException("Error encrypting value", e);
+            throw new IllegalArgumentException("Error encrypting value", e);
         }
     }
 
