@@ -8,14 +8,20 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 import org.springframework.security.ldap.userdetails.UserDetailsContextMapper;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.rui.basic.app.basic.service.CustomUserDetailsService;
 
+import jakarta.servlet.ServletContext;
 
 @Configuration
 @EnableWebSecurity
@@ -45,7 +51,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            // Mantener CSRF habilitado (por seguridad)
+            .csrf(csrf -> csrf
+                // Configurar CSRF para permitir la operación de logout
+                .ignoringRequestMatchers("/logout"))
             .authorizeHttpRequests(auth -> auth
                 // Recursos públicos
                 .requestMatchers("/auth/**", "/css/**", "/js/**", "/img/**", "/error", "/api/test/**").permitAll()
@@ -85,6 +94,21 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/auth/login?logout=true")
                 .permitAll()
+                // Permitir logout con GET (además del POST por defecto)
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+            )
+            // Control de sesiones máximas
+            .sessionManagement(session -> session
+                //.invalidSessionUrl("/auth/login?invalid=true")
+                // Configuración para prevenir ataques de fijación de sesión
+                .sessionFixation().migrateSession()
+                // Política de creación de sesiones
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                // Control de sesiones concurrentes
+                .maximumSessions(1)                          // Máximo 1 sesión por usuario
+                .maxSessionsPreventsLogin(false)             // Permitir nuevos inicios y expulsar la sesión anterior
+                .expiredUrl("/auth/login?expired=true")      // Redirección cuando una sesión es invalidada
+                .sessionRegistry(sessionRegistry())          // Registro de sesiones
             )
             // Manejo de acceso denegado
             .exceptionHandling(exception -> exception
@@ -94,6 +118,32 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+    
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
+    }
+
+    // Configuración de tiempo de expiración de la sesión (10 minutos)
+    @Bean
+    public jakarta.servlet.http.HttpSessionListener httpSessionListener() {
+        return new jakarta.servlet.http.HttpSessionListener() {
+            @Override
+            public void sessionCreated(jakarta.servlet.http.HttpSessionEvent event) {
+                event.getSession().setMaxInactiveInterval(600); // 10 minutos en segundos
+            }
+            
+            @Override
+            public void sessionDestroyed(jakarta.servlet.http.HttpSessionEvent event) {
+                // No se requiere ninguna acción específica
+            }
+        };
     }
 
     @Bean

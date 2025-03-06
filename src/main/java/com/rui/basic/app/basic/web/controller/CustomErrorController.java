@@ -12,7 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.Date;
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CustomErrorController implements ErrorController {
 
-    @RequestMapping("/error")
+    @GetMapping("/error")
     public String handleError(HttpServletRequest request, Model model) {
         Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
         Object exception = request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
