@@ -21,7 +21,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.rui.basic.app.basic.service.CustomUserDetailsService;
 
-import jakarta.servlet.ServletContext;
 
 @Configuration
 @EnableWebSecurity
@@ -51,10 +50,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Mantener CSRF habilitado (por seguridad)
-            .csrf(csrf -> csrf
-                // Configurar CSRF para permitir la operación de logout
-                .ignoringRequestMatchers("/logout"))
+            // Mantener CSRF habilitado (comportamiento por defecto)
             .authorizeHttpRequests(auth -> auth
                 // Recursos públicos
                 .requestMatchers("/auth/**", "/css/**", "/js/**", "/img/**", "/error", "/api/test/**").permitAll()
@@ -94,8 +90,14 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/auth/login?logout=true")
                 .permitAll()
-                // Permitir logout con GET (además del POST por defecto)
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+                // Permitir tanto GET como POST para logout, pero de manera segura
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                // Invalidar la sesión HTTP al cerrar sesión
+                .invalidateHttpSession(true)
+                // Limpiar la autenticación al cerrar sesión
+                .clearAuthentication(true)
+                // Eliminar las cookies al cerrar sesión
+                .deleteCookies("JSESSIONID")
             )
             // Control de sesiones máximas
             .sessionManagement(session -> session

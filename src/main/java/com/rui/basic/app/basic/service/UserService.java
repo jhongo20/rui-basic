@@ -86,19 +86,21 @@ public class UserService {
         // Mínimo 8 caracteres
         if (password.length() < 8) return false;
         
-        // Debe contener al menos una mayúscula
-        if (!password.matches(".*[A-Z].*")) return false;
+        // Uso de caracteres simples en lugar de expresiones regulares susceptibles a backtracking
+        boolean hasUppercase = false;
+        boolean hasLowercase = false;
+        boolean hasDigit = false;
+        boolean hasSpecial = false;
         
-        // Debe contener al menos una minúscula
-        if (!password.matches(".*[a-z].*")) return false;
+        // Un solo recorrido por la cadena
+        for (char c : password.toCharArray()) {
+            if (Character.isUpperCase(c)) hasUppercase = true;
+            else if (Character.isLowerCase(c)) hasLowercase = true;
+            else if (Character.isDigit(c)) hasDigit = true;
+            else if ("!@#$%^&*()_+-=[]{}|;:'\"\\,.<>/?".indexOf(c) >= 0) hasSpecial = true;
+        }
         
-        // Debe contener al menos un número
-        if (!password.matches(".*\\d.*")) return false;
-        
-        // Debe contener al menos un carácter especial
-        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) return false;
-        
-        return true;
+        return hasUppercase && hasLowercase && hasDigit && hasSpecial;
     }
 
     public RuiUser findByUsername(String username) {

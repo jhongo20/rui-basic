@@ -86,10 +86,10 @@ public class MailConfig {
             
             // Si el servidor es el de la configuración antigua (172.20.22.177),
             // podría no ser accesible desde el nuevo entorno
-            if ("172.20.22.177".equals(servidorSMTP)) {
+            /*if ("172.20.22.177".equals(servidorSMTP)) {
                 log.warn("Detectado servidor interno antiguo que podría no ser accesible. "+
                          "Considera cambiar app.mail.use-legacy-config=false o actualizar la BD");
-            }
+            }*/
             
             Properties props = mailSender.getJavaMailProperties();
             props.put("mail.smtp.auth", "true");
