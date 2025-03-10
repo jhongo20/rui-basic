@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.rui.basic.app.basic.domain.converters.StringToNumberConverter;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,7 +27,8 @@ public class RuiPerson implements Serializable {
     private Long id;
     
     @Column(name = "DOCUMENT_TYPE")
-    private String documentType;
+@Convert(converter = StringToNumberConverter.class)
+private String documentType;
     
     @Column(name = "DOCUMENT_NUMBER")
     private String documentNumber;

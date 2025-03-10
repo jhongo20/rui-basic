@@ -35,4 +35,7 @@ public interface RuiGenericsRepository extends JpaRepository<RuiGenerics, Long> 
 
     @Query("SELECT g FROM RuiGenerics g WHERE g.id = :id AND g.status = :status")
     Optional<RuiGenerics> findByIdAndStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    @Query("SELECT g FROM RuiGenerics g WHERE g.fatherId = :fatherId AND g.status = :status ORDER BY g.value")
+    List<RuiGenerics> findByFatherIdAndStatus(@Param("fatherId") Long fatherId, @Param("status") Integer status);
 }
