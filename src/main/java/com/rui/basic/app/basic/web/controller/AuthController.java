@@ -162,6 +162,8 @@ public class AuthController {
         try {
             registrationService.resetPassword(token, password);
             redirectAttributes.addFlashAttribute("message", "La contraseña fue cambiada correctamente. Ya puede iniciar sesión.");
+            // Después de actualizar exitosamente la contraseña, añade:
+            redirectAttributes.addFlashAttribute("success", "¡Contraseña actualizada correctamente! Ahora puedes iniciar sesión con tu nueva contraseña.");
             return "redirect:/auth/login";
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

@@ -166,7 +166,8 @@ public class EmailService {
             context.setVariable("recoveryLink", recoveryLink);
             context.setVariable("currentDate", getCurrentFormattedDate());
             
-            String htmlContent = templateEngine.process("email/password-recovery.html", context);
+            // Aquí solo usamos la ruta de la plantilla, no una URL
+            String htmlContent = templateEngine.process("email/password-recovery", context);
             sendEmail(to, "Recuperación de Contraseña RUI", htmlContent);
             
             log.info("Password recovery email sent to: {}", to);

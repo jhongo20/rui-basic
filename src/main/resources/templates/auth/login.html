@@ -1,100 +1,139 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Login</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUI | Iniciar Sesión</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <style>
         .login-bg {
-            background-color: #f8f9fa;
+            background-color: #f5f5f5;
             min-height: 100vh;
             display: flex;
             align-items: center;
         }
-        
         .login-box {
-            background: white;
-            padding: 20px;
+            background-color: white;
+            padding: 30px;
             border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+            margin-bottom: 30px;
         }
     </style>
 </head>
 <body class="login-bg">
     <div class="container">
         <div class="row">
-            <div class="col-md-4 offset-md-4 login-box">
-                <br/>
+            <div class="col-md-6 offset-md-3 login-box">
+                <div class="text-center mb-4">
+                    <img th:src="@{/img/mintrabajo_logo.png}" height="35" style="margin-top:5px;" alt="Logo Mintrabajo">
+                    <img th:src="@{/img/nuevopais_logo.png}" height="60" alt="Logo Nuevo País">
+                </div>
+                
+                <h4 class="text-center mb-4">INICIAR SESIÓN</h4>
+                
+                <!-- Mensaje de cambio de password -->
+                <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+                
+                <!-- Mensaje de sesión expirada -->
+                <div th:if="${param.expired}" class="alert alert-warning">
+                    Tu sesión ha expirado porque el usuario ha iniciado sesión en otro dispositivo.
+                </div>
+                
+                <!-- Mensaje de error -->
+                <div th:if="${param.error}" class="alert alert-danger">
+                    <div th:if="${session['SPRING_SECURITY_LAST_EXCEPTION']} != null">
+                        <span th:if="${session['SPRING_SECURITY_LAST_EXCEPTION'] instanceof T(org.springframework.security.authentication.DisabledException)}">
+                            Usuario inactivo o bloqueado. Contacte al administrador.
+                        </span>
+                        <span th:if="${session['SPRING_SECURITY_LAST_EXCEPTION'] instanceof T(org.springframework.security.authentication.AuthenticationServiceException)}">
+                            Error del sistema: [[${session['SPRING_SECURITY_LAST_EXCEPTION'].message}]]
+                        </span>
+                        <span th:if="${session['SPRING_SECURITY_LAST_EXCEPTION'] instanceof T(org.springframework.security.authentication.BadCredentialsException)}">
+                            Usuario o contraseña incorrectos.
+                        </span>
+                        <span th:if="${session['SPRING_SECURITY_LAST_EXCEPTION'] instanceof T(org.springframework.security.core.userdetails.UsernameNotFoundException)}">
+                            Usuario no encontrado.
+                        </span>
+                    </div>
+                    <div th:unless="${session['SPRING_SECURITY_LAST_EXCEPTION']} != null">
+                        Error de autenticación. Por favor, intente nuevamente.
+                    </div>
+                </div>
+                
+                <!-- Mensaje de logout exitoso -->
+                <div th:if="${param.logout}" class="alert alert-success">
+                    Has cerrado sesión exitosamente
+                </div>
+                
                 <form th:action="@{/auth/login}" method="post" id="loginForm">
-                    <!-- Mensaje de sesión expirada - separado del mensaje de error -->
-                    <div th:if="${param.expired}" class="alert alert-warning">
-                        Tu sesión ha expirado porque el usuario ha iniciado sesión en otro dispositivo.
-                    </div>
-                    <!-- Mensaje de error -->
-                    <div th:if="${param.error}" class="alert alert-danger">
-                        <div th:if="${session['SPRING_SECURITY_LAST_EXCEPTION']} != null">
-                            <span th:if="${session['SPRING_SECURITY_LAST_EXCEPTION'] instanceof T(org.springframework.security.authentication.DisabledException)}">
-                                Usuario inactivo o bloqueado. Contacte al administrador.
-                            </span>
-                            <span th:if="${session['SPRING_SECURITY_LAST_EXCEPTION'] instanceof T(org.springframework.security.authentication.AuthenticationServiceException)}">
-                                Error del sistema: [[${session['SPRING_SECURITY_LAST_EXCEPTION'].message}]]
-                            </span>
-                            <span th:if="${session['SPRING_SECURITY_LAST_EXCEPTION'] instanceof T(org.springframework.security.authentication.BadCredentialsException)}">
-                                Usuario o contraseña incorrectos.
-                            </span>
-                            <span th:if="${session['SPRING_SECURITY_LAST_EXCEPTION'] instanceof T(org.springframework.security.core.userdetails.UsernameNotFoundException)}">
-                                Usuario no encontrado.
-                            </span>
-                        </div>
-                        <div th:unless="${session['SPRING_SECURITY_LAST_EXCEPTION']} != null">
-                            Error de autenticación. Por favor, intente nuevamente.
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Correo Electrónico</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" id="username" name="username" class="form-control" 
+                                   th:value="${param.username}" placeholder="correo@ejemplo.com" required>
                         </div>
                     </div>
-                    <!-- Mensaje de logout exitoso -->
-                    <div th:if="${param.logout}" class="alert alert-success">
-                        Has cerrado sesión exitosamente
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" id="password" name="password" class="form-control" 
+                                   placeholder="Contraseña" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     
-                    <!-- Campo de usuario -->
-                    <div class="form-group">
-                        <input type="text" 
-                        id="username"
-                        name="username" 
-                        class="form-control" 
-                        th:value="${param.username}"
-                        placeholder="Correo electrónico"
-                        required/>
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-primary">INGRESAR</button>
                     </div>
                     
-                    <!-- Campo de contraseña -->
-                    <div class="form-group">
-                        <input type="password" 
-                               name="password" 
-                               class="form-control" 
-                               placeholder="Contraseña" 
-                               required/>
+                    <div class="text-center">
+                        <a th:href="@{/auth/forgot-password}" class="text-decoration-none">
+                            ¿Olvidaste tu contraseña?
+                        </a>
                     </div>
-                    
-                    <!-- Botón de ingreso -->
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary btn-block">
-                            Ingresar
-                        </button>
+                    <div class="text-center">
+                        <span>¿No tienes una cuenta? </span>
+                        <a th:href="@{/auth/register}" class="text-decoration-none fw-bold">
+                            Crear cuenta
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
-    <!-- Scripts de Bootstrap -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Script para mostrar/ocultar contraseña
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+        
+        // Script para registro de formulario (mantenido de tu versión original)
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             const username = document.getElementById('username').value;
             console.log('Enviando formulario con username:', username);
         });
-        </script>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"></script>
-    
+    </script>
 </body>
 </html>

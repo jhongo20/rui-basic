@@ -3,6 +3,7 @@ package com.rui.basic.app.basic.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,9 @@ public class RegistrationService {
     private final EmailService emailService;
     private final AuditService auditService;
     private final TokenUtil tokenUtil;
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     @Transactional
     public RuiUser registerUser(RegistrationDto registrationDto) {
@@ -149,17 +153,20 @@ public void confirmAccount(String token) {
     }
 }
 
-    @Transactional
-    public void sendPasswordRecoveryEmail(String email) {
-        RuiUser user = userRepository.findByUsername(email.toLowerCase())
-            .orElseThrow(() -> new ResourceNotFoundException("El usuario con correo " + email + " no existe en el sistema"));
-        
-        // Generar token de recuperación
-        String token = tokenUtil.generatePasswordResetToken(user.getId());
-        
-        // Enviar correo de recuperación
-        emailService.sendPasswordRecoveryEmail(email, "/auth/reset-password?token=" + token);
-    }
+@Transactional
+public void sendPasswordRecoveryEmail(String email) {
+    RuiUser user = userRepository.findByUsername(email.toLowerCase())
+        .orElseThrow(() -> new ResourceNotFoundException("El usuario con correo " + email + " no existe en el sistema"));
+    
+    // Generar token de recuperación
+    String token = tokenUtil.generatePasswordResetToken(user.getId());
+    
+    // Construir la URL completa para el reseteo de contraseña
+    String recoveryLink = baseUrl + "/auth/reset-password?token=" + token;
+    
+    // Enviar correo de recuperación
+    emailService.sendPasswordRecoveryEmail(email, recoveryLink);
+}
 
     @Transactional
     public void resetPassword(String token, String newPassword) {
