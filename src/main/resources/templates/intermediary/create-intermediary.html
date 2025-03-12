@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Intermediario | RUI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .nav-tabs .nav-link.active { background-color: #3f51b5; color: white !important; }
+        .nav-tabs .nav-link { color: #3f51b5; }
+        .progress { height: 5px; margin-bottom: 20px; }
+        .tab-content { padding: 20px; }
+        .btn-primary { background-color: #3f51b5; border-color: #3f51b5; }
+        .btn-primary:hover { background-color: #303f9f; border-color: #303f9f; }
+        .btn-secondary { background-color: #f8f9fa; border-color: #ddd; color: #333; }
+        .btn-secondary:hover { background-color: #e9ecef; border-color: #ccc; color: #333; }
+        .table th { background-color: #f8f9fa; color: #333; font-weight: 500; }
+        .table td { vertical-align: middle; }
+        .btn-link { padding: 0.25rem 0.5rem; text-decoration: none; }
+        .btn-link:hover { background-color: #f8f9fa; border-radius: 4px; }
+        .form-check-input { margin: 0; }
+    </style>
+</head>
+<body>
+    <!-- Contenedor para los mensajes toast -->
+    <div id="toast-container" class="position-fixed top-0 end-0 p-3"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img th:src="@{/img/mintrabajo_logo.png}" height="35" alt="MinTrabajo">
+                <img th:src="@{/img/nuevopais_logo.png}" height="60" alt="Nuevo País">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" 
+                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Dashboard (visible para todos) -->
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/dashboard}" th:classappend="${activeTab == 'dashboard' ? 'active fw-bold' : ''}">
+                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                        </a>
+                    </li>
+    
+                    <!-- Listado de Intermediarios (NO visible para Intermediario) -->
+                    <li class="nav-item" sec:authorize="!hasRole('ROLE_Intermediario')">
+                        <a class="nav-link" th:href="@{/intermediary/list}" th:classappend="${activeTab == 'intermediaryList' ? 'active fw-bold' : ''}">
+                            <i class="fas fa-list me-1"></i> Listado de Intermediarios
+                        </a>
+                    </li>
+                    
+                    <!-- Mis Registros (visible para todos) -->
+                    <li class="nav-item" sec:authorize="!hasRole('ROLE_Funcionario')">
+                        <a class="nav-link" th:href="@{/intermediary/my-registries}" th:classappend="${activeTab == 'myRegistries' ? 'active fw-bold' : ''}">
+                            <i class="fas fa-folder-open me-1"></i> Mis Registros
+                        </a>
+                    </li>
+                    
+                    <!-- Cerrar sesión (visible para todos) -->
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/logout}">
+                            <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4>FORMULARIO ÚNICO DE INTERMEDIARIOS DE SEGUROS EN EL RAMO DE RIESGOS LABORALES</h4>
+                    <p>CREAR NUEVO INTERMEDIARIO</p>
+                </div>
+                <a th:href="@{/intermediary/my-registries}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Volver a Mis Registros
+                </a>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/intermediary/create}" method="post" enctype="multipart/form-data">
+                    <!-- Selector de tipo de intermediario -->
+                    <div class="row mb-4">
+                        <label class="col-sm-3 col-form-label">Tipo de Intermediario: *</label>
+                        <div class="col-sm-8">
+                            <select class="form-select" name="typeIntermediary" id="typeIntermediary" required onchange="toggleForm()">
+                                <option value="">Seleccione...</option>
+                                <option th:each="type : ${intermediaryTypes}" th:value="${type.id}" th:text="${type.value}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Formulario para empresa -->
+                    <div id="companyForm" style="display: none;">
+                        <h5>Datos de la Empresa</h5>
+                        
+                        <!-- NIT -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">NIT: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="companyId.nit" required maxlength="20">
+                            </div>
+                        </div>
+                        
+                        <!-- Razón Social -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Razón Social: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="companyId.name" required maxlength="160">
+                            </div>
+                        </div>
+                        
+                        <!-- Departamento -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Departamento: *</label>
+                            <div class="col-sm-8">
+                                <select class="form-select" name="departmentId" id="departmentSelect" required onchange="loadCities('departmentSelect', 'citySelect')">
+                                    <option value="">Seleccione...</option>
+                                    <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Ciudad -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Ciudad: *</label>
+                            <div class="col-sm-8">
+                                <select class="form-select" name="cityId" id="citySelect" required>
+                                    <option value="">Seleccione...</option>
+                                    <option th:each="city : ${cities}" th:value="${city.id}" th:text="${city.name}" 
+                                            th:attr="data-department=${city.department != null ? city.department.id : ''}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Dirección -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Dirección: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="companyId.address" required maxlength="100">
+                            </div>
+                        </div>
+                        
+                        <!-- Correo electrónico -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Correo electrónico: *</label>
+                            <div class="col-sm-8">
+                                <input type="email" class="form-control" name="companyId.email" required maxlength="200">
+                            </div>
+                        </div>
+                        
+                        <!-- Teléfono Fijo -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Teléfono Fijo: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="companyId.phone" required maxlength="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario para persona -->
+                    <div id="personForm" style="display: none;">
+                        <h5>Datos Personales</h5>
+                        
+                        <!-- Tipo de Documento -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Tipo de Documento: *</label>
+                            <div class="col-sm-8">
+                                <select class="form-select" name="documentType" required>
+                                    <option value="">Seleccione...</option>
+                                    <option th:each="docType : ${documentTypes}" th:value="${docType.id}" th:text="${docType.value}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Número de Documento -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Número de Documento: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="personId.documentNumber" required maxlength="15">
+                            </div>
+                        </div>
+                        
+                        <!-- Primer Nombre -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Primer Nombre: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="personId.firstName" required maxlength="25">
+                            </div>
+                        </div>
+                        
+                        <!-- Segundo Nombre -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Segundo Nombre:</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="personId.secondName" maxlength="25">
+                            </div>
+                        </div>
+                        
+                        <!-- Primer Apellido -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Primer Apellido: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="personId.firstSurname" required maxlength="25">
+                            </div>
+                        </div>
+                        
+                        <!-- Segundo Apellido -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Segundo Apellido:</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="personId.secondSurname" maxlength="25">
+                            </div>
+                        </div>
+                        
+                        <!-- Departamento -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Departamento: *</label>
+                            <div class="col-sm-8">
+                                <select class="form-select" name="personDepartmentId" id="personDepartmentSelect" required onchange="loadCities('personDepartmentSelect', 'personCitySelect')">
+                                    <option value="">Seleccione...</option>
+                                    <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Ciudad -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Ciudad: *</label>
+                            <div class="col-sm-8">
+                                <select class="form-select" name="personCityId" id="personCitySelect" required>
+                                    <option value="">Seleccione...</option>
+                                    <option th:each="city : ${cities}" th:value="${city.id}" th:text="${city.name}"
+                                            th:attr="data-department=${city.department != null ? city.department.id : ''}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Dirección -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Dirección: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="personId.address" required maxlength="100">
+                            </div>
+                        </div>
+                        
+                        <!-- Correo electrónico -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Correo electrónico: *</label>
+                            <div class="col-sm-8">
+                                <input type="email" class="form-control" name="personId.email" required maxlength="200">
+                            </div>
+                        </div>
+                        
+                        <!-- Teléfono Fijo -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Teléfono Fijo: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="personId.phone" required maxlength="10">
+                            </div>
+                        </div>
+                        
+                        <!-- Teléfono Móvil -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Teléfono Móvil: *</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="personId.cellphone" required maxlength="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documentos Requeridos -->
+                    <div id="documentSection" style="display: none;">
+                        <h5 class="mt-4">Documentos Requeridos</h5>
+                        
+                        <!-- Idoneidad Profesional (para todos) -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Soporte de Idoneidad: *</label>
+                            <div class="col-sm-8"><input type="file" class="form-control" name="idoneityFile" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="form-text text-muted">Subir certificado de curso/capacitación en PDF, JPG o PNG.</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Documentos específicos para empresas -->
+                        <div id="companyDocuments" style="display: none;">
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label">Cámara de Comercio: *</label>
+                                <div class="col-sm-8">
+                                    <input type="file" class="form-control" name="ccFile" accept=".pdf,.jpg,.jpeg,.png">
+                                    <small class="form-text text-muted">Subir certificado de Cámara de Comercio en PDF, JPG o PNG.</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label">Certificación Software: *</label>
+                                <div class="col-sm-8">
+                                    <input type="file" class="form-control" name="softwareFile" accept=".pdf,.jpg,.jpeg,.png">
+                                    <small class="form-text text-muted">Subir certificación de software o base de datos en PDF, JPG o PNG.</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label">Certificación Equipos: *</label>
+                                <div class="col-sm-8">
+                                    <input type="file" class="form-control" name="equipmentFile" accept=".pdf,.jpg,.jpeg,.png">
+                                    <small class="form-text text-muted">Subir certificación de equipos tecnológicos en PDF, JPG o PNG.</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Firma digitalizada (para todos) -->
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label">Firma Digitalizada: *</label>
+                            <div class="col-sm-8">
+                                <input type="file" class="form-control" name="signatureFile" accept=".jpg,.jpeg,.png">
+                                <small class="form-text text-muted">Subir imagen de firma digitalizada en JPG o PNG.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center mt-4">
+                        <button type="button" class="btn btn-secondary me-2" onclick="window.location.href='/intermediary/my-registries'">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Guardar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar el formulario según el tipo de intermediario seleccionado
+            toggleForm();
+        });
+        
+        function toggleForm() {
+            const typeSelect = document.getElementById('typeIntermediary');
+            const companyForm = document.getElementById('companyForm');
+            const personForm = document.getElementById('personForm');
+            const documentSection = document.getElementById('documentSection');
+            const companyDocuments = document.getElementById('companyDocuments');
+            
+            // Mostrar/ocultar secciones según el tipo de intermediario
+            if (typeSelect.value) {
+                documentSection.style.display = 'block';
+                
+                // Valor 4 corresponde a Agente
+                if (typeSelect.value == '4') {
+                    personForm.style.display = 'block';
+                    companyForm.style.display = 'none';
+                    companyDocuments.style.display = 'none';
+                    
+                    // Hacer requeridos los campos de persona
+                    setRequiredFields('personForm', true);
+                    setRequiredFields('companyForm', false);
+                } else {
+                    personForm.style.display = 'none';
+                    companyForm.style.display = 'block';
+                    companyDocuments.style.display = 'block';
+                    
+                    // Hacer requeridos los campos de empresa
+                    setRequiredFields('personForm', false);
+                    setRequiredFields('companyForm', true);
+                }
+            } else {
+                personForm.style.display = 'none';
+                companyForm.style.display = 'none';
+                documentSection.style.display = 'none';
+                companyDocuments.style.display = 'none';
+                
+                // Quitar required de todos los campos
+                setRequiredFields('personForm', false);
+                setRequiredFields('companyForm', false);
+            }
+        }
+        
+        function setRequiredFields(formId, isRequired) {
+            const form = document.getElementById(formId);
+            if (form) {
+                const requiredElements = form.querySelectorAll('[required]');
+                requiredElements.forEach(element => {
+                    if (!isRequired) {
+                        element.removeAttribute('required');
+                    } else if (!element.hasAttribute('required')) {
+                        element.setAttribute('required', '');
+                    }
+                });
+            }
+        }
+        
+        function loadCities(departmentSelectId, citySelectId) {
+            const departmentSelect = document.getElementById(departmentSelectId);
+            const citySelect = document.getElementById(citySelectId);
+            
+            if (!departmentSelect || !citySelect) return;
+            
+            const selectedDeptId = departmentSelect.value;
+            const cityOptions = citySelect.querySelectorAll('option');
+            
+            // Ocultar todas las ciudades excepto la opción "Seleccione..."
+            for (let i = 0; i < cityOptions.length; i++) {
+                const cityOption = cityOptions[i];
+                if (cityOption.value === '') {
+                    cityOption.style.display = '';
+                    continue;
+                }
+                
+                const deptId = cityOption.getAttribute('data-department');
+                if (deptId === selectedDeptId) {
+                    cityOption.style.display = '';
+                } else {
+                    cityOption.style.display = 'none';
+                }
+            }
+            
+            // Resetear la selección
+            citySelect.value = ''; 
+        }
+    </script>
+</body>
+</html><!-- Corregido: -->
+<input type="file" class="form-control" name="idoneityFile" accept=".pdf,.jpg,.jpeg,.png">

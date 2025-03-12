@@ -74,7 +74,7 @@
                         <label for="username" class="form-label">Correo Electrónico</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input type="email" id="username" name="username" class="form-control" 
+                            <input type="text" id="username" name="username" class="form-control" 
                                    th:value="${param.username}" placeholder="correo@ejemplo.com" required>
                         </div>
                     </div>
@@ -100,12 +100,12 @@
                             ¿Olvidaste tu contraseña?
                         </a>
                     </div>
-                    <div class="text-center">
+                   <!-- <div class="text-center">
                         <span>¿No tienes una cuenta? </span>
                         <a th:href="@{/auth/register}" class="text-decoration-none fw-bold">
                             Crear cuenta
                         </a>
-                    </div>
+                    </div>-->
                 </form>
             </div>
         </div>

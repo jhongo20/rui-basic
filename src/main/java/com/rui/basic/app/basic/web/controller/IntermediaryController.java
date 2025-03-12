@@ -46,6 +46,7 @@ import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rui.basic.app.basic.service.DocumentTypeService;
 import com.rui.basic.app.basic.service.DocumentoService;
 import com.rui.basic.app.basic.service.FileStorageService;
 import com.rui.basic.app.basic.service.FirmaDigitalizadaService;
@@ -53,6 +54,7 @@ import com.rui.basic.app.basic.service.IdoneidadProfesionalService;
 import com.rui.basic.app.basic.service.InfraestructuraHumanaService;
 import com.rui.basic.app.basic.service.InfraestructuraOperativaService;
 import com.rui.basic.app.basic.service.IntermediaryService;
+import com.rui.basic.app.basic.service.IntermediaryTypeService;
 import com.rui.basic.app.basic.service.UbicacionService;
 import com.rui.basic.app.basic.service.UserService;
 import com.rui.basic.app.basic.service.email.EmailService;
@@ -71,6 +73,7 @@ import lombok.Data;
 import com.rui.basic.app.basic.domain.entities.RuiCity;
 import com.rui.basic.app.basic.domain.entities.RuiCompany;
 import com.rui.basic.app.basic.domain.entities.RuiDepartment;
+import com.rui.basic.app.basic.domain.entities.RuiGenerics;
 import com.rui.basic.app.basic.domain.entities.RuiHistoryDetails;
 import com.rui.basic.app.basic.domain.entities.RuiIdoniedad;
 import com.rui.basic.app.basic.domain.entities.RuiInfraHuman;
@@ -95,9 +98,9 @@ import com.rui.basic.app.basic.repository.RuiWorkExperienceRepository;
 @Controller
 @RequestMapping("/intermediary")
 public class IntermediaryController {
-    
+
     private static final Logger log = LoggerFactory.getLogger(IntermediaryController.class);
-    
+
     private final IntermediaryService intermediaryService;
     private final IdoneidadProfesionalService idoneidadService;
     private final EmailService emailService;
@@ -127,13 +130,13 @@ public class IntermediaryController {
     @Autowired
     private IdoneidadProfesionalService idoniedadService;
 
+    private final DocumentTypeService documentTypeService;
+    private final IntermediaryTypeService intermediaryTypeService;
+
     // Inyectar app.documentos.ruta como un campo en el controlador
     @Value("${app.documentos.ruta}")
     private String attachmentsDir;
-    
 
-    
-    
     public IntermediaryController(
             IntermediaryService intermediaryService,
             EmailService emailService,
@@ -148,7 +151,9 @@ public class IntermediaryController {
             RuiHistoryDetailsRepository historyDetailsRepository,
             RuiUserRepository ruiUserRepository,
             RuiCityRepository ruiCityRepository,
-            RuiDepartmentRepository ruiDepartmentRepository) {
+            RuiDepartmentRepository ruiDepartmentRepository,
+            DocumentTypeService documentTypeService,
+            IntermediaryTypeService intermediaryTypeService) {
         this.intermediaryService = intermediaryService;
         this.emailService = emailService;
         this.fileStorageService = fileStorageService;
@@ -163,52 +168,54 @@ public class IntermediaryController {
         this.ruiUserRepository = ruiUserRepository;
         this.ruiCityRepository = ruiCityRepository;
         this.ruiDepartmentRepository = ruiDepartmentRepository;
+        this.documentTypeService = documentTypeService;
+        this.intermediaryTypeService = intermediaryTypeService;
     }
-    
+
     @PostMapping("/status/update")
     public String updateStatus(
-            @RequestParam Long id, 
+            @RequestParam Long id,
             @RequestParam String status) {
         try {
             // Convertir el status a IntermediaryState
             IntermediaryState state = IntermediaryState.fromState(Integer.parseInt(status));
-            
+
             // Actualizar el estado
             intermediaryService.updateIntermediaryStatus(id, state, null, null);
-            
+
             // Preparar y enviar el correo
             EmailTemplateDTO emailDTO = intermediaryService.prepareStatusEmail(id, state);
             if (emailDTO != null) {
                 emailService.sendEmail(emailDTO);
             }
-            
+
             return "redirect:/intermediary/list";
         } catch (Exception e) {
             log.error("Error updating intermediary status: {}", e.getMessage());
             return "redirect:/error";
         }
     }
-    
+
     @PostMapping("/file/upload")
     public ResponseEntity<String> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("type") String type,
             @RequestParam("intermediaryId") Long intermediaryId) {
         try {
-            // Obtener el usuario actual (deberías implementar esto según tu sistema de autenticación)
+            // Obtener el usuario actual (deberías implementar esto según tu sistema de
+            // autenticación)
             Long currentUserId = getCurrentUserId();
-            
+
             // Almacenar el archivo
             String filePath = fileStorageService.storeFile(
-                file,
-                String.format("intermediary/%d/%s", intermediaryId, type),
-                currentUserId,
-                intermediaryId
-            );
-            
+                    file,
+                    String.format("intermediary/%d/%s", intermediaryId, type),
+                    currentUserId,
+                    intermediaryId);
+
             // Guardar la referencia del archivo
             intermediaryService.saveSupport(intermediaryId, filePath, type);
-            
+
             return ResponseEntity.ok("File uploaded successfully");
         } catch (Exception e) {
             log.error("Error uploading file: {}", e.getMessage());
@@ -222,33 +229,33 @@ public class IntermediaryController {
             RuiIntermediary intermediary = intermediaryService.findById(id);
 
             // Asegúrate de que esto se está ejecutando:
-        Map<String, FormFieldStateDTO> fieldStates = intermediaryService.getFieldStates(id);
-        model.addAttribute("fieldStates", fieldStates);
-            
+            Map<String, FormFieldStateDTO> fieldStates = intermediaryService.getFieldStates(id);
+            model.addAttribute("fieldStates", fieldStates);
+
             // Cargar datos principales
             model.addAttribute("intermediary", intermediary);
 
             // Determinar tipo de intermediario
-        boolean isAgente = intermediary.getTypeIntermediarieId() != null && 
-        intermediary.getTypeIntermediarieId().getId() == 4L;
-        model.addAttribute("isAgente", isAgente);
+            boolean isAgente = intermediary.getTypeIntermediarieId() != null &&
+                    intermediary.getTypeIntermediarieId().getId() == 4L;
+            model.addAttribute("isAgente", isAgente);
 
             model.addAttribute("idoneidadList", idoneidadService.findMostRecentByIntermediary(id));
-            
+
             // Cargar ubicación
             loadLocationData(intermediary, model);
-            
+
             // Cargar infraestructuras y firma
             loadInfrastructuraHumana(id, model);
             loadInfrastructuraOperativa(id, model);
             loadFirmaDigitalizada(id, model);
-            
+
             // Estado de revisión
-            model.addAttribute("estadoRevisado", 
-                intermediary.getState() == IntermediaryState.REVIEWED);
-            
+            model.addAttribute("estadoRevisado",
+                    intermediary.getState() == IntermediaryState.REVIEWED);
+
             return "intermediary/review";
-            
+
         } catch (EntityNotFoundException e) {
             log.error("Intermediario no encontrado: {}", id);
             return "redirect:/error";
@@ -264,45 +271,43 @@ public class IntermediaryController {
 
         if (intermediary.getCompanyId() != null) {
             departmentId = Optional.ofNullable(intermediary.getCompanyId().getDepartmentId())
-                                 .map(RuiDepartment::getId)
-                                 .orElse(null);
+                    .map(RuiDepartment::getId)
+                    .orElse(null);
             cityId = Optional.ofNullable(intermediary.getCompanyId().getCityId())
-                           .map(RuiCity::getId)
-                           .orElse(null);
+                    .map(RuiCity::getId)
+                    .orElse(null);
         } else if (intermediary.getPersonId() != null) {
             departmentId = Optional.ofNullable(intermediary.getPersonId().getDepartmentId())
-                                 .map(RuiDepartment::getId)
-                                 .orElse(null);
+                    .map(RuiDepartment::getId)
+                    .orElse(null);
             cityId = Optional.ofNullable(intermediary.getPersonId().getCityId())
-                           .map(RuiCity::getId)
-                           .orElse(null);
+                    .map(RuiCity::getId)
+                    .orElse(null);
         }
 
         if (departmentId != null) {
             ubicacionService.getDepartmentById(departmentId)
-                .ifPresent(dept -> model.addAttribute("departamento", dept));
+                    .ifPresent(dept -> model.addAttribute("departamento", dept));
         }
-        
+
         if (cityId != null) {
             ubicacionService.getCityById(cityId)
-                .ifPresent(city -> model.addAttribute("ciudad", city));
+                    .ifPresent(city -> model.addAttribute("ciudad", city));
         }
     }
 
     private void loadInfrastructuraHumana(Long id, Model model) {
         try {
-            InfrastructuraHumanaDTO infraestructuraHumana = 
-                infraestructuraHumanaService.findByIntermediary(id);
+            InfrastructuraHumanaDTO infraestructuraHumana = infraestructuraHumanaService.findByIntermediary(id);
             model.addAttribute("infraestructuraHumana", infraestructuraHumana);
 
             /*
-              List<ExperienciaLaboralDTO> experiencias = 
-                infraestructuraHumanaService.findWorkExperienceByIntermediary(id);
-            model.addAttribute("experienciasLaborales", experiencias);
+             * List<ExperienciaLaboralDTO> experiencias =
+             * infraestructuraHumanaService.findWorkExperienceByIntermediary(id);
+             * model.addAttribute("experienciasLaborales", experiencias);
              */
             if (infraestructuraHumana != null && infraestructuraHumana.getId() != null) {
-                List<ExperienciaLaboralDTO> experiencias = 
-                    infraestructuraHumanaService.findWorkExperienceByInfraHuman(
+                List<ExperienciaLaboralDTO> experiencias = infraestructuraHumanaService.findWorkExperienceByInfraHuman(
                         infraestructuraHumana.getId());
                 model.addAttribute("experienciasLaborales", experiencias);
             } else {
@@ -317,8 +322,8 @@ public class IntermediaryController {
 
     private void loadInfrastructuraOperativa(Long id, Model model) {
         try {
-            model.addAttribute("infraestructuraOperativa", 
-                infraestructuraOperativaService.findByIntermediary(id));
+            model.addAttribute("infraestructuraOperativa",
+                    infraestructuraOperativaService.findByIntermediary(id));
         } catch (Exception e) {
             log.warn("Error al cargar infraestructura operativa: {}", e.getMessage());
             model.addAttribute("infraestructuraOperativa", null);
@@ -327,8 +332,8 @@ public class IntermediaryController {
 
     private void loadFirmaDigitalizada(Long id, Model model) {
         try {
-            model.addAttribute("firmaDigitalizada", 
-                firmaDigitalizadaService.findByIntermediary(id));
+            model.addAttribute("firmaDigitalizada",
+                    firmaDigitalizadaService.findByIntermediary(id));
         } catch (Exception e) {
             log.warn("Error al cargar firma digitalizada: {}", e.getMessage());
             model.addAttribute("firmaDigitalizada", null);
@@ -343,10 +348,10 @@ public class IntermediaryController {
             @RequestParam(defaultValue = "DESC") String direction,
             @RequestParam(required = false) String search,
             Model model) {
-        
+
         try {
             Page<RuiIntermediary> intermediariesPage;
-            
+
             if (StringUtils.hasText(search)) {
                 intermediariesPage = intermediaryService.search(search, page, size, sort, direction);
                 model.addAttribute("searchActive", true);
@@ -362,12 +367,12 @@ public class IntermediaryController {
             model.addAttribute("direction", direction);
             model.addAttribute("search", search);
             model.addAttribute("activeTab", "intermediaryList");
-            
+
             // Agregar mensaje cuando no hay resultados
             if (intermediariesPage.isEmpty() && StringUtils.hasText(search)) {
                 model.addAttribute("noResults", true);
             }
-            
+
             return "intermediary/list";
         } catch (Exception e) {
             model.addAttribute("error", "Error al buscar intermediarios: " + e.getMessage());
@@ -375,21 +380,19 @@ public class IntermediaryController {
         }
     }
 
-    
-
     @GetMapping("/view/{id}")
     public String viewIntermediary(@PathVariable Long id, Model model) {
         try {
             RuiIntermediary intermediary = intermediaryService.findById(id);
-            
+
             // Verificar permisos según el tipo de usuario...
-            
+
             // Cargar datos principales
             model.addAttribute("intermediary", intermediary);
 
             // Determinar tipo de intermediario
-            boolean isAgente = intermediary.getTypeIntermediarieId() != null && 
-                            intermediary.getTypeIntermediarieId().getId() == 4L;
+            boolean isAgente = intermediary.getTypeIntermediarieId() != null &&
+                    intermediary.getTypeIntermediarieId().getId() == 4L;
             model.addAttribute("isAgente", isAgente);
 
             // Cargar idoneidad con indicador de observaciones
@@ -399,30 +402,31 @@ public class IntermediaryController {
                 dto.setHasObservation(idoneidadService.hasObservation(dto.getId()));
             }
             model.addAttribute("idoneidadList", idoneidadList);
-            
+
             // Cargar estados de campos para observaciones
             Map<String, FormFieldStateDTO> fieldStates = intermediaryService.getFieldStates(id);
             model.addAttribute("fieldStates", fieldStates);
-            
+
             // Cargar ubicación
             loadLocationData(intermediary, model);
-            
+
             // Cargar infraestructuras y firma
             loadInfrastructuraHumana(id, model);
-            
+
             // Marcar si las experiencias laborales tienen observaciones
             if (model.getAttribute("experienciasLaborales") != null) {
-                List<ExperienciaLaboralDTO> experiencias = (List<ExperienciaLaboralDTO>) model.getAttribute("experienciasLaborales");
+                List<ExperienciaLaboralDTO> experiencias = (List<ExperienciaLaboralDTO>) model
+                        .getAttribute("experienciasLaborales");
                 for (ExperienciaLaboralDTO exp : experiencias) {
                     exp.setHasObservation(infraestructuraHumanaService.hasWorkExpObservation(exp.getId()));
                 }
             }
-            
+
             loadInfrastructuraOperativa(id, model);
             loadFirmaDigitalizada(id, model);
-            
+
             return "intermediary/view";
-            
+
         } catch (EntityNotFoundException e) {
             log.error("Intermediario no encontrado: {}", id);
             return "redirect:/error";
@@ -431,8 +435,6 @@ public class IntermediaryController {
             return "redirect:/error";
         }
     }
-
-
 
     @GetMapping("/review")
     public String reviewIntermediary() {
@@ -456,7 +458,7 @@ public class IntermediaryController {
     public ResponseEntity<Resource> viewWorkExperienceDocument(@PathVariable Long id) {
         try {
             Resource file = documentoService.loadWorkExperienceDocument(id);
-            
+
             // Determinar el tipo de contenido
             String contentType = "application/pdf";
             String filename = file.getFilename();
@@ -467,7 +469,7 @@ public class IntermediaryController {
                     contentType = "image/png";
                 }
             }
-            
+
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
@@ -478,12 +480,11 @@ public class IntermediaryController {
         }
     }
 
-
     @GetMapping("/firma/{id}")
     public ResponseEntity<Resource> verFirma(@PathVariable Long id) {
         try {
             Resource firma = firmaDigitalizadaService.loadFirmaDigitalizada(id);
-            
+
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_JPEG) // Ajustar según el formato real
                     .body(firma);
@@ -496,20 +497,20 @@ public class IntermediaryController {
     @PostMapping("/status/marcar-revisado/{id}")
     public String marcarComoRevisado(@PathVariable Long id, RedirectAttributes redirectAttributes, Model model) {
         Map<String, Object> result = firmaDigitalizadaService.marcarComoRevisado(id);
-        
+
         if ((Boolean) result.get("success")) {
             redirectAttributes.addFlashAttribute("mensaje", result.get("message"));
-            
+
             // Si hay observaciones pendientes, agregar información adicional
             if (result.containsKey("observacionesPendientes") && (Boolean) result.get("observacionesPendientes")) {
-                redirectAttributes.addFlashAttribute("advertencia", 
-                    "Se ha marcado como revisado, pero existen " + result.get("cantidadObservaciones") + 
-                    " observaciones pendientes.");
+                redirectAttributes.addFlashAttribute("advertencia",
+                        "Se ha marcado como revisado, pero existen " + result.get("cantidadObservaciones") +
+                                " observaciones pendientes.");
             }
         } else {
             redirectAttributes.addFlashAttribute("error", result.get("message"));
         }
-        
+
         return "redirect:/intermediary/review/" + id;
     }
 
@@ -517,7 +518,7 @@ public class IntermediaryController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> verificarObservaciones(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             Long cantidadObservaciones = historyDetailsRepository.countByIntermediaryId(id);
             response.put("observacionesPendientes", cantidadObservaciones > 0);
@@ -533,44 +534,43 @@ public class IntermediaryController {
     @PostMapping("/status/enviar-complementar/{id}")
     public String enviarAComplementar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         boolean success = firmaDigitalizadaService.enviarAComplementar(id);
-        
+
         if (success) {
             redirectAttributes.addFlashAttribute("mensaje", "Registro enviado a complementar correctamente");
         } else {
             redirectAttributes.addFlashAttribute("error", "Error al enviar a complementar");
         }
-        
+
         return "redirect:/intermediary/review/" + id;
     }
 
     @PostMapping("/status/aprobar/{id}")
     public String aprobarRegistro(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         boolean success = firmaDigitalizadaService.aprobarRegistro(id);
-        
+
         if (success) {
             redirectAttributes.addFlashAttribute("mensaje", "Registro aprobado correctamente");
         } else {
             redirectAttributes.addFlashAttribute("error", "Error al aprobar el registro");
         }
-        
+
         return "redirect:/intermediary/review/" + id;
     }
 
     @PostMapping("/status/regresar-funcionario/{id}")
     public String regresarAFuncionario(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         boolean success = firmaDigitalizadaService.regresarAFuncionario(id);
-        
+
         if (success) {
             redirectAttributes.addFlashAttribute("mensaje", "Registro regresado a funcionario correctamente");
         } else {
             redirectAttributes.addFlashAttribute("error", "Error al regresar a funcionario");
         }
-        
+
         return "redirect:/intermediary/review/" + id;
     }
 
-
-    //endpoint para documentos de tab infraestructura operativa
+    // endpoint para documentos de tab infraestructura operativa
     @GetMapping("/infraoperativa/soporte/{tipo}/{id}")
     public ResponseEntity<Resource> downloadInfraOperativaDocument(
             @PathVariable String tipo,
@@ -578,15 +578,17 @@ public class IntermediaryController {
             @RequestParam(defaultValue = "true") boolean download) {
         try {
             Resource file = documentoService.loadInfraOperativaDocument(id, tipo);
-            
+
             ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.ok();
-            
+
             if (download) {
                 // Configurar para descarga
-                responseBuilder.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"");
+                responseBuilder.header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + file.getFilename() + "\"");
             } else {
                 // Configurar para visualización en línea
-                responseBuilder.header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"");
+                responseBuilder.header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + file.getFilename() + "\"");
                 // Determinar tipo de contenido
                 String contentType = "application/pdf"; // Por defecto
                 String filename = file.getFilename();
@@ -599,21 +601,21 @@ public class IntermediaryController {
                 }
                 responseBuilder.contentType(MediaType.parseMediaType(contentType));
             }
-            
+
             return responseBuilder.body(file);
         } catch (Exception e) {
             log.error("Error al descargar documento de infraestructura operativa: {}", e.getMessage(), e);
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     @GetMapping("/infraoperativa/soporte/{tipo}/{id}/view")
     public ResponseEntity<Resource> viewInfraOperativaDocument(
             @PathVariable String tipo,
             @PathVariable Long id) {
         try {
             Resource file = documentoService.loadInfraOperativaDocument(id, tipo);
-            
+
             // Determinar el tipo de contenido
             String contentType = "application/pdf";
             String filename = file.getFilename();
@@ -624,7 +626,7 @@ public class IntermediaryController {
                     contentType = "image/png";
                 }
             }
-            
+
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
@@ -635,7 +637,7 @@ public class IntermediaryController {
         }
     }
 
-    //endpoint para observaciones de tab infraestructura operativa
+    // endpoint para observaciones de tab infraestructura operativa
     @GetMapping("/workexp/{id}/observation")
     @ResponseBody
     public ResponseEntity<FormFieldStateDTO> getWorkExpObservation(@PathVariable Long id) {
@@ -655,7 +657,6 @@ public class IntermediaryController {
             return ResponseEntity.badRequest().body(new FormFieldStateDTO());
         }
     }
-
 
     @PostMapping("/workexp/{id}/observation")
     @ResponseBody
@@ -707,7 +708,7 @@ public class IntermediaryController {
             if (observation == null) {
                 throw new IllegalArgumentException("La observación no puede ser nula");
             }
-            
+
             log.debug("Recibiendo solicitud PUT para actualizar observación en experiencia laboral ID: {}", id);
             FormFieldStateDTO state = infraestructuraHumanaService.updateWorkExpObservation(id, observation);
             return ResponseEntity.ok(state);
@@ -727,10 +728,7 @@ public class IntermediaryController {
         }
     }
 
-    
-
-
-    //--------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------
     // Otros métodos del controlador
     @GetMapping("/my-registries")
     public String listUserRegistries(
@@ -748,7 +746,8 @@ public class IntermediaryController {
             String username = authentication.getName();
             log.debug("Usuario autenticado: {}", username);
 
-            Page<RuiIntermediary> userRegistries = intermediaryService.findByUser(username, page, size, sort, direction);
+            Page<RuiIntermediary> userRegistries = intermediaryService.findByUser(username, page, size, sort,
+                    direction);
 
             model.addAttribute("registries", userRegistries.getContent());
             model.addAttribute("currentPage", page);
@@ -757,7 +756,7 @@ public class IntermediaryController {
             model.addAttribute("sort", sort);
             model.addAttribute("direction", direction);
             model.addAttribute("activeTab", "myRegistries");
-            
+
             if (userRegistries.isEmpty()) {
                 model.addAttribute("noResults", true);
             }
@@ -771,19 +770,23 @@ public class IntermediaryController {
     }
 
     // Método auxiliar para obtener el ID del usuario actual (mejorado)
-   /*  private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            // Asumimos que el ID del usuario está en los detalles del Authentication o como principal
-            // Debes ajustarlo según tu implementación de autenticación
-            return 1L; // Temporal, reemplaza con la lógica real
-        }
-        throw new IllegalStateException("No hay usuario autenticado");
-    }*/
+    /*
+     * private Long getCurrentUserId() {
+     * Authentication authentication =
+     * SecurityContextHolder.getContext().getAuthentication();
+     * if (authentication != null && authentication.isAuthenticated()) {
+     * // Asumimos que el ID del usuario está en los detalles del Authentication o
+     * como principal
+     * // Debes ajustarlo según tu implementación de autenticación
+     * return 1L; // Temporal, reemplaza con la lógica real
+     * }
+     * throw new IllegalStateException("No hay usuario autenticado");
+     * }
+     */
 
-    //--------------------------------------------------------------------------------
-    // métodos para editar 
-    
+    // --------------------------------------------------------------------------------
+    // métodos para editar
+
     @PostMapping("/complement/{id}")
     public String complementIntermediary(
             @PathVariable Long id,
@@ -802,8 +805,8 @@ public class IntermediaryController {
             log.debug("Request Content-Type: {}", request.getContentType());
             log.debug("Todos los parámetros de formulario: {}", allParams);
             log.debug("Todos los archivos recibidos en request.getFileMap():");
-            request.getFileMap().forEach((name, file) -> 
-                log.debug("Archivo: name={}, originalFilename={}, size={}", name, file.getOriginalFilename(), file.getSize()));
+            request.getFileMap().forEach((name, file) -> log.debug("Archivo: name={}, originalFilename={}, size={}",
+                    name, file.getOriginalFilename(), file.getSize()));
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated()) {
@@ -844,32 +847,39 @@ public class IntermediaryController {
                     }
                     RuiPerson person = idoniedad.getPersonId();
                     if (person != null) {
-                        person.setDocumentType(allParams.getOrDefault("idoneidadDocumentTypes[" + i + "]", person.getDocumentType()));
-                        person.setDocumentNumber(allParams.getOrDefault("idoneidadDocumentNumbers[" + i + "]", person.getDocumentNumber()));
-                        person.setFirstName(allParams.getOrDefault("idoneidadFirstNames[" + i + "]", person.getFirstName()));
-                        person.setSecondName(allParams.getOrDefault("idoneidadSecondNames[" + i + "]", person.getSecondName()));
-                        person.setFirstSurname(allParams.getOrDefault("idoneidadFirstSurnames[" + i + "]", person.getFirstSurname()));
-                        person.setSecondSurname(allParams.getOrDefault("idoneidadSecondSurnames[" + i + "]", person.getSecondSurname()));
+                        person.setDocumentType(
+                                allParams.getOrDefault("idoneidadDocumentTypes[" + i + "]", person.getDocumentType()));
+                        person.setDocumentNumber(allParams.getOrDefault("idoneidadDocumentNumbers[" + i + "]",
+                                person.getDocumentNumber()));
+                        person.setFirstName(
+                                allParams.getOrDefault("idoneidadFirstNames[" + i + "]", person.getFirstName()));
+                        person.setSecondName(
+                                allParams.getOrDefault("idoneidadSecondNames[" + i + "]", person.getSecondName()));
+                        person.setFirstSurname(
+                                allParams.getOrDefault("idoneidadFirstSurnames[" + i + "]", person.getFirstSurname()));
+                        person.setSecondSurname(allParams.getOrDefault("idoneidadSecondSurnames[" + i + "]",
+                                person.getSecondSurname()));
                         ruiPersonRepository.save(person);
                     }
                     idoniedadService.saveIdoneidad(idoniedad);
 
                     MultipartFile idoneidadFile = request.getFile("idoneidadFiles[" + i + "]");
-                if (idoneidadFile != null && !idoneidadFile.isEmpty()) {
-                    String filePath = fileStorageService.storeFile(idoneidadFile, "IDONIEDAD/" + idoneidadId, currentUserId, id, Paths.get(attachmentsDir));
-                    ruiSupportRepository.findByIdoniedadId(idoneidadId).ifPresent(support -> {
-                        support.setStatus((short) 0);
+                    if (idoneidadFile != null && !idoneidadFile.isEmpty()) {
+                        String filePath = fileStorageService.storeFile(idoneidadFile, "IDONIEDAD/" + idoneidadId,
+                                currentUserId, id, Paths.get(attachmentsDir));
+                        ruiSupportRepository.findByIdoniedadId(idoneidadId).ifPresent(support -> {
+                            support.setStatus((short) 0);
+                            ruiSupportRepository.save(support);
+                        });
+                        RuiSupport support = new RuiSupport();
+                        support.setIdoniedadId(idoniedad);
+                        support.setFilename(FilenameUtils.getName(filePath));
+                        support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+                        support.setExtencion(FilenameUtils.getExtension(filePath));
+                        support.setStatus((short) 1);
                         ruiSupportRepository.save(support);
-                    });
-                    RuiSupport support = new RuiSupport();
-                    support.setIdoniedadId(idoniedad);
-                    support.setFilename(FilenameUtils.getName(filePath));
-                    support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
-                    support.setExtencion(FilenameUtils.getExtension(filePath));
-                    support.setStatus((short) 1);
-                    ruiSupportRepository.save(support);
-                    log.info("Archivo de idoneidad guardado para ID {}: {}", idoneidadId, filePath);
-                } else {
+                        log.info("Archivo de idoneidad guardado para ID {}: {}", idoneidadId, filePath);
+                    } else {
                         log.debug("No se proporcionó archivo para idoneidad ID: {} en índice: {}", idoneidadId, i);
                     }
                 }
@@ -915,22 +925,24 @@ public class IntermediaryController {
                         workExperienceRepository.save(exp);
 
                         MultipartFile workExperienceFile = request.getFile("workExperienceFiles[" + index + "]");
-                    if (workExperienceFile != null && !workExperienceFile.isEmpty()) {
-                        String filePath = fileStorageService.storeFile(workExperienceFile, "WORK_EXPERIENCE/" + exp.getId(), currentUserId, id, Paths.get(attachmentsDir));
-                        ruiSupportRepository.findFirstByWorkExperienceId(exp).ifPresent(support -> {
-                            support.setStatus((short) 0);
+                        if (workExperienceFile != null && !workExperienceFile.isEmpty()) {
+                            String filePath = fileStorageService.storeFile(workExperienceFile,
+                                    "WORK_EXPERIENCE/" + exp.getId(), currentUserId, id, Paths.get(attachmentsDir));
+                            ruiSupportRepository.findFirstByWorkExperienceId(exp).ifPresent(support -> {
+                                support.setStatus((short) 0);
+                                ruiSupportRepository.save(support);
+                            });
+                            RuiSupport support = new RuiSupport();
+                            support.setWorkExperienceId(exp);
+                            support.setFilename(FilenameUtils.getName(filePath));
+                            support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
+                            support.setExtencion(FilenameUtils.getExtension(filePath));
+                            support.setStatus((short) 1);
                             ruiSupportRepository.save(support);
-                        });
-                        RuiSupport support = new RuiSupport();
-                        support.setWorkExperienceId(exp);
-                        support.setFilename(FilenameUtils.getName(filePath));
-                        support.setRoute(FilenameUtils.getFullPathNoEndSeparator(filePath));
-                        support.setExtencion(FilenameUtils.getExtension(filePath));
-                        support.setStatus((short) 1);
-                        ruiSupportRepository.save(support);
-                        log.info("Archivo de experiencia laboral guardado para ID {}: {}", exp.getId(), filePath);
-                    } else {
-                            log.debug("No se proporcionó archivo para experiencia laboral ID: {} en índice: {}", exp.getId(), index);
+                            log.info("Archivo de experiencia laboral guardado para ID {}: {}", exp.getId(), filePath);
+                        } else {
+                            log.debug("No se proporcionó archivo para experiencia laboral ID: {} en índice: {}",
+                                    exp.getId(), index);
                         }
                         index++;
                     }
@@ -946,12 +958,14 @@ public class IntermediaryController {
                 infraOp.setPhone3(intermediary.getInfrastructureOperationalId().getPhone3());
                 infraOp.setPhoneFax(intermediary.getInfrastructureOperationalId().getPhoneFax());
                 infraOp.setEmail(intermediary.getInfrastructureOperationalId().getEmail());
-                infraOp.setAddressServiceOffice(intermediary.getInfrastructureOperationalId().getAddressServiceOffice());
+                infraOp.setAddressServiceOffice(
+                        intermediary.getInfrastructureOperationalId().getAddressServiceOffice());
                 infraOperativaRepository.save(infraOp);
 
                 // ccFile
                 if (ccFile != null && !ccFile.isEmpty()) {
-                    String filePath = fileStorageService.storeFile(ccFile, "INFRA_OPERACIONAL/CC", currentUserId, id, Paths.get(attachmentsDir));
+                    String filePath = fileStorageService.storeFile(ccFile, "INFRA_OPERACIONAL/CC", currentUserId, id,
+                            Paths.get(attachmentsDir));
                     List<RuiSupport> existingCcSupports = ruiSupportRepository.findAllByInfraOperationalCc(infraOp);
                     for (RuiSupport support : existingCcSupports) {
                         if (support.getStatus() == 1) {
@@ -971,7 +985,8 @@ public class IntermediaryController {
 
                 // softFile
                 if (softFile != null && !softFile.isEmpty()) {
-                    String filePath = fileStorageService.storeFile(softFile, "INFRA_OPERACIONAL/SOFT", currentUserId, id, Paths.get(attachmentsDir));
+                    String filePath = fileStorageService.storeFile(softFile, "INFRA_OPERACIONAL/SOFT", currentUserId,
+                            id, Paths.get(attachmentsDir));
                     List<RuiSupport> existingSoftSupports = ruiSupportRepository.findAllByInfraOperationalSoft(infraOp);
                     for (RuiSupport support : existingSoftSupports) {
                         if (support.getStatus() == 1) {
@@ -991,7 +1006,8 @@ public class IntermediaryController {
 
                 // hardFile
                 if (hardFile != null && !hardFile.isEmpty()) {
-                    String filePath = fileStorageService.storeFile(hardFile, "INFRA_OPERACIONAL/HARD", currentUserId, id, Paths.get(attachmentsDir));
+                    String filePath = fileStorageService.storeFile(hardFile, "INFRA_OPERACIONAL/HARD", currentUserId,
+                            id, Paths.get(attachmentsDir));
                     List<RuiSupport> existingHardSupports = ruiSupportRepository.findAllByInfraOperationalHard(infraOp);
                     for (RuiSupport support : existingHardSupports) {
                         if (support.getStatus() == 1) {
@@ -1009,10 +1025,11 @@ public class IntermediaryController {
                     log.info("Archivo hardFile guardado: {}", filePath);
                 }
             }
-            
+
             // 5. Guardar Firma Digitalizada
             if (signatureFile != null && !signatureFile.isEmpty()) {
-                String filePath = fileStorageService.storeFile(signatureFile, "FIRMA_DIGITALIZADA", currentUserId, id, Paths.get(attachmentsDir));
+                String filePath = fileStorageService.storeFile(signatureFile, "FIRMA_DIGITALIZADA", currentUserId, id,
+                        Paths.get(attachmentsDir));
                 // Buscar soporte existente con status=1 o crear uno nuevo
                 RuiSupport support = ruiSupportRepository.findByInfraOperationalSignAndStatus(
                         existingIntermediary.getInfrastructureOperationalId(), (short) 1)
@@ -1026,14 +1043,16 @@ public class IntermediaryController {
                 log.info("Archivo signatureFile guardado: {}", filePath);
             }
 
-            intermediaryService.updateIntermediaryStatus(id, IntermediaryState.COMPLEMENTED, "Información complementada", null);
+            intermediaryService.updateIntermediaryStatus(id, IntermediaryState.COMPLEMENTED,
+                    "Información complementada", null);
             ruiIntermediaryRepository.save(existingIntermediary);
 
             redirectAttributes.addFlashAttribute("mensaje", "Registro complementado correctamente");
             return "redirect:/intermediary/my-registries";
         } catch (MaxUploadSizeExceededException e) {
             log.error("Tamaño de carga excedido: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("error", "El tamaño total de los archivos excede el límite permitido. Por favor, suba archivos más pequeños.");
+            redirectAttributes.addFlashAttribute("error",
+                    "El tamaño total de los archivos excede el límite permitido. Por favor, suba archivos más pequeños.");
             return "redirect:/intermediary/complement/" + id;
         } catch (Exception e) {
             log.error("Error al complementar el registro: {}", e.getMessage(), e);
@@ -1041,8 +1060,6 @@ public class IntermediaryController {
             return "redirect:/intermediary/complement/" + id;
         }
     }
-
-
 
     /**
      * Método auxiliar para actualizar los detalles del intermediario
@@ -1053,24 +1070,25 @@ public class IntermediaryController {
             RuiCompany company = existing.getCompanyId();
             company.setNit(updated.getCompanyId().getNit());
             company.setName(updated.getCompanyId().getName());
-            
+
             // Asegurar que las entidades de departamento y ciudad son las correctas
-            if (updated.getCompanyId().getDepartmentId() != null && updated.getCompanyId().getDepartmentId().getId() != null) {
+            if (updated.getCompanyId().getDepartmentId() != null
+                    && updated.getCompanyId().getDepartmentId().getId() != null) {
                 Long deptId = updated.getCompanyId().getDepartmentId().getId();
                 Optional<RuiDepartment> department = ruiDepartmentRepository.findById(deptId);
                 department.ifPresent(company::setDepartmentId);
             }
-            
+
             if (updated.getCompanyId().getCityId() != null && updated.getCompanyId().getCityId().getId() != null) {
                 Long cityId = updated.getCompanyId().getCityId().getId();
                 Optional<RuiCity> city = ruiCityRepository.findById(cityId);
                 city.ifPresent(company::setCityId);
             }
-            
+
             company.setAddress(updated.getCompanyId().getAddress());
             company.setEmail(updated.getCompanyId().getEmail());
             company.setPhone(updated.getCompanyId().getPhone());
-        } 
+        }
         // Actualizar datos de persona
         else if (existing.getPersonId() != null && updated.getPersonId() != null) {
             RuiPerson person = existing.getPersonId();
@@ -1080,20 +1098,21 @@ public class IntermediaryController {
             person.setSecondName(updated.getPersonId().getSecondName());
             person.setFirstSurname(updated.getPersonId().getFirstSurname());
             person.setSecondSurname(updated.getPersonId().getSecondSurname());
-            
+
             // Asegurar que las entidades de departamento y ciudad son las correctas
-            if (updated.getPersonId().getDepartmentId() != null && updated.getPersonId().getDepartmentId().getId() != null) {
+            if (updated.getPersonId().getDepartmentId() != null
+                    && updated.getPersonId().getDepartmentId().getId() != null) {
                 Long deptId = updated.getPersonId().getDepartmentId().getId();
                 Optional<RuiDepartment> department = ruiDepartmentRepository.findById(deptId);
                 department.ifPresent(person::setDepartmentId);
             }
-            
+
             if (updated.getPersonId().getCityId() != null && updated.getPersonId().getCityId().getId() != null) {
                 Long cityId = updated.getPersonId().getCityId().getId();
                 Optional<RuiCity> city = ruiCityRepository.findById(cityId);
                 city.ifPresent(person::setCityId);
             }
-            
+
             person.setAddress(updated.getPersonId().getAddress());
             person.setEmail(updated.getPersonId().getEmail());
             person.setPhone(updated.getPersonId().getPhone());
@@ -1103,7 +1122,7 @@ public class IntermediaryController {
         // Actualizar infraestructura humana (abogado y experiencias laborales)
         if (existing.getInfrastructureHumanId() != null && updated.getInfrastructureHumanId() != null) {
             RuiInfraHuman infraHuman = existing.getInfrastructureHumanId();
-            
+
             // Actualizar datos del abogado
             if (infraHuman.getLawyerId() != null && updated.getInfrastructureHumanId().getLawyerId() != null) {
                 RuiPerson lawyer = infraHuman.getLawyerId();
@@ -1128,7 +1147,8 @@ public class IntermediaryController {
                 for (RuiWorkExperience updatedExpItem : updatedExp) {
                     if (updatedExpItem.getId() != null) {
                         for (RuiWorkExperience existingExpItem : existingExp) {
-                            if (existingExpItem.getId() != null && existingExpItem.getId().equals(updatedExpItem.getId())) {
+                            if (existingExpItem.getId() != null
+                                    && existingExpItem.getId().equals(updatedExpItem.getId())) {
                                 existingExpItem.setCompany(updatedExpItem.getCompany());
                                 existingExpItem.setCharge(updatedExpItem.getCharge());
                                 existingExpItem.setNameBoss(updatedExpItem.getNameBoss());
@@ -1156,7 +1176,8 @@ public class IntermediaryController {
     }
 
     /**
-     * Método auxiliar para verificar si el usuario está autorizado para el intermediario
+     * Método auxiliar para verificar si el usuario está autorizado para el
+     * intermediario
      */
     private boolean isUserAuthorizedForIntermediary(RuiIntermediary intermediary, String username) {
         // Verificar si el usuario es un administrador o tiene rol adecuado
@@ -1165,22 +1186,22 @@ public class IntermediaryController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_ADMIN"))) {
             return true;
         }
-        
+
         // Obtener el usuario por nombre de usuario
         Optional<RuiUser> userOpt = ruiUserRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
             return false;
         }
-        
+
         RuiUser user = userOpt.get();
-        
+
         // Verificar si el intermediario está asociado al usuario
         if (intermediary.getPersonId() != null && user.getPerson() != null) {
             return intermediary.getPersonId().getId().equals(user.getPerson().getId());
         } else if (intermediary.getCompanyId() != null && user.getCompany() != null) {
             return intermediary.getCompanyId().getId().equals(user.getCompany().getId());
         }
-        
+
         return false;
     }
 
@@ -1206,15 +1227,18 @@ public class IntermediaryController {
                 log.error("Intermediary con ID {} no encontrado", id);
                 return "redirect:/error";
             }
-            
-            log.info("Intermediary encontrado: ID={}, TypeIntermediarieId={}", 
-                    intermediary.getId(), 
-                    intermediary.getTypeIntermediarieId() != null ? intermediary.getTypeIntermediarieId().getValue() : "null");
+
+            log.info("Intermediary encontrado: ID={}, TypeIntermediarieId={}",
+                    intermediary.getId(),
+                    intermediary.getTypeIntermediarieId() != null ? intermediary.getTypeIntermediarieId().getValue()
+                            : "null");
 
             // Determinar si es agente por el tipo de intermediario
-            boolean isAgente = intermediary.getTypeIntermediarieId() != null && intermediary.getTypeIntermediarieId().getId() == 4L;
+            boolean isAgente = intermediary.getTypeIntermediarieId() != null
+                    && intermediary.getTypeIntermediarieId().getId() == 4L;
 
-            // Inicializar objetos del tab de información general para evitar NullPointerException
+            // Inicializar objetos del tab de información general para evitar
+            // NullPointerException
             if (isAgente) {
                 // Si es agente, asegurar que personId está inicializado
                 if (intermediary.getPersonId() == null) {
@@ -1222,14 +1246,14 @@ public class IntermediaryController {
                     log.info("Inicializando personId para intermediario agente");
                 } else {
                     Hibernate.initialize(intermediary.getPersonId());
-                    
+
                     // Inicializar propiedades anidadas de Person
                     if (intermediary.getPersonId().getDepartmentId() == null) {
                         intermediary.getPersonId().setDepartmentId(new RuiDepartment());
                     } else {
                         Hibernate.initialize(intermediary.getPersonId().getDepartmentId());
                     }
-                    
+
                     if (intermediary.getPersonId().getCityId() == null) {
                         intermediary.getPersonId().setCityId(new RuiCity());
                     } else {
@@ -1243,14 +1267,14 @@ public class IntermediaryController {
                     log.info("Inicializando companyId para intermediario empresa");
                 } else {
                     Hibernate.initialize(intermediary.getCompanyId());
-                    
+
                     // Inicializar propiedades anidadas de Company
                     if (intermediary.getCompanyId().getDepartmentId() == null) {
                         intermediary.getCompanyId().setDepartmentId(new RuiDepartment());
                     } else {
                         Hibernate.initialize(intermediary.getCompanyId().getDepartmentId());
                     }
-                    
+
                     if (intermediary.getCompanyId().getCityId() == null) {
                         intermediary.getCompanyId().setCityId(new RuiCity());
                     } else {
@@ -1268,7 +1292,7 @@ public class IntermediaryController {
                         Hibernate.initialize(intermediary.getInfrastructureHumanId().getLawyerId().getDocumentType());
                     }
                 }
-                
+
                 // Inicializar workExperiences si es null
                 if (intermediary.getInfrastructureHumanId().getWorkExperiences() == null) {
                     intermediary.getInfrastructureHumanId().setWorkExperiences(new HashSet<>());
@@ -1295,32 +1319,35 @@ public class IntermediaryController {
             model.addAttribute("isAgente", isAgente);
             model.addAttribute("documentTypes", userService.getDocumentTypes());
             model.addAttribute("idoneidadList", idoneidadService.findMostRecentByIntermediary(id));
-            
+
             // Obtener experiencias laborales y asegurar que nunca sea null
-            List<ExperienciaLaboralDTO> experiencias = infraestructuraHumanaService.findWorkExperienceByIntermediary(id);
+            List<ExperienciaLaboralDTO> experiencias = infraestructuraHumanaService
+                    .findWorkExperienceByIntermediary(id);
             if (experiencias == null) {
                 experiencias = new ArrayList<>();
             }
             model.addAttribute("experienciasLaborales", experiencias);
-            
+
             model.addAttribute("departments", ubicacionService.getAllDepartments());
             model.addAttribute("cities", ubicacionService.getAllCities());
-            
+
             // Cargar estados de campos para observaciones
             Map<String, FormFieldStateDTO> fieldStates = intermediaryService.getFieldStates(id);
             model.addAttribute("fieldStates", fieldStates);
-            
+
             // Cargar infraestructuras y firma
             loadInfrastructuraOperativa(id, model);
             loadFirmaDigitalizada(id, model);
 
-            log.info("Modelo preparado para renderizar: intermediary={}, idoneidadList.size={}, experienciasLaborales.size={}", 
-                    intermediary.getId(), 
-                    model.getAttribute("idoneidadList") != null ? ((List<?>) model.getAttribute("idoneidadList")).size() : 0,
+            log.info(
+                    "Modelo preparado para renderizar: intermediary={}, idoneidadList.size={}, experienciasLaborales.size={}",
+                    intermediary.getId(),
+                    model.getAttribute("idoneidadList") != null ? ((List<?>) model.getAttribute("idoneidadList")).size()
+                            : 0,
                     experiencias.size());
 
             return "intermediary/edit-intermediary";
-            
+
         } catch (Exception e) {
             log.error("Error al preparar el formulario de complemento para ID {}: {}", id, e.getMessage(), e);
             return "redirect:/error";
@@ -1345,13 +1372,13 @@ public class IntermediaryController {
         try {
             // Buscar todas las observaciones para este intermediario
             List<RuiHistoryDetails> details = historyDetailsRepository.findByIntermediaryId(id);
-            
+
             // Extraer los nombres de los campos que tienen observaciones
             List<String> fieldsWithObservations = details.stream()
-                .map(RuiHistoryDetails::getFieldName)  // Corregido a fieldName
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-            
+                    .map(RuiHistoryDetails::getFieldName) // Corregido a fieldName
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
             return ResponseEntity.ok(Map.of("fields", fieldsWithObservations));
         } catch (Exception e) {
             log.error("Error al obtener campos con observaciones: {}", e.getMessage());
@@ -1363,10 +1390,11 @@ public class IntermediaryController {
     @ResponseBody
     public ResponseEntity<?> checkIdoneidadHasObservation(@PathVariable Long id) {
         try {
-            // Asumo que las observaciones de idoneidad se almacenan con tableName = "RUI_IDONIEDAD"
+            // Asumo que las observaciones de idoneidad se almacenan con tableName =
+            // "RUI_IDONIEDAD"
             List<RuiHistoryDetails> observations = historyDetailsRepository
-                .findByTableIdAndTableName(id, "RUI_IDONIEDAD");
-            
+                    .findByTableIdAndTableName(id, "RUI_IDONIEDAD");
+
             boolean hasObservation = !observations.isEmpty();
             return ResponseEntity.ok(Map.of("hasObservation", hasObservation));
         } catch (Exception e) {
@@ -1379,10 +1407,11 @@ public class IntermediaryController {
     @ResponseBody
     public ResponseEntity<?> checkWorkExpHasObservation(@PathVariable Long id) {
         try {
-            // Asumo que las observaciones de experiencia laboral se almacenan con tableName = "RUI_WORK_EXPERIENCE"
+            // Asumo que las observaciones de experiencia laboral se almacenan con tableName
+            // = "RUI_WORK_EXPERIENCE"
             List<RuiHistoryDetails> observations = historyDetailsRepository
-                .findByTableIdAndTableName(id, "RUI_WORK_EXPERIENCE");
-            
+                    .findByTableIdAndTableName(id, "RUI_WORK_EXPERIENCE");
+
             boolean hasObservation = !observations.isEmpty();
             return ResponseEntity.ok(Map.of("hasObservation", hasObservation));
         } catch (Exception e) {
@@ -1402,48 +1431,231 @@ public class IntermediaryController {
     // Método POST para procesar el formulario simplificado
     @PostMapping("/test/{id}")
     public String complementIntermediarySimplified(
-        @PathVariable Long id,
-        @RequestParam(name = "idoneidadFile", required = false) MultipartFile idoneidadFile,
-        @RequestParam(name = "workExperienceFile", required = false) MultipartFile workExperienceFile,
-        MultipartHttpServletRequest request,
-        RedirectAttributes redirectAttributes) {
-    try {
-        log.debug("Inicio de complementIntermediarySimplified para ID: {}", id);
+            @PathVariable Long id,
+            @RequestParam(name = "idoneidadFile", required = false) MultipartFile idoneidadFile,
+            @RequestParam(name = "workExperienceFile", required = false) MultipartFile workExperienceFile,
+            MultipartHttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        try {
+            log.debug("Inicio de complementIntermediarySimplified para ID: {}", id);
 
-        // Autenticación
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            log.error("No hay usuario autenticado");
-            return "redirect:/auth/login";
+            // Autenticación
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                log.error("No hay usuario autenticado");
+                return "redirect:/auth/login";
+            }
+            String username = authentication.getName();
+            log.debug("Usuario autenticado: {}", username);
+            Long currentUserId = getCurrentUserId();
+
+            // Depuración
+            log.debug("Request Content-Type: {}", request.getContentType());
+            log.debug("Todos los archivos recibidos:");
+            request.getFileMap().forEach((name, file) -> log.debug("Archivo: name={}, originalFilename={}, size={}",
+                    name, file.getOriginalFilename(), file.getSize()));
+            log.debug("idoneidadFile: {}", idoneidadFile != null ? idoneidadFile.getOriginalFilename() : "null");
+            log.debug("workExperienceFile: {}",
+                    workExperienceFile != null ? workExperienceFile.getOriginalFilename() : "null");
+
+            // Procesar archivos
+            if (idoneidadFile != null && !idoneidadFile.isEmpty()) {
+                String filePath = fileStorageService.storeFile(idoneidadFile, "IDONIEDAD/test", currentUserId, id);
+                log.info("Archivo de idoneidad guardado en: {}", filePath);
+            }
+            if (workExperienceFile != null && !workExperienceFile.isEmpty()) {
+                String filePath = fileStorageService.storeFile(workExperienceFile, "WORK_EXPERIENCE/test",
+                        currentUserId, id);
+                log.info("Archivo de experiencia laboral guardado en: {}", filePath);
+            }
+
+            redirectAttributes.addFlashAttribute("mensaje", "Formulario simplificado procesado correctamente");
+            return "redirect:/intermediary/my-registries";
+        } catch (Exception e) {
+            log.error("Error al procesar el formulario simplificado: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Error al procesar el formulario: " + e.getMessage());
+            return "redirect:/intermediary/my-registries";
         }
-        String username = authentication.getName();
-        log.debug("Usuario autenticado: {}", username);
-        Long currentUserId = getCurrentUserId();
-
-        // Depuración
-        log.debug("Request Content-Type: {}", request.getContentType());
-        log.debug("Todos los archivos recibidos:");
-        request.getFileMap().forEach((name, file) -> 
-            log.debug("Archivo: name={}, originalFilename={}, size={}", name, file.getOriginalFilename(), file.getSize()));
-        log.debug("idoneidadFile: {}", idoneidadFile != null ? idoneidadFile.getOriginalFilename() : "null");
-        log.debug("workExperienceFile: {}", workExperienceFile != null ? workExperienceFile.getOriginalFilename() : "null");
-
-        // Procesar archivos
-        if (idoneidadFile != null && !idoneidadFile.isEmpty()) {
-            String filePath = fileStorageService.storeFile(idoneidadFile, "IDONIEDAD/test", currentUserId, id);
-            log.info("Archivo de idoneidad guardado en: {}", filePath);
-        }
-        if (workExperienceFile != null && !workExperienceFile.isEmpty()) {
-            String filePath = fileStorageService.storeFile(workExperienceFile, "WORK_EXPERIENCE/test", currentUserId, id);
-            log.info("Archivo de experiencia laboral guardado en: {}", filePath);
-        }
-
-        redirectAttributes.addFlashAttribute("mensaje", "Formulario simplificado procesado correctamente");
-        return "redirect:/intermediary/my-registries";
-    } catch (Exception e) {
-        log.error("Error al procesar el formulario simplificado: {}", e.getMessage(), e);
-        redirectAttributes.addFlashAttribute("error", "Error al procesar el formulario: " + e.getMessage());
-        return "redirect:/intermediary/my-registries";
     }
-}
+
+    // Endpoints para crear un nuevo intermediario
+    @GetMapping("/create")
+    public String showCreateForm(Model model) {
+        // Preparar un intermediario vacío
+        RuiIntermediary intermediary = new RuiIntermediary();
+
+        // Inicializar company y person para evitar NullPointerException
+        intermediary.setCompanyId(new RuiCompany());
+        intermediary.setPersonId(new RuiPerson());
+
+        model.addAttribute("intermediary", intermediary);
+        model.addAttribute("departments", ubicacionService.getAllDepartments());
+        model.addAttribute("cities", ubicacionService.getAllCities());
+        model.addAttribute("documentTypes", documentTypeService.getAllDocumentTypes());
+        model.addAttribute("intermediaryTypes", intermediaryTypeService.getAllIntermediaryTypes());
+        model.addAttribute("activeTab", "create");
+
+        return "intermediary/create-intermediary";
+    }
+
+    @PostMapping("/create")
+    public String createIntermediary(
+            @ModelAttribute RuiIntermediary intermediary,
+            @RequestParam(value = "typeIntermediary", required = true) Long intermediaryTypeId,
+            @RequestParam(value = "isCompany", required = false) Boolean isCompany,
+            @RequestParam(value = "departmentId", required = false) Long departmentId,
+            @RequestParam(value = "cityId", required = false) Long cityId,
+            @RequestParam(value = "personDepartmentId", required = false) Long personDepartmentId,
+            @RequestParam(value = "personCityId", required = false) Long personCityId,
+            @RequestParam(value = "documentType", required = false) String documentType,
+            @RequestParam(required = false) MultipartFile idoneityFile,
+            @RequestParam(required = false) MultipartFile ccFile,
+            @RequestParam(required = false) MultipartFile softwareFile,
+            @RequestParam(required = false) MultipartFile equipmentFile,
+            @RequestParam(required = false) MultipartFile signatureFile,
+            MultipartHttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            log.info("Iniciando creación de intermediario");
+
+            // Obtener usuario autenticado
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                log.error("No hay usuario autenticado");
+                redirectAttributes.addFlashAttribute("error", "Debe iniciar sesión para crear un intermediario");
+                return "redirect:/auth/login";
+            }
+
+            String username = authentication.getName();
+            log.info("Usuario autenticado: {}", username);
+
+            Optional<RuiUser> userOpt = ruiUserRepository.findByUsername(username);
+            if (userOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Usuario no encontrado");
+                return "redirect:/";
+            }
+
+            RuiUser user = userOpt.get();
+
+            // Establecer tipo de intermediario
+            RuiGenerics tipoIntermediario = new RuiGenerics();
+            tipoIntermediario.setId(intermediaryTypeId);
+            intermediary.setTypeIntermediarieId(tipoIntermediario);
+
+            // Determinar si es persona o empresa basado en el tipo de intermediario
+            boolean isAgente = (intermediaryTypeId == 4L);
+
+            if (isAgente) {
+                // Es un agente (persona)
+                intermediary.setCompanyId(null);
+
+                // Configurar datos de persona
+                RuiPerson person = intermediary.getPersonId();
+                person.setDocumentType(documentType);
+                person.setStatus(1); // Activo
+
+                // Configurar ubicación
+                if (personDepartmentId != null && personCityId != null) {
+                    // Obtenemos directamente las entidades del repositorio
+                    Optional<RuiDepartment> department = ruiDepartmentRepository.findById(personDepartmentId);
+                    Optional<RuiCity> city = ruiCityRepository.findById(personCityId);
+
+                    // Asignamos las entidades
+                    department.ifPresent(person::setDepartmentId);
+                    city.ifPresent(person::setCityId);
+                }
+            } else {
+                // Es una empresa
+                intermediary.setPersonId(null);
+
+                RuiCompany company = intermediary.getCompanyId();
+                // No hay campo status en RuiCompany, así que eliminamos la línea
+                // company.setStatus(1);
+
+                // Configurar ubicación
+                if (departmentId != null && cityId != null) {
+                    // Obtenemos directamente las entidades del repositorio
+                    Optional<RuiDepartment> department = ruiDepartmentRepository.findById(departmentId);
+                    Optional<RuiCity> city = ruiCityRepository.findById(cityId);
+
+                    // Asignamos las entidades
+                    department.ifPresent(company::setDepartmentId);
+                    city.ifPresent(company::setCityId);
+                }
+            }
+
+            // Establecer estado inicial y número de radicado
+            intermediary.setState(IntermediaryState.OPENING);
+            intermediary.setRadicateNumber(generateRadicateNumber());
+
+            // Guardar el intermediario
+            RuiIntermediary savedIntermediary = intermediaryService.create(intermediary, user);
+
+            // Manejo de archivos adjuntos
+            Long intermediaryId = savedIntermediary.getId();
+            Long userId = user.getId();
+
+            // Procesar archivos si fueron proporcionados
+            processFiles(idoneityFile, ccFile, softwareFile, equipmentFile, signatureFile, intermediaryId, userId);
+
+            redirectAttributes.addFlashAttribute("mensaje", "Intermediario creado correctamente");
+            return "redirect:/intermediary/my-registries";
+
+        } catch (Exception e) {
+            log.error("Error al crear el intermediario: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Error al crear el intermediario: " + e.getMessage());
+            return "redirect:/intermediary/create";
+        }
+    }
+
+    private String generateRadicateNumber() {
+        // Generar un número de radicado único basado en la fecha actual
+        String prefix = "RUI-";
+        String timestamp = String.valueOf(new Date().getTime()).substring(0, 10);
+        return prefix + timestamp;
+    }
+
+    private void processFiles(
+            MultipartFile idoneityFile,
+            MultipartFile ccFile,
+            MultipartFile softwareFile,
+            MultipartFile equipmentFile,
+            MultipartFile signatureFile,
+            Long intermediaryId,
+            Long userId) {
+
+        try {
+            if (idoneityFile != null && !idoneityFile.isEmpty()) {
+                String filePath = fileStorageService.storeFile(idoneityFile, "IDONIEDAD", userId, intermediaryId);
+                log.info("Archivo de idoneidad guardado: {}", filePath);
+                // Aquí podrías guardar la referencia al archivo en la base de datos
+            }
+
+            if (ccFile != null && !ccFile.isEmpty()) {
+                String filePath = fileStorageService.storeFile(ccFile, "INFRA_OPERACIONAL/CC", userId, intermediaryId);
+                log.info("Archivo de cámara de comercio guardado: {}", filePath);
+            }
+
+            if (softwareFile != null && !softwareFile.isEmpty()) {
+                String filePath = fileStorageService.storeFile(softwareFile, "INFRA_OPERACIONAL/SOFT", userId,
+                        intermediaryId);
+                log.info("Archivo de software guardado: {}", filePath);
+            }
+
+            if (equipmentFile != null && !equipmentFile.isEmpty()) {
+                String filePath = fileStorageService.storeFile(equipmentFile, "INFRA_OPERACIONAL/HARD", userId,
+                        intermediaryId);
+                log.info("Archivo de equipos guardado: {}", filePath);
+            }
+
+            if (signatureFile != null && !signatureFile.isEmpty()) {
+                String filePath = fileStorageService.storeFile(signatureFile, "FIRMA_DIGITALIZADA", userId,
+                        intermediaryId);
+                log.info("Archivo de firma digitalizada guardado: {}", filePath);
+            }
+        } catch (Exception e) {
+            log.error("Error al procesar archivos: {}", e.getMessage(), e);
+        }
+    }
 }
