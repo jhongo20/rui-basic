@@ -62,8 +62,9 @@ public class SecurityConfig {
                                 "/intermediary/workexp-has-observation/**").permitAll()
                 
                 // Endpoints específicos para roles
-                .requestMatchers("/api/idoneidad/**").hasRole("Soporte")
-                .requestMatchers("/api/intermediary/**").hasRole("Soporte")
+                .requestMatchers("/api/idoneidad/**").hasAnyRole("Soporte", "Funcionario", "Administrador", "Aprobador")
+                //.requestMatchers("/api/intermediary/**").hasRole("Soporte")
+                .requestMatchers("/api/intermediary/**").hasAnyRole("Intermediario", "Soporte", "Funcionario", "Administrador", "Aprobador")
                 
                 // Rutas de intermediario
                 .requestMatchers("/intermediary/my-registries").hasAnyRole("Intermediario", "Soporte", "Administrador")
